@@ -1,0 +1,125 @@
+name: Update data and deploy Pages
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "23 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Update CSV data
+        if: github.event_name != 'push'
+        run: |
+          set +e
+          failures=0
+
+          run_update() {
+            echo "::group::$1"
+            if ! ${2}; then
+              echo "::warning::$1 failed; keeping existing committed data where available."
+              failures=1
+            fi
+            echo "::endgroup::"
+          }
+
+          run_update "S&P 500" "node scripts/update-sp500.mjs"
+          run_update "HY OAS" "node scripts/update-hy-oas.mjs"
+          run_update "FRED macro series" "node scripts/update-fred-series.mjs"
+          run_update "FX series" "node scripts/update-fx.mjs"
+          run_update "FINRA Margin Debt YoY" "python scripts/update-finra-margin-debt-yoy.py"
+
+          echo "DATA_UPDATE_FAILURES=${failures}" >> "${GITHUB_ENV}"
+
+      - name: Validate scripts
+        run: |
+          node --check app.js
+          node --check scripts/update-sp500.mjs
+          node --check scripts/update-hy-oas.mjs
+          node --check scripts/update-fred-series.mjs
+          node --check scripts/update-fx.mjs
+          python -B -m py_compile scripts/update-finra-margin-debt-yoy.py
+
+      - name: Remove generated caches
+        run: |
+          find . -name "__pycache__" -type d -prune -exec rm -rf {} +
+          find . -name "*.pyc" -delete
+
+      - name: Commit updated data
+        if: github.event_name != 'push'
+        run: |
+          if git diff --quiet -- data; then
+            echo "No data changes to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          git commit -m "Update dashboard data [skip ci]"
+          git push
+
+      - name: Prepare static site
+        run: |
+          rm -rf _site
+          mkdir -p _site
+          cp index.html style.css app.js _site/
+          cp -R data _site/data
+          touch _site/.nojekyll
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

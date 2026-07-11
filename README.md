@@ -20,6 +20,25 @@ http://localhost:8001/
 
 Opening `index.html` directly with `file://` is not recommended because browser security rules can block local CSV loading.
 
+## GitHub Pages
+
+The dashboard is designed to deploy as a static GitHub Pages site:
+
+```text
+https://raylia529.github.io/market-indicators-dashboard/
+```
+
+The repository includes `.github/workflows/pages.yml`, which:
+
+- deploys the current static dashboard when changes are pushed to `main`;
+- refreshes CSV data once per day using GitHub Actions;
+- can be run manually from the GitHub Actions tab with `workflow_dispatch`;
+- deploys only `index.html`, `style.css`, `app.js`, and `data/` to Pages.
+
+In GitHub, set `Settings -> Pages -> Build and deployment -> Source` to `GitHub Actions`.
+
+If the daily data commit step fails with a permission error, set `Settings -> Actions -> General -> Workflow permissions` to `Read and write permissions`.
+
 ## Current Features
 
 - Macro and FX tabs with matching responsive layouts.
@@ -74,6 +93,7 @@ node scripts/update-sp500.mjs
 node scripts/update-hy-oas.mjs
 node scripts/update-fred-series.mjs
 node scripts/update-fx.mjs
+python3 -m pip install -r requirements.txt
 python3 scripts/update-finra-margin-debt-yoy.py
 ```
 
