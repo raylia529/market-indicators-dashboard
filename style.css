@@ -136,7 +136,8 @@ h2 {
 }
 
 .swipe-label,
-.swipe-hint {
+.swipe-hint,
+.mobile-view-switch {
   display: none;
 }
 
@@ -533,16 +534,11 @@ h2 {
   }
 
   .mobile-swipe-track {
-    display: flex;
-    gap: 0;
+    display: block;
     margin: 14px -14px 0;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    padding: 0 0 8px;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-    touch-action: pan-x pan-y;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible;
+    padding: 0;
+    touch-action: auto;
   }
 
   .mobile-swipe-track::-webkit-scrollbar {
@@ -550,12 +546,13 @@ h2 {
   }
 
   .mobile-pane {
-    display: block;
-    flex: 0 0 100%;
+    display: none;
     padding: 0 14px;
     min-width: 0;
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
+  }
+
+  .mobile-pane.active {
+    display: block;
   }
 
   .swipe-label {
@@ -568,14 +565,38 @@ h2 {
     text-transform: uppercase;
   }
 
-  .swipe-hint {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    margin: 8px 0 0;
+  .mobile-view-switch {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    margin: 12px 0 0;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px;
+    background: #f8fafc;
+  }
+
+  .mobile-view-button {
+    border: 0;
+    border-radius: 999px;
+    padding: 9px 12px;
+    background: transparent;
     color: var(--muted);
-    font-size: 0.78rem;
-    font-weight: 800;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.86rem;
+    font-weight: 900;
+  }
+
+  .mobile-view-button.active {
+    background: #ffffff;
+    color: var(--blue);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  }
+
+  .mobile-view-button:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, 0.18);
+    outline-offset: 2px;
   }
 
   .chart-toolbar {
@@ -605,6 +626,7 @@ h2 {
   #indicator-chart,
   #fx-chart {
     height: 380px;
+    touch-action: pan-x pan-y;
   }
 }
 

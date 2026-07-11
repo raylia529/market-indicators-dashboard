@@ -4,9 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Market Indicators Dashboard</title>
-    <link rel="stylesheet" href="style.css?v=color-panel" />
+    <link rel="stylesheet" href="style.css?v=mobile-chart-toggle" />
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
-    <script src="app.js?v=color-panel" defer></script>
+    <script src="app.js?v=mobile-chart-toggle" defer></script>
   </head>
   <body>
     <main class="dashboard-shell">
@@ -30,8 +30,8 @@
             </div>
             <span id="chart-meta">CSV source</span>
           </div>
-          <div class="mobile-swipe-track" data-swipe-track="macro">
-            <section class="mobile-pane cards-pane" aria-label="Macro indicator cards">
+          <div class="mobile-swipe-track" data-mobile-track="macro">
+            <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="Macro indicator cards">
               <p class="swipe-label">Cards</p>
               <section
                 class="metric-grid indicator-grid"
@@ -41,8 +41,8 @@
                 <p class="loading-message">Loading CSV data...</p>
               </section>
             </section>
-            <section class="mobile-pane chart-pane" aria-label="Macro chart">
-              <p class="swipe-label">Chart</p>
+            <section class="mobile-pane chart-pane" data-mobile-pane="charts" aria-label="Macro charts">
+              <p class="swipe-label">Charts</p>
               <div class="chart-toolbar">
                 <div class="range-selector" aria-label="Date range selector">
                   <button class="range-button" type="button" data-range="1Y">1Y</button>
@@ -70,9 +70,13 @@
               </p>
             </section>
           </div>
-          <div class="swipe-hint" aria-hidden="true">
-            <span>Swipe for chart</span>
-            <span>Cards</span>
+          <div class="mobile-view-switch" aria-label="Macro mobile view">
+            <button class="mobile-view-button active" type="button" data-mobile-view-button="macro" data-mobile-view="cards" aria-pressed="true">
+              Cards
+            </button>
+            <button class="mobile-view-button" type="button" data-mobile-view-button="macro" data-mobile-view="charts" aria-pressed="false">
+              Charts
+            </button>
           </div>
         </section>
       </section>
@@ -85,8 +89,8 @@
           </div>
           <span id="fx-updated">Loading FX data</span>
         </div>
-        <div class="mobile-swipe-track" data-swipe-track="fx">
-          <section class="mobile-pane cards-pane" aria-label="FX indicator cards">
+        <div class="mobile-swipe-track" data-mobile-track="fx">
+          <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="FX indicator cards">
             <p class="swipe-label">Cards</p>
             <div class="metric-grid fx-card-grid">
               <article class="metric-card fx-card active" data-fx-card="USDJPY" tabindex="0">
@@ -103,8 +107,8 @@
               </article>
             </div>
           </section>
-          <section class="mobile-pane chart-pane" aria-label="FX chart">
-            <p class="swipe-label">Chart</p>
+          <section class="mobile-pane chart-pane" data-mobile-pane="charts" aria-label="FX charts">
+            <p class="swipe-label">Charts</p>
             <div class="fx-controls">
               <div class="range-selector" aria-label="FX date range selector">
                 <button class="range-button active" type="button" data-fx-range="3M">3M</button>
@@ -122,9 +126,13 @@
             </p>
           </section>
         </div>
-        <div class="swipe-hint" aria-hidden="true">
-          <span>Swipe for chart</span>
-          <span>Cards</span>
+        <div class="mobile-view-switch" aria-label="FX mobile view">
+          <button class="mobile-view-button active" type="button" data-mobile-view-button="fx" data-mobile-view="cards" aria-pressed="true">
+            Cards
+          </button>
+          <button class="mobile-view-button" type="button" data-mobile-view-button="fx" data-mobile-view="charts" aria-pressed="false">
+            Charts
+          </button>
         </div>
       </section>
       </section>

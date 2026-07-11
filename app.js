@@ -103,7 +103,7 @@ const macroLogScaleInput = document.getElementById("macro-log-scale");
 const rangeButtons = Array.from(document.querySelectorAll("[data-range]"));
 const tabButtons = Array.from(document.querySelectorAll("[data-tab]"));
 const tabPanels = Array.from(document.querySelectorAll("[data-tab-panel]"));
-const swipeTracks = Array.from(document.querySelectorAll("[data-swipe-track]"));
+const mobileViewButtons = Array.from(document.querySelectorAll("[data-mobile-view-button]"));
 const fxChartElement = document.getElementById("fx-chart");
 const fxRangeButtons = Array.from(document.querySelectorAll("[data-fx-range]"));
 const fxCards = Array.from(document.querySelectorAll("[data-fx-card]"));
@@ -128,7 +128,22 @@ let fxColors = loadStoredColors(
     ["US_Japan_2Y_Spread", "#f97316"],
   ]),
 );
-let swipeResizeTimer = null;
+
+function usesTouchChartMode() {
+  return window.matchMedia("(pointer: coarse), (max-width: 760px)").matches;
+}
+
+function getChartDragMode() {
+  return usesTouchChartMode() ? "pan" : "zoom";
+}
+
+function getPlotlyConfig() {
+  return {
+    displayModeBar: true,
+    responsive: true,
+    scrollZoom: !usesTouchChartMode(),
+  };
+}
 
 function loadStoredColors(storageKey, fallbackColors) {
   try {
@@ -580,7 +595,7 @@ function renderChart() {
       tickfont: { color: "#64748b", weight: 700 },
     },
     hovermode: "x unified",
-    dragmode: "zoom",
+    dragmode: getChartDragMode(),
   };
 
   if (firstIndicator) {
@@ -591,14 +606,8 @@ function renderChart() {
     layout.yaxis2 = getYAxisLayout("right", secondIndicator, secondRows);
   }
 
-  const config = {
-    displayModeBar: true,
-    responsive: true,
-    scrollZoom: true,
-  };
-
   if (chartElement && window.Plotly) {
-    Plotly.react(chartElement, traces, layout, config);
+    Plotly.react(chartElement, traces, layout, getPlotlyConfig());
   }
 }
 
@@ -834,13 +843,9 @@ function renderFxChart() {
       yaxis,
       yaxis2,
       hovermode: "x unified",
-      dragmode: "zoom",
+      dragmode: getChartDragMode(),
     },
-    {
-      displayModeBar: true,
-      responsive: true,
-      scrollZoom: true,
-    },
+    getPlotlyConfig(),
   );
 }
 
@@ -867,6 +872,32 @@ function resizeVisibleCharts() {
 
   if (fxChartElement) {
     Plotly.Plots.resize(fxChartElement);
+  }
+}
+
+function setMobileView(group, view) {
+  const track = document.querySelector(`[data-mobile-track="${group}"]`);
+
+  if (!track) {
+    return;
+  }
+
+  track.querySelectorAll("[data-mobile-pane]").forEach((pane) => {
+    pane.classList.toggle("active", pane.dataset.mobilePane === view);
+  });
+
+  mobileViewButtons
+    .filter((button) => button.dataset.mobileViewButton === group)
+    .forEach((button) => {
+      const active = button.dataset.mobileView === view;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+
+  if (view === "charts") {
+    requestAnimationFrame(() => {
+      resizeVisibleCharts();
+    });
   }
 }
 
@@ -936,15 +967,10 @@ tabButtons.forEach((button) => {
   });
 });
 
-swipeTracks.forEach((track) => {
-  track.addEventListener(
-    "scroll",
-    () => {
-      window.clearTimeout(swipeResizeTimer);
-      swipeResizeTimer = window.setTimeout(resizeVisibleCharts, 140);
-    },
-    { passive: true },
-  );
+mobileViewButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    setMobileView(button.dataset.mobileViewButton, button.dataset.mobileView);
+  });
 });
 
 document.addEventListener("click", () => {
