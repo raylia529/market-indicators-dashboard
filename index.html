@@ -4,18 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Market Indicators Dashboard</title>
-    <link rel="stylesheet" href="style.css?v=mobile-swipe-2" />
+    <link rel="stylesheet" href="style.css?v=color-panel" />
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
-    <script src="app.js?v=mobile-swipe-2" defer></script>
+    <script src="app.js?v=color-panel" defer></script>
   </head>
   <body>
     <main class="dashboard-shell">
       <header class="page-header">
         <div>
-          <p class="eyebrow">Prototype</p>
           <h1>Market Indicators</h1>
         </div>
-        <p class="status-pill">CSV-driven comparison</p>
       </header>
 
       <nav class="tab-bar" aria-label="Dashboard sections">
@@ -80,11 +78,10 @@
       </section>
 
       <section class="tab-panel" data-tab-panel="fx">
-      <section class="dashboard-section fx-section" aria-labelledby="fx-title">
+      <section class="dashboard-section fx-section" aria-label="FX">
         <div class="panel-header">
           <div>
             <p class="eyebrow">FX</p>
-            <h2 id="fx-title">USD/JPY and 2Y Yield Spread</h2>
           </div>
           <span id="fx-updated">Loading FX data</span>
         </div>
@@ -93,22 +90,16 @@
             <p class="swipe-label">Cards</p>
             <div class="metric-grid fx-card-grid">
               <article class="metric-card fx-card active" data-fx-card="USDJPY" tabindex="0">
-                <span>USD/JPY Exchange Rate</span>
+                <span>USD/JPY</span>
                 <strong id="fx-usdjpy-value">--</strong>
                 <small id="fx-usdjpy-date">Loading</small>
-                <label class="color-control">
-                  <span>Line color</span>
-                  <input type="color" value="#2563eb" data-fx-color="USDJPY" />
-                </label>
+                <div class="color-control" data-fx-color-control="USDJPY"></div>
               </article>
               <article class="metric-card fx-card active" data-fx-card="US_Japan_2Y_Spread" tabindex="0">
-                <span>US-Japan 2Y Yield Spread</span>
+                <span>US-JP 2Y Spread</span>
                 <strong id="fx-spread-value">--</strong>
                 <small id="fx-spread-date">Loading</small>
-                <label class="color-control">
-                  <span>Line color</span>
-                  <input type="color" value="#f97316" data-fx-color="US_Japan_2Y_Spread" />
-                </label>
+                <div class="color-control" data-fx-color-control="US_Japan_2Y_Spread"></div>
               </article>
             </div>
           </section>

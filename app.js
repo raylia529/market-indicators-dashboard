@@ -23,7 +23,7 @@ const indicators = [
   },
   {
     id: "high-yield-oas",
-    name: "US High Yield OAS",
+    name: "HY OAS",
     file: "data/hy_oas.csv",
     unitLabel: "Percentage Points",
     valueSuffix: " pp",
@@ -32,18 +32,8 @@ const indicators = [
     decimals: 2,
   },
   {
-    id: "10y-2y-spread",
-    name: "US 10Y minus 2Y Treasury spread",
-    file: "data/us-10y-minus-2y-spread.csv",
-    unitLabel: "Percentage Points",
-    valueSuffix: " pp",
-    category: "spread",
-    color: "#8b5cf6",
-    decimals: 2,
-  },
-  {
     id: "margin-debt-yoy",
-    name: "FINRA Margin Debt YoY",
+    name: "Margin Debt YoY",
     file: "data/finra-margin-debt-yoy.csv",
     unitLabel: "Percent YoY",
     valueSuffix: "%",
@@ -53,7 +43,7 @@ const indicators = [
   },
   {
     id: "treasury-10y",
-    name: "US 10-Year Treasury yield",
+    name: "US 10Y Yield",
     file: "data/us-10-year-treasury-yield.csv",
     unitLabel: "Percent",
     valueSuffix: "%",
@@ -61,6 +51,34 @@ const indicators = [
     color: "#14b8a6",
     decimals: 2,
   },
+  {
+    id: "10y-2y-spread",
+    name: "10Y-2Y Spread",
+    file: "data/us-10y-minus-2y-spread.csv",
+    unitLabel: "Percentage Points",
+    valueSuffix: " pp",
+    category: "spread",
+    color: "#8b5cf6",
+    decimals: 2,
+  },
+];
+
+const colorPalette = [
+  "#111827",
+  "#2563eb",
+  "#06b6d4",
+  "#14b8a6",
+  "#10b981",
+  "#84cc16",
+  "#facc15",
+  "#f97316",
+  "#ef4444",
+  "#ec4899",
+  "#8b5cf6",
+  "#64748b",
+  "#39ff14",
+  "#00f5ff",
+  "#ff2bd6",
 ];
 
 const ranges = {
@@ -89,10 +107,12 @@ const swipeTracks = Array.from(document.querySelectorAll("[data-swipe-track]"));
 const fxChartElement = document.getElementById("fx-chart");
 const fxRangeButtons = Array.from(document.querySelectorAll("[data-fx-range]"));
 const fxCards = Array.from(document.querySelectorAll("[data-fx-card]"));
-const fxColorInputs = Array.from(document.querySelectorAll("[data-fx-color]"));
 
 let indicatorData = new Map();
-let indicatorColors = new Map(indicators.map((indicator) => [indicator.id, indicator.color]));
+let indicatorColors = loadStoredColors(
+  "macroIndicatorColors",
+  new Map(indicators.map((indicator) => [indicator.id, indicator.color])),
+);
 let selectedIndicatorIds = ["sp500", "high-yield-oas"];
 let axisOrder = ["sp500", "high-yield-oas"];
 let manualAxisOrder = false;
@@ -101,11 +121,116 @@ let macroScale = "linear";
 let fxData = [];
 let activeFxRange = "3M";
 let visibleFxSeries = new Set(["USDJPY", "US_Japan_2Y_Spread"]);
-let fxColors = new Map([
-  ["USDJPY", "#2563eb"],
-  ["US_Japan_2Y_Spread", "#f97316"],
-]);
+let fxColors = loadStoredColors(
+  "fxIndicatorColors",
+  new Map([
+    ["USDJPY", "#2563eb"],
+    ["US_Japan_2Y_Spread", "#f97316"],
+  ]),
+);
 let swipeResizeTimer = null;
+
+function loadStoredColors(storageKey, fallbackColors) {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(storageKey) || "{}");
+    const merged = new Map(fallbackColors);
+
+    Object.entries(stored).forEach(([id, color]) => {
+      if (typeof color === "string" && /^#[0-9a-f]{6}$/i.test(color)) {
+        merged.set(id, color.toLowerCase());
+      }
+    });
+
+    return merged;
+  } catch {
+    return new Map(fallbackColors);
+  }
+}
+
+function storeColors(storageKey, colors) {
+  try {
+    window.localStorage.setItem(storageKey, JSON.stringify(Object.fromEntries(colors)));
+  } catch {
+    // Some privacy modes disable localStorage; color changes still work for the current page.
+  }
+}
+
+function renderColorPalette({ activeColor, targetId, targetType }) {
+  return `
+    <div class="color-control" data-color-control>
+      ${renderColorPaletteContent({ activeColor, targetId, targetType })}
+    </div>
+  `;
+}
+
+function renderColorPaletteContent({ activeColor, targetId, targetType }) {
+  const controlAttribute =
+    targetType === "macro" ? `data-color-panel-for="${targetId}"` : `data-fx-color-panel-for="${targetId}"`;
+
+  return `
+    <span>Line color</span>
+    <div class="color-picker">
+      <button
+        class="current-color"
+        type="button"
+        data-color-menu-toggle
+        style="--swatch-color: ${activeColor}"
+        aria-label="Change line color"
+        aria-expanded="false"
+      ></button>
+      <div class="color-panel" ${controlAttribute} hidden>
+        <div class="color-swatch-grid" role="group" aria-label="Line color">
+          ${colorPalette
+            .map((color) => {
+              const active = color.toLowerCase() === activeColor.toLowerCase();
+              const dataAttribute =
+                targetType === "macro"
+                  ? `data-color-indicator="${targetId}"`
+                  : `data-fx-color="${targetId}"`;
+
+              return `
+                <button
+                  class="color-swatch ${active ? "active" : ""}"
+                  type="button"
+                  ${dataAttribute}
+                  data-color-value="${color}"
+                  style="--swatch-color: ${color}"
+                  aria-label="Use ${color}"
+                  aria-pressed="${active}"
+                ></button>
+              `;
+            })
+            .join("")}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function closeColorPanels(exceptPanel = null) {
+  document.querySelectorAll(".color-panel").forEach((panel) => {
+    if (panel === exceptPanel) {
+      return;
+    }
+
+    panel.hidden = true;
+    panel.closest(".color-picker")?.querySelector("[data-color-menu-toggle]")?.setAttribute("aria-expanded", "false");
+  });
+}
+
+function toggleColorPanel(toggleButton) {
+  const picker = toggleButton.closest(".color-picker");
+  const panel = picker?.querySelector(".color-panel");
+
+  if (!panel) {
+    return;
+  }
+
+  const willOpen = panel.hidden;
+  closeColorPanels(panel);
+  panel.hidden = !willOpen;
+  toggleButton.setAttribute("aria-expanded", String(willOpen));
+}
 
 function parseCsv(csvText) {
   return csvText
@@ -287,10 +412,11 @@ function renderCards() {
           <span class="indicator-label">${indicator.name}</span>
           <strong>${latest ? formatValue(latest.value, indicator) : "--"}</strong>
           <small class="indicator-date">${latest ? `Updated ${formatDate(latest.date)}` : "Loading"}</small>
-          <label class="color-control">
-            <span>Line color</span>
-            <input type="color" value="${indicatorColors.get(indicator.id)}" data-color-indicator="${indicator.id}" />
-          </label>
+          ${renderColorPalette({
+            activeColor: indicatorColors.get(indicator.id),
+            targetId: indicator.id,
+            targetType: "macro",
+          })}
         </article>
       `;
     })
@@ -327,7 +453,7 @@ function renderCards() {
     });
   });
 
-  indicatorGrid.querySelectorAll(".color-control").forEach((control) => {
+  indicatorGrid.querySelectorAll("[data-color-control]").forEach((control) => {
     control.addEventListener("click", (event) => {
       event.stopPropagation();
     });
@@ -336,13 +462,23 @@ function renderCards() {
     });
   });
 
-  indicatorGrid.querySelectorAll("[data-color-indicator]").forEach((input) => {
-    input.addEventListener("keydown", (event) => {
+  indicatorGrid.querySelectorAll("[data-color-menu-toggle]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      toggleColorPanel(button);
+    });
+  });
+
+  indicatorGrid.querySelectorAll("[data-color-indicator]").forEach((swatch) => {
+    swatch.addEventListener("keydown", (event) => {
       event.stopPropagation();
     });
-    input.addEventListener("input", (event) => {
+    swatch.addEventListener("click", (event) => {
       event.stopPropagation();
-      indicatorColors.set(input.dataset.colorIndicator, input.value);
+      indicatorColors.set(swatch.dataset.colorIndicator, swatch.dataset.colorValue);
+      storeColors("macroIndicatorColors", indicatorColors);
+      closeColorPanels();
+      renderCards();
       renderChart();
     });
   });
@@ -536,6 +672,36 @@ function renderFxCards() {
     const active = visibleFxSeries.has(card.dataset.fxCard);
     card.classList.toggle("active", active);
     card.setAttribute("aria-pressed", String(active));
+  });
+
+  document.querySelectorAll("[data-fx-color-control]").forEach((control) => {
+    const id = control.dataset.fxColorControl;
+    control.innerHTML = renderColorPaletteContent({
+      activeColor: fxColors.get(id),
+      targetId: id,
+      targetType: "fx",
+    });
+
+    control.querySelectorAll("[data-fx-color]").forEach((swatch) => {
+      swatch.addEventListener("click", (event) => {
+        event.stopPropagation();
+        fxColors.set(swatch.dataset.fxColor, swatch.dataset.colorValue);
+        storeColors("fxIndicatorColors", fxColors);
+        closeColorPanels();
+        renderFxCards();
+        renderFxChart();
+      });
+      swatch.addEventListener("keydown", (event) => {
+        event.stopPropagation();
+      });
+    });
+
+    control.querySelectorAll("[data-color-menu-toggle]").forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.stopPropagation();
+        toggleColorPanel(button);
+      });
+    });
   });
 }
 
@@ -781,6 +947,16 @@ swipeTracks.forEach((track) => {
   );
 });
 
+document.addEventListener("click", () => {
+  closeColorPanels();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeColorPanels();
+  }
+});
+
 fxRangeButtons.forEach((button) => {
   button.addEventListener("click", () => {
     activeFxRange = button.dataset.fxRange;
@@ -824,13 +1000,6 @@ fxCards.forEach((card) => {
     control.addEventListener("keydown", (event) => {
       event.stopPropagation();
     });
-  });
-});
-
-fxColorInputs.forEach((input) => {
-  input.addEventListener("input", () => {
-    fxColors.set(input.dataset.fxColor, input.value);
-    renderFxChart();
   });
 });
 
