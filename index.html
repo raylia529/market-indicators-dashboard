@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Market Indicators Dashboard</title>
+    <link rel="stylesheet" href="style.css?v=mobile-swipe-2" />
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
+    <script src="app.js?v=mobile-swipe-2" defer></script>
+  </head>
+  <body>
+    <main class="dashboard-shell">
+      <header class="page-header">
+        <div>
+          <p class="eyebrow">Prototype</p>
+          <h1>Market Indicators</h1>
+        </div>
+        <p class="status-pill">CSV-driven comparison</p>
+      </header>
+
+      <nav class="tab-bar" aria-label="Dashboard sections">
+        <button class="tab-button active" type="button" data-tab="macro">Macro</button>
+        <button class="tab-button" type="button" data-tab="fx">FX</button>
+      </nav>
+
+      <section class="tab-panel active" data-tab-panel="macro">
+        <section class="dashboard-section" aria-labelledby="chart-title">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Macro</p>
+              <h2 id="chart-title">Loading indicators</h2>
+            </div>
+            <span id="chart-meta">CSV source</span>
+          </div>
+          <div class="mobile-swipe-track" data-swipe-track="macro">
+            <section class="mobile-pane cards-pane" aria-label="Macro indicator cards">
+              <p class="swipe-label">Cards</p>
+              <section
+                class="metric-grid indicator-grid"
+                id="indicator-grid"
+                aria-label="Market indicator cards"
+              >
+                <p class="loading-message">Loading CSV data...</p>
+              </section>
+            </section>
+            <section class="mobile-pane chart-pane" aria-label="Macro chart">
+              <p class="swipe-label">Chart</p>
+              <div class="chart-toolbar">
+                <div class="range-selector" aria-label="Date range selector">
+                  <button class="range-button" type="button" data-range="1Y">1Y</button>
+                  <button class="range-button" type="button" data-range="3Y">3Y</button>
+                  <button class="range-button" type="button" data-range="5Y">5Y</button>
+                  <button class="range-button" type="button" data-range="10Y">10Y</button>
+                  <button class="range-button" type="button" data-range="Max">Max</button>
+                </div>
+                <div class="chart-actions">
+                  <label class="toggle-pill">
+                    <input type="checkbox" id="macro-log-scale" />
+                    Log scale
+                  </label>
+                  <button class="secondary-button" id="clear-selection" type="button">Clear</button>
+                  <button class="secondary-button" id="swap-axes" type="button">Swap axes</button>
+                </div>
+              </div>
+              <div class="selection-notice" id="selection-notice" hidden>
+                <span id="selection-notice-text"></span>
+                <button class="notice-close" id="selection-notice-close" type="button" aria-label="Dismiss notice">x</button>
+              </div>
+              <div id="indicator-chart" aria-label="Interactive market indicator chart"></div>
+              <p class="compare-note" id="compare-note">
+                The two series use independent Y-axis scales. Visual overlap does not imply equal magnitude or correlation.
+              </p>
+            </section>
+          </div>
+          <div class="swipe-hint" aria-hidden="true">
+            <span>Swipe for chart</span>
+            <span>Cards</span>
+          </div>
+        </section>
+      </section>
+
+      <section class="tab-panel" data-tab-panel="fx">
+      <section class="dashboard-section fx-section" aria-labelledby="fx-title">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">FX</p>
+            <h2 id="fx-title">USD/JPY and 2Y Yield Spread</h2>
+          </div>
+          <span id="fx-updated">Loading FX data</span>
+        </div>
+        <div class="mobile-swipe-track" data-swipe-track="fx">
+          <section class="mobile-pane cards-pane" aria-label="FX indicator cards">
+            <p class="swipe-label">Cards</p>
+            <div class="metric-grid fx-card-grid">
+              <article class="metric-card fx-card active" data-fx-card="USDJPY" tabindex="0">
+                <span>USD/JPY Exchange Rate</span>
+                <strong id="fx-usdjpy-value">--</strong>
+                <small id="fx-usdjpy-date">Loading</small>
+                <label class="color-control">
+                  <span>Line color</span>
+                  <input type="color" value="#2563eb" data-fx-color="USDJPY" />
+                </label>
+              </article>
+              <article class="metric-card fx-card active" data-fx-card="US_Japan_2Y_Spread" tabindex="0">
+                <span>US-Japan 2Y Yield Spread</span>
+                <strong id="fx-spread-value">--</strong>
+                <small id="fx-spread-date">Loading</small>
+                <label class="color-control">
+                  <span>Line color</span>
+                  <input type="color" value="#f97316" data-fx-color="US_Japan_2Y_Spread" />
+                </label>
+              </article>
+            </div>
+          </section>
+          <section class="mobile-pane chart-pane" aria-label="FX chart">
+            <p class="swipe-label">Chart</p>
+            <div class="fx-controls">
+              <div class="range-selector" aria-label="FX date range selector">
+                <button class="range-button active" type="button" data-fx-range="3M">3M</button>
+                <button class="range-button" type="button" data-fx-range="6M">6M</button>
+                <button class="range-button" type="button" data-fx-range="1Y">1Y</button>
+                <button class="range-button" type="button" data-fx-range="2Y">2Y</button>
+                <button class="range-button" type="button" data-fx-range="5Y">5Y</button>
+                <button class="range-button" type="button" data-fx-range="10Y">10Y</button>
+                <button class="range-button" type="button" data-fx-range="MAX">MAX</button>
+              </div>
+            </div>
+            <div id="fx-chart" aria-label="Interactive FX chart"></div>
+            <p class="compare-note">
+              Sources: FRED DEXJPUS, FRED DGS2, Japan Ministry of Finance JGB interest rate CSV.
+            </p>
+          </section>
+        </div>
+        <div class="swipe-hint" aria-hidden="true">
+          <span>Swipe for chart</span>
+          <span>Cards</span>
+        </div>
+      </section>
+      </section>
+    </main>
+  </body>
+</html>
