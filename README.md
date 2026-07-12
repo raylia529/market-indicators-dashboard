@@ -42,6 +42,7 @@ If the daily data commit step fails with a permission error, set `Settings -> Ac
 ## Current Features
 
 - Macro and FX tabs with matching responsive layouts.
+- Data Status tab with source transparency, latest observation dates, refresh timestamps, and status badges.
 - Mobile card-to-chart swipe layout for portrait and landscape phone screens.
 - Indicator cards loaded from local CSV files.
 - Click cards to show or hide series.
@@ -117,6 +118,14 @@ The consolidated FX CSV uses:
 date,USDJPY,US_2Y_Yield,Japan_2Y_Yield,US_Japan_2Y_Spread
 ```
 
+The Data Status page reads generated metadata from:
+
+```text
+data/status.json
+```
+
+This metadata separates the newest available source observation from the time the dashboard last successfully checked or refreshed that indicator.
+
 ## Update Scripts
 
 The dashboard works from the committed CSV files. Data update scripts are included for manual refreshes:
@@ -128,6 +137,7 @@ node scripts/update-fred-series.mjs
 node scripts/update-fx.mjs
 python3 -m pip install -r requirements.txt
 python3 scripts/update-finra-margin-debt-yoy.py
+node scripts/generate-status.mjs
 ```
 
 The scripts use merge-and-validate workflows where applicable and avoid replacing complete history with short rolling datasets.
@@ -169,6 +179,8 @@ There is no package manager or formal build step. Basic validation for this stat
 
 ```bash
 node --check app.js
+node --check sw.js
+node --check scripts/generate-status.mjs
 node --check scripts/update-sp500.mjs
 node --check scripts/update-hy-oas.mjs
 node --check scripts/update-fred-series.mjs

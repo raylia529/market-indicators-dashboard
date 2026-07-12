@@ -107,6 +107,9 @@ const mobileViewButtons = Array.from(document.querySelectorAll("[data-mobile-vie
 const fxChartElement = document.getElementById("fx-chart");
 const fxRangeButtons = Array.from(document.querySelectorAll("[data-fx-range]"));
 const fxCards = Array.from(document.querySelectorAll("[data-fx-card]"));
+const dataStatusUpdated = document.getElementById("data-status-updated");
+const statusSummaryGrid = document.getElementById("status-summary-grid");
+const dataStatusBody = document.getElementById("data-status-body");
 
 let indicatorData = new Map();
 let indicatorColors = loadStoredColors(
@@ -130,6 +133,13 @@ let fxColors = loadStoredColors(
 );
 
 const clampingCharts = new WeakSet();
+
+const statusClassNames = {
+  "Up to date": "up-to-date",
+  "Waiting for next official release": "waiting",
+  "Failed to update": "failed",
+  "Stale data": "stale",
+};
 
 function usesTouchChartMode() {
   return window.matchMedia("(pointer: coarse), (max-width: 760px)").matches;
@@ -313,6 +323,41 @@ function formatValue(value, indicator) {
   }).format(value);
 
   return `${formatted}${indicator.valueSuffix}`;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function formatDateTime(value) {
+  if (!value) {
+    return "--";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  })
+    .formatToParts(date)
+    .reduce((acc, part) => ({ ...acc, [part.type]: part.value }), {});
+
+  return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute} JST`;
 }
 
 function shiftDateByRange(endDate, rangeKey) {
@@ -1097,6 +1142,156 @@ async function loadFxData() {
   fxData = parseFxCsv(await response.text());
 }
 
+async function loadDataStatus() {
+  const response = await fetch(`data/status.json?updated=${Date.now()}`, { cache: "no-store" });
+
+  if (!response.ok) {
+    throw new Error("Could not load data/status.json");
+  }
+
+  return response.json();
+}
+
+function renderSourceLinks(indicator) {
+  const sourceUrls =
+    Array.isArray(indicator.source_urls) && indicator.source_urls.length > 0
+      ? indicator.source_urls
+      : [{ label: indicator.source_name, url: indicator.source_url }];
+
+  return sourceUrls
+    .filter((source) => source?.url)
+    .map(
+      (source) =>
+        `<a href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(
+          source.label || source.url,
+        )}</a>`,
+    )
+    .join("");
+}
+
+function renderSourceUrlLinks(indicator) {
+  const sourceUrls =
+    Array.isArray(indicator.source_urls) && indicator.source_urls.length > 0
+      ? indicator.source_urls
+      : [{ label: indicator.source_url, url: indicator.source_url }];
+
+  return sourceUrls
+    .filter((source) => source?.url)
+    .map(
+      (source) =>
+        `<a class="source-url" href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(
+          source.url,
+        )}</a>`,
+    )
+    .join("");
+}
+
+function renderStatusBadge(status) {
+  const className = statusClassNames[status] || "unknown";
+  return `<span class="data-status-badge ${className}">${escapeHtml(status || "Unknown")}</span>`;
+}
+
+function renderDataStatus(metadata) {
+  if (!metadata || !metadata.indicators) {
+    throw new Error("Data status metadata is missing indicators.");
+  }
+
+  const indicators = Object.values(metadata.indicators);
+  const failedCount = indicators.filter((indicator) => indicator.status === "Failed to update").length;
+  const staleCount = indicators.filter((indicator) => indicator.status === "Stale data").length;
+
+  if (dataStatusUpdated) {
+    dataStatusUpdated.textContent = metadata.last_dashboard_refresh_display
+      ? `Last dashboard refresh ${metadata.last_dashboard_refresh_display}`
+      : "Data status loaded";
+  }
+
+  if (statusSummaryGrid) {
+    statusSummaryGrid.innerHTML = [
+      ["Dashboard Version", metadata.dashboard_version || "--"],
+      ["Last Dashboard Refresh", metadata.last_dashboard_refresh_display || formatDateTime(metadata.last_dashboard_refresh)],
+      [
+        "Data Update Duration",
+        Number.isFinite(metadata.update_duration_seconds)
+          ? `${metadata.update_duration_seconds.toFixed(1)} seconds`
+          : "--",
+      ],
+      ["Number of Indicators", indicators.length],
+      ["Last Git Commit", metadata.last_git_commit || "--"],
+      ["Python Version", metadata.python_version || "--"],
+      ["Failed Sources", failedCount],
+      ["Stale Sources", staleCount],
+    ]
+      .map(
+        ([label, value]) => `
+          <article class="status-summary-card">
+            <span>${escapeHtml(label)}</span>
+            <strong>${escapeHtml(value)}</strong>
+          </article>
+        `,
+      )
+      .join("");
+  }
+
+  if (dataStatusBody) {
+    dataStatusBody.innerHTML = indicators
+      .map((indicator) => {
+        const formula = indicator.formula
+          ? `<p class="formula-text"><strong>Formula:</strong> ${escapeHtml(indicator.formula)}</p>`
+          : "";
+        const releaseNote = indicator.release_note
+          ? `<p class="formula-text">${escapeHtml(indicator.release_note)}</p>`
+          : "";
+        const errorDetails = indicator.error_message
+          ? `<details class="error-details"><summary>Error details</summary><p>${escapeHtml(indicator.error_message)}</p></details>`
+          : "";
+
+        return `
+          <tr>
+            <td>
+              <strong>${escapeHtml(indicator.display_name)}</strong>
+              ${formula}
+              ${releaseNote}
+              ${errorDetails}
+            </td>
+            <td class="source-links">${renderSourceLinks(indicator) || escapeHtml(indicator.source_name || "--")}</td>
+            <td class="source-links">${renderSourceUrlLinks(indicator) || "--"}</td>
+            <td>${escapeHtml(indicator.frequency || "--")}</td>
+            <td>${escapeHtml(indicator.latest_available_date || "--")}</td>
+            <td>${escapeHtml(
+              indicator.last_successful_refresh_display || formatDateTime(indicator.last_successful_refresh),
+            )}</td>
+            <td>${renderStatusBadge(indicator.status)}</td>
+          </tr>
+        `;
+      })
+      .join("");
+  }
+}
+
+function renderDataStatusError(error) {
+  if (dataStatusUpdated) {
+    dataStatusUpdated.textContent = "Data status unavailable";
+  }
+
+  if (statusSummaryGrid) {
+    statusSummaryGrid.innerHTML = `<p class="error-message">${escapeHtml(error.message)}</p>`;
+  }
+
+  if (dataStatusBody) {
+    dataStatusBody.innerHTML = `
+      <tr>
+        <td colspan="7">
+          <details class="error-details" open>
+            <summary>Could not load data status metadata</summary>
+            <p>${escapeHtml(error.message)}</p>
+          </details>
+        </td>
+      </tr>
+    `;
+  }
+}
+
 rangeButtons.forEach((button) => {
   button.addEventListener("click", () => {
     activeRange = button.dataset.range;
@@ -1239,6 +1434,8 @@ loadFxData()
   .catch((error) => {
     setFxText("fx-updated", error.message);
   });
+
+loadDataStatus().then(renderDataStatus).catch(renderDataStatusError);
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {

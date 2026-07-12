@@ -10,9 +10,9 @@
     <title>Market Indicators Dashboard</title>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
-    <link rel="stylesheet" href="style.css?v=x-axis-bounds" />
+    <link rel="stylesheet" href="style.css?v=data-status" />
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
-    <script src="app.js?v=x-axis-bounds" defer></script>
+    <script src="app.js?v=data-status" defer></script>
   </head>
   <body>
     <main class="dashboard-shell">
@@ -25,6 +25,7 @@
       <nav class="tab-bar" aria-label="Dashboard sections">
         <button class="tab-button active" type="button" data-tab="macro">Macro</button>
         <button class="tab-button" type="button" data-tab="fx">FX</button>
+        <button class="tab-button" type="button" data-tab="data-status">Data Status</button>
       </nav>
 
       <section class="tab-panel active" data-tab-panel="macro">
@@ -141,6 +142,43 @@
           </button>
         </div>
       </section>
+      </section>
+
+      <section class="tab-panel" data-tab-panel="data-status">
+        <section class="dashboard-section data-status-section" aria-labelledby="data-status-title">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Transparency</p>
+              <h2 id="data-status-title">Data Status</h2>
+            </div>
+            <span id="data-status-updated">Loading metadata</span>
+          </div>
+
+          <div class="status-summary-grid" id="status-summary-grid" aria-label="Dashboard data status summary">
+            <p class="loading-message">Loading data status...</p>
+          </div>
+
+          <div class="data-status-table-wrap" aria-label="Data source status table">
+            <table class="data-status-table">
+              <thead>
+                <tr>
+                  <th scope="col">Indicator</th>
+                  <th scope="col">Data Source</th>
+                  <th scope="col">Source URL</th>
+                  <th scope="col">Update Frequency</th>
+                  <th scope="col">Latest Available Date</th>
+                  <th scope="col">Last Successful Refresh</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody id="data-status-body">
+                <tr>
+                  <td colspan="7">Loading data status...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
       </section>
     </main>
   </body>

@@ -1,0 +1,204 @@
+{
+  "last_dashboard_refresh": "2026-07-12T22:39:29+09:00",
+  "last_dashboard_refresh_display": "2026-07-12 22:39 JST",
+  "update_duration_seconds": 0,
+  "dashboard_version": "1.0.0",
+  "last_git_commit": "001142e",
+  "python_version": "Python 3.13.3",
+  "indicators": {
+    "SP500": {
+      "display_name": "S&P 500 Index",
+      "source_name": "FRED SP500",
+      "source_url": "https://fred.stlouisfed.org/series/SP500",
+      "source_urls": [
+        {
+          "label": "FRED SP500",
+          "url": "https://fred.stlouisfed.org/series/SP500"
+        }
+      ],
+      "latest_available_date": "2026-07-10",
+      "last_successful_refresh": "2026-07-12T22:39:29+09:00",
+      "last_successful_refresh_display": "2026-07-12 22:39 JST",
+      "frequency": "Daily, US trading days",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": null
+    },
+    "VIXCLS": {
+      "display_name": "CBOE Volatility Index (VIX)",
+      "source_name": "FRED",
+      "source_url": "https://fred.stlouisfed.org/series/VIXCLS",
+      "source_urls": [
+        {
+          "label": "FRED VIXCLS",
+          "url": "https://fred.stlouisfed.org/series/VIXCLS"
+        }
+      ],
+      "latest_available_date": "2026-07-09",
+      "last_successful_refresh": "2026-07-12T22:39:29+09:00",
+      "last_successful_refresh_display": "2026-07-12 22:39 JST",
+      "frequency": "Daily, US trading days",
+      "status": "Waiting for next official release",
+      "error_message": null,
+      "formula": null,
+      "release_note": null
+    },
+    "BAMLH0A0HYM2": {
+      "display_name": "ICE BofA US High Yield Index Option-Adjusted Spread",
+      "source_name": "FRED",
+      "source_url": "https://fred.stlouisfed.org/series/BAMLH0A0HYM2",
+      "source_urls": [
+        {
+          "label": "FRED BAMLH0A0HYM2",
+          "url": "https://fred.stlouisfed.org/series/BAMLH0A0HYM2"
+        }
+      ],
+      "latest_available_date": "2026-07-09",
+      "last_successful_refresh": "2026-07-12T22:39:29+09:00",
+      "last_successful_refresh_display": "2026-07-12 22:39 JST",
+      "frequency": "Daily",
+      "status": "Waiting for next official release",
+      "error_message": null,
+      "formula": null,
+      "release_note": null
+    },
+    "DGS10": {
+      "display_name": "US 10-Year Treasury Yield",
+      "source_name": "FRED",
+      "source_url": "https://fred.stlouisfed.org/series/DGS10",
+      "source_urls": [
+        {
+          "label": "FRED DGS10",
+          "url": "https://fred.stlouisfed.org/series/DGS10"
+        }
+      ],
+      "latest_available_date": "2026-07-09",
+      "last_successful_refresh": "2026-07-12T22:39:29+09:00",
+      "last_successful_refresh_display": "2026-07-12 22:39 JST",
+      "frequency": "Daily",
+      "status": "Waiting for next official release",
+      "error_message": null,
+      "formula": null,
+      "release_note": null
+    },
+    "T10Y2Y": {
+      "display_name": "US Treasury 10-Year Minus 2-Year Yield Spread",
+      "source_name": "FRED",
+      "source_url": "https://fred.stlouisfed.org/series/T10Y2Y",
+      "source_urls": [
+        {
+          "label": "FRED T10Y2Y",
+          "url": "https://fred.stlouisfed.org/series/T10Y2Y"
+        }
+      ],
+      "latest_available_date": "2026-07-10",
+      "last_successful_refresh": "2026-07-12T22:39:29+09:00",
+      "last_successful_refresh_display": "2026-07-12 22:39 JST",
+      "frequency": "Daily",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": null
+    },
+    "FINRA_MARGIN_DEBT_YOY": {
+      "display_name": "FINRA Margin Debt Year-over-Year Growth",
+      "source_name": "FINRA Margin Statistics",
+      "source_url": "https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics",
+      "source_urls": [
+        {
+          "label": "FINRA Margin Statistics",
+          "url": "https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics"
+        }
+      ],
+      "latest_available_date": "2026-05-31",
+      "last_successful_refresh": "2026-07-12T22:39:29+09:00",
+      "last_successful_refresh_display": "2026-07-12 22:39 JST",
+      "frequency": "Monthly",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": "Usually published during the third week of the following month."
+    },
+    "DEXJPUS": {
+      "display_name": "USD/JPY Exchange Rate",
+      "source_name": "FRED",
+      "source_url": "https://fred.stlouisfed.org/series/DEXJPUS",
+      "source_urls": [
+        {
+          "label": "FRED DEXJPUS",
+          "url": "https://fred.stlouisfed.org/series/DEXJPUS"
+        }
+      ],
+      "latest_available_date": "2026-07-02",
+      "last_successful_refresh": "2026-07-12T22:39:29+09:00",
+      "last_successful_refresh_display": "2026-07-12 22:39 JST",
+      "frequency": "Daily, forex trading days",
+      "status": "Stale data",
+      "error_message": null,
+      "formula": null,
+      "release_note": null
+    },
+    "DGS2": {
+      "display_name": "US 2-Year Treasury Yield",
+      "source_name": "FRED",
+      "source_url": "https://fred.stlouisfed.org/series/DGS2",
+      "source_urls": [
+        {
+          "label": "FRED DGS2",
+          "url": "https://fred.stlouisfed.org/series/DGS2"
+        }
+      ],
+      "latest_available_date": "2026-07-09",
+      "last_successful_refresh": "2026-07-12T22:39:29+09:00",
+      "last_successful_refresh_display": "2026-07-12 22:39 JST",
+      "frequency": "Daily",
+      "status": "Waiting for next official release",
+      "error_message": null,
+      "formula": null,
+      "release_note": null
+    },
+    "JAPAN_2Y_JGB": {
+      "display_name": "Japan 2-Year JGB Yield",
+      "source_name": "Japan Ministry of Finance",
+      "source_url": "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/",
+      "source_urls": [
+        {
+          "label": "Japan Ministry of Finance",
+          "url": "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/"
+        }
+      ],
+      "latest_available_date": "2026-07-09",
+      "last_successful_refresh": "2026-07-12T22:39:29+09:00",
+      "last_successful_refresh_display": "2026-07-12 22:39 JST",
+      "frequency": "Daily, Japan business days",
+      "status": "Waiting for next official release",
+      "error_message": null,
+      "formula": null,
+      "release_note": null
+    },
+    "US_JAPAN_2Y_SPREAD": {
+      "display_name": "US-Japan 2-Year Government Bond Yield Spread",
+      "source_name": "Calculated",
+      "source_url": "https://fred.stlouisfed.org/series/DGS2",
+      "source_urls": [
+        {
+          "label": "FRED DGS2",
+          "url": "https://fred.stlouisfed.org/series/DGS2"
+        },
+        {
+          "label": "Japan Ministry of Finance",
+          "url": "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/"
+        }
+      ],
+      "latest_available_date": "2026-07-09",
+      "last_successful_refresh": "2026-07-12T22:39:29+09:00",
+      "last_successful_refresh_display": "2026-07-12 22:39 JST",
+      "frequency": "Daily",
+      "status": "Waiting for next official release",
+      "error_message": null,
+      "formula": "US 2-Year Treasury Yield - Japan 2-Year JGB Yield",
+      "release_note": null
+    }
+  }
+}

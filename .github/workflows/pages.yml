@@ -41,33 +41,81 @@ jobs:
       - name: Install Python dependencies
         run: python -m pip install -r requirements.txt
 
+      - name: Mark refresh start time
+        run: echo "DASHBOARD_REFRESH_STARTED_AT=$(TZ=Asia/Tokyo date +'%Y-%m-%dT%H:%M:%S+09:00')" >> "${GITHUB_ENV}"
+
       - name: Update CSV data
         if: github.event_name != 'push'
         run: |
           set +e
           failures=0
+          printf '{}\n' > .update-results.json
+
+          record_update_result() {
+            node - "${1}" "${2}" "${3}" <<'NODE'
+          const fs = require("fs");
+          const keys = process.argv[2].split(",");
+          const status = process.argv[3];
+          const errorMessage = process.argv[4] || null;
+          const file = ".update-results.json";
+          const data = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")) : {};
+          const now = new Intl.DateTimeFormat("en-CA", {
+            timeZone: "Asia/Tokyo",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false,
+          })
+            .formatToParts(new Date())
+            .reduce((acc, part) => ({ ...acc, [part.type]: part.value }), {});
+          const timestamp = `${now.year}-${now.month}-${now.day}T${now.hour}:${now.minute}:${now.second}+09:00`;
+
+          for (const key of keys) {
+            data[key] = {
+              status,
+              last_successful_refresh: status === "success" ? timestamp : null,
+              error_message: status === "failed" ? errorMessage : null,
+            };
+          }
+
+          fs.writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`);
+          NODE
+          }
 
           run_update() {
             echo "::group::$1"
-            if ! ${2}; then
+            output="$(${2} 2>&1)"
+            exit_code=$?
+            echo "${output}"
+            if [ "${exit_code}" -ne 0 ]; then
               echo "::warning::$1 failed; keeping existing committed data where available."
+              record_update_result "${3}" "failed" "${output}"
               failures=1
+            else
+              record_update_result "${3}" "success" ""
             fi
             echo "::endgroup::"
           }
 
-          run_update "S&P 500" "node scripts/update-sp500.mjs"
-          run_update "HY OAS" "node scripts/update-hy-oas.mjs"
-          run_update "FRED macro series" "node scripts/update-fred-series.mjs"
-          run_update "FX series" "node scripts/update-fx.mjs"
-          run_update "FINRA Margin Debt YoY" "python scripts/update-finra-margin-debt-yoy.py"
+          run_update "S&P 500" "node scripts/update-sp500.mjs" "SP500"
+          run_update "HY OAS" "node scripts/update-hy-oas.mjs" "BAMLH0A0HYM2"
+          run_update "FRED macro series" "node scripts/update-fred-series.mjs" "VIXCLS,T10Y2Y,DGS10"
+          run_update "FX series" "node scripts/update-fx.mjs" "DEXJPUS,DGS2,JAPAN_2Y_JGB,US_JAPAN_2Y_SPREAD"
+          run_update "FINRA Margin Debt YoY" "python scripts/update-finra-margin-debt-yoy.py" "FINRA_MARGIN_DEBT_YOY"
 
           echo "DATA_UPDATE_FAILURES=${failures}" >> "${GITHUB_ENV}"
+
+      - name: Generate data status metadata
+        run: node scripts/generate-status.mjs
 
       - name: Validate scripts
         run: |
           node --check app.js
           node --check sw.js
+          node --check scripts/generate-status.mjs
           node --check scripts/update-sp500.mjs
           node --check scripts/update-hy-oas.mjs
           node --check scripts/update-fred-series.mjs
