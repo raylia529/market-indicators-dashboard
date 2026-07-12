@@ -33,7 +33,7 @@ The repository includes `.github/workflows/pages.yml`, which:
 - deploys the current static dashboard when changes are pushed to `main`;
 - refreshes CSV data once per day using GitHub Actions;
 - can be run manually from the GitHub Actions tab with `workflow_dispatch`;
-- deploys only `index.html`, `style.css`, `app.js`, and `data/` to Pages.
+- deploys `index.html`, `style.css`, `app.js`, PWA assets, icons, and `data/` to Pages.
 
 In GitHub, set `Settings -> Pages -> Build and deployment -> Source` to `GitHub Actions`.
 
@@ -56,6 +56,39 @@ If the daily data commit step fails with a permission error, set `Settings -> Ac
 - Data is not normalized.
 - Log scale is available only when the selected range contains positive values.
 - Line colors can be adjusted from the cards.
+- Installable iPhone PWA with a web app manifest, app icons, and service worker.
+
+## Install on iPhone
+
+Open the GitHub Pages site in Safari:
+
+```text
+https://raylia529.github.io/market-indicators-dashboard/
+```
+
+Then install it:
+
+1. Tap the Safari Share button.
+2. Tap `Add to Home Screen`.
+3. Confirm the name `Markets`.
+4. Launch `Markets` from the Home Screen.
+
+When launched from the Home Screen, the dashboard uses standalone display mode without the normal Safari address bar.
+
+## PWA Cache Behavior
+
+The service worker is configured for GitHub Pages under:
+
+```text
+/market-indicators-dashboard/
+```
+
+Caching strategy:
+
+- HTML, CSS, JavaScript, manifest, offline page, and local icons use cache-first loading.
+- Market CSV and JSON files under `data/` use network-first loading.
+- Market data can fall back to the most recently cached response when offline, but the app tries the network first so updated CSV data is not hidden by permanent cache.
+- External CDN assets, including Plotly.js, are not added to the local application-shell cache.
 
 ## Data Files
 

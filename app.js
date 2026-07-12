@@ -129,6 +129,8 @@ let fxColors = loadStoredColors(
   ]),
 );
 
+const clampingCharts = new WeakSet();
+
 function usesTouchChartMode() {
   return window.matchMedia("(pointer: coarse), (max-width: 760px)").matches;
 }
@@ -292,6 +294,18 @@ function formatYearMonth(dateText) {
   return formatDate(dateText);
 }
 
+function toDate(dateText) {
+  return new Date(`${dateText}T00:00:00`);
+}
+
+function toIsoDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
 function formatValue(value, indicator) {
   const formatted = new Intl.NumberFormat("en-US", {
     minimumFractionDigits: indicator.decimals,
@@ -301,25 +315,61 @@ function formatValue(value, indicator) {
   return `${formatted}${indicator.valueSuffix}`;
 }
 
-function getRangeStart(rows) {
-  if (activeRange === "Max") {
-    return new Date(`${maxStartDate}T00:00:00`);
+function shiftDateByRange(endDate, rangeKey) {
+  const startDate = new Date(endDate);
+
+  if (rangeKey.endsWith("M")) {
+    startDate.setMonth(startDate.getMonth() - Number(rangeKey.slice(0, -1)));
+  } else {
+    startDate.setFullYear(startDate.getFullYear() - ranges[rangeKey]);
   }
 
-  const latestDate = new Date(`${rows.at(-1).date}T00:00:00`);
-  latestDate.setFullYear(latestDate.getFullYear() - ranges[activeRange]);
-  return latestDate;
+  return startDate;
+}
+
+function getMacroXBounds() {
+  const selected = axisOrder.slice(0, 2);
+  const latestDateText = selected
+    .flatMap((id) => indicatorData.get(id) || [])
+    .map((row) => row.date)
+    .sort((a, b) => a.localeCompare(b))
+    .at(-1);
+
+  if (!latestDateText) {
+    return null;
+  }
+
+  const endDate = toDate(latestDateText);
+  const startDate = activeRange === "Max" ? toDate(maxStartDate) : shiftDateByRange(endDate, activeRange);
+
+  return {
+    start: toIsoDate(startDate),
+    end: toIsoDate(endDate),
+  };
+}
+
+function getRangeStart(rows) {
+  if (activeRange === "Max") {
+    return toDate(maxStartDate);
+  }
+
+  return shiftDateByRange(toDate(rows.at(-1).date), activeRange);
 }
 
 function getFilteredRows(indicatorId) {
   const rows = indicatorData.get(indicatorId) || [];
+  const bounds = getMacroXBounds();
 
   if (rows.length === 0) {
     return [];
   }
 
-  const start = getRangeStart(rows);
-  return rows.filter((row) => new Date(`${row.date}T00:00:00`) >= start);
+  if (!bounds) {
+    const start = getRangeStart(rows);
+    return rows.filter((row) => toDate(row.date) >= start);
+  }
+
+  return rows.filter((row) => row.date >= bounds.start && row.date <= bounds.end);
 }
 
 function getAutoAxisOrder(ids) {
@@ -405,6 +455,84 @@ function getAutoRange(rows, scale) {
   }
 
   return [min, max];
+}
+
+function clampDateRange(nextStart, nextEnd, bounds) {
+  const min = Date.parse(bounds.start);
+  const max = Date.parse(bounds.end);
+  let start = Date.parse(nextStart);
+  let end = Date.parse(nextEnd);
+
+  if (!Number.isFinite(start) || !Number.isFinite(end) || start >= end) {
+    return [bounds.start, bounds.end];
+  }
+
+  const allowedSpan = max - min;
+  let span = end - start;
+
+  if (span >= allowedSpan) {
+    return [bounds.start, bounds.end];
+  }
+
+  if (start < min) {
+    start = min;
+    end = start + span;
+  }
+
+  if (end > max) {
+    end = max;
+    start = end - span;
+  }
+
+  start = Math.max(start, min);
+  end = Math.min(end, max);
+
+  return [toIsoDate(new Date(start)), toIsoDate(new Date(end))];
+}
+
+function setupBoundedXAxis(chartNode, getBounds) {
+  if (!chartNode || typeof chartNode.on !== "function" || chartNode.dataset.xBoundsGuard === "true") {
+    return;
+  }
+
+  chartNode.dataset.xBoundsGuard = "true";
+  chartNode.on("plotly_relayout", (eventData) => {
+    if (clampingCharts.has(chartNode)) {
+      return;
+    }
+
+    const bounds = getBounds();
+
+    if (!bounds) {
+      return;
+    }
+
+    const start = eventData["xaxis.range[0]"] || eventData["xaxis.range"]?.[0];
+    const end = eventData["xaxis.range[1]"] || eventData["xaxis.range"]?.[1];
+    const resetRequested = eventData["xaxis.autorange"] === true;
+
+    if (!start || !end) {
+      if (resetRequested) {
+        clampingCharts.add(chartNode);
+        Plotly.relayout(chartNode, { "xaxis.range": [bounds.start, bounds.end] }).then(() => {
+          clampingCharts.delete(chartNode);
+        });
+      }
+      return;
+    }
+
+    const [clampedStart, clampedEnd] = clampDateRange(start, end, bounds);
+
+    const normalizedStart = toIsoDate(new Date(start));
+    const normalizedEnd = toIsoDate(new Date(end));
+
+    if (clampedStart !== normalizedStart || clampedEnd !== normalizedEnd) {
+      clampingCharts.add(chartNode);
+      Plotly.relayout(chartNode, { "xaxis.range": [clampedStart, clampedEnd] }).then(() => {
+        clampingCharts.delete(chartNode);
+      });
+    }
+  });
 }
 
 function canUseLog(rows) {
@@ -568,6 +696,7 @@ function renderChart() {
   compareNote.hidden = selected.length !== 2;
   swapButton.disabled = selected.length !== 2;
 
+  const xBounds = getMacroXBounds();
   const firstRows = selected[0] ? getFilteredRows(selected[0]) : [];
   const secondRows = selected[1] ? getFilteredRows(selected[1]) : [];
   const firstIndicator = selected[0] ? getIndicator(selected[0]) : null;
@@ -588,7 +717,9 @@ function renderChart() {
       y: 1.14,
     },
     xaxis: {
-      range: activeRange === "Max" ? [maxStartDate, undefined] : undefined,
+      range: xBounds ? [xBounds.start, xBounds.end] : undefined,
+      minallowed: xBounds?.start,
+      maxallowed: xBounds?.end,
       showgrid: false,
       tickformat: "%Y/%-m",
       hoverformat: "%Y/%-m/%-d",
@@ -607,8 +738,39 @@ function renderChart() {
   }
 
   if (chartElement && window.Plotly) {
-    Plotly.react(chartElement, traces, layout, getPlotlyConfig());
+    Plotly.react(chartElement, traces, layout, getPlotlyConfig()).then(() => {
+      setupBoundedXAxis(chartElement, getMacroXBounds);
+    });
   }
+}
+
+function shiftFxDateByRange(endDate, rangeKey) {
+  const startDate = new Date(endDate);
+  const amount = Number(rangeKey.slice(0, -1));
+  const unit = rangeKey.slice(-1);
+
+  if (unit === "M") {
+    startDate.setMonth(startDate.getMonth() - amount);
+  } else {
+    startDate.setFullYear(startDate.getFullYear() - amount);
+  }
+
+  return startDate;
+}
+
+function getFxXBounds() {
+  if (fxData.length === 0) {
+    return null;
+  }
+
+  const latestDateText = fxData.at(-1).date;
+  const endDate = toDate(latestDateText);
+  const startDate = activeFxRange === "MAX" ? toDate(fxData[0].date) : shiftFxDateByRange(endDate, activeFxRange);
+
+  return {
+    start: toIsoDate(startDate),
+    end: toIsoDate(endDate),
+  };
 }
 
 function getFxRangeStart(rows) {
@@ -616,17 +778,7 @@ function getFxRangeStart(rows) {
     return null;
   }
 
-  const latestDate = new Date(`${rows.at(-1).date}T00:00:00`);
-  const amount = Number(activeFxRange.slice(0, -1));
-  const unit = activeFxRange.slice(-1);
-
-  if (unit === "M") {
-    latestDate.setMonth(latestDate.getMonth() - amount);
-  } else {
-    latestDate.setFullYear(latestDate.getFullYear() - amount);
-  }
-
-  return latestDate;
+  return shiftFxDateByRange(toDate(rows.at(-1).date), activeFxRange);
 }
 
 function getFilteredFxRows() {
@@ -634,13 +786,13 @@ function getFilteredFxRows() {
     return [];
   }
 
-  const start = getFxRangeStart(fxData);
+  const bounds = getFxXBounds();
 
-  if (!start) {
+  if (!bounds) {
     return fxData;
   }
 
-  return fxData.filter((row) => new Date(`${row.date}T00:00:00`) >= start);
+  return fxData.filter((row) => row.date >= bounds.start && row.date <= bounds.end);
 }
 
 function latestWith(field) {
@@ -785,6 +937,7 @@ function renderFxChart() {
   const secondarySeries = fxSeries[1];
   const primaryValues = primarySeries ? rows.map((row) => row[primarySeries.field]) : [];
   const secondaryValues = secondarySeries ? rows.map((row) => row[secondarySeries.field]) : [];
+  const xBounds = getFxXBounds();
   const yaxis = primarySeries
     ? {
         title: { text: primarySeries.axisTitle, font: { color: primarySeries.color } },
@@ -835,6 +988,9 @@ function renderFxChart() {
       },
       legend: { orientation: "h", x: 0, y: 1.14 },
       xaxis: {
+        range: xBounds ? [xBounds.start, xBounds.end] : undefined,
+        minallowed: xBounds?.start,
+        maxallowed: xBounds?.end,
         showgrid: false,
         tickformat: "%Y/%-m",
         hoverformat: "%Y/%-m/%-d",
@@ -846,7 +1002,9 @@ function renderFxChart() {
       dragmode: getChartDragMode(),
     },
     getPlotlyConfig(),
-  );
+  ).then(() => {
+    setupBoundedXAxis(fxChartElement, getFxXBounds);
+  });
 }
 
 function renderFx() {
@@ -1081,3 +1239,11 @@ loadFxData()
   .catch((error) => {
     setFxText("fx-updated", error.message);
   });
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch((error) => {
+      console.warn("Service worker registration failed:", error);
+    });
+  });
+}
