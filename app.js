@@ -132,6 +132,9 @@ let fxColors = loadStoredColors(
 );
 
 const clampingCharts = new WeakSet();
+const longPressTimers = new WeakMap();
+const longPressMoveLimit = 12;
+const longPressDelayMs = 700;
 
 const statusClassNames = {
   "Up to date": "up-to-date",
@@ -461,6 +464,54 @@ function clearNotice() {
   selectionNoticeText.textContent = "";
 }
 
+function showCopyToast(message) {
+  let toast = document.getElementById("copy-toast");
+
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "copy-toast";
+    toast.className = "copy-toast";
+    toast.setAttribute("role", "status");
+    toast.setAttribute("aria-live", "polite");
+    document.body.appendChild(toast);
+  }
+
+  toast.textContent = message;
+  toast.classList.add("show");
+  window.clearTimeout(showCopyToast.timeoutId);
+  showCopyToast.timeoutId = window.setTimeout(() => {
+    toast.classList.remove("show");
+  }, 1400);
+}
+
+async function copyText(text) {
+  const clipboard = globalThis.navigator?.clipboard;
+
+  if (clipboard?.writeText && window.isSecureContext) {
+    await clipboard.writeText(text);
+    return;
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.top = "0";
+  textarea.style.left = "-9999px";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  textarea.setSelectionRange(0, textarea.value.length);
+
+  const copied = typeof document.execCommand === "function" && document.execCommand("copy");
+  textarea.remove();
+
+  if (!copied) {
+    throw new Error("Copy command failed.");
+  }
+}
+
 function percentile(values, p) {
   const sorted = [...values].sort((a, b) => a - b);
   const index = (sorted.length - 1) * p;
@@ -533,6 +584,322 @@ function clampDateRange(nextStart, nextEnd, bounds) {
   end = Math.min(end, max);
 
   return [toIsoDate(new Date(start)), toIsoDate(new Date(end))];
+}
+
+function addDays(dateText, days) {
+  const date = toDate(dateText);
+  date.setDate(date.getDate() + days);
+  return toIsoDate(date);
+}
+
+function findNearestRow(rows, targetDateText, valueField = "value") {
+  const target = Date.parse(`${targetDateText}T00:00:00`);
+  let nearest = null;
+  let smallestDistance = Infinity;
+
+  rows.forEach((row) => {
+    const value = row[valueField];
+    const rowTime = Date.parse(`${row.date}T00:00:00`);
+
+    if (!Number.isFinite(value) || !Number.isFinite(rowTime)) {
+      return;
+    }
+
+    const distance = Math.abs(rowTime - target);
+
+    if (distance < smallestDistance) {
+      nearest = row;
+      smallestDistance = distance;
+    }
+  });
+
+  return nearest;
+}
+
+function formatPromptValue(value, decimals, suffix = "") {
+  return `${Number(value).toFixed(decimals)}${suffix}`;
+}
+
+function formatPromptSeriesLine({ name, unit, rows, dateText, valueField, decimals, suffix }) {
+  const nearest = findNearestRow(rows, dateText, valueField);
+
+  if (!nearest) {
+    return `- ${name}: no available observation near ${dateText}.`;
+  }
+
+  const prior = findNearestRow(rows, addDays(nearest.date, -30), valueField);
+  const after = findNearestRow(rows, addDays(nearest.date, 30), valueField);
+  const parts = [
+    `- ${name}: ${formatPromptValue(nearest[valueField], decimals, suffix)} on ${nearest.date} (${unit})`,
+  ];
+
+  if (prior && prior.date !== nearest.date) {
+    const change = nearest[valueField] - prior[valueField];
+    parts.push(
+      `  - roughly 1M before: ${formatPromptValue(prior[valueField], decimals, suffix)} on ${prior.date}; change to selected point: ${formatPromptValue(change, decimals, suffix)}`,
+    );
+  }
+
+  if (after && after.date !== nearest.date) {
+    const change = after[valueField] - nearest[valueField];
+    parts.push(
+      `  - roughly 1M after: ${formatPromptValue(after[valueField], decimals, suffix)} on ${after.date}; change after selected point: ${formatPromptValue(change, decimals, suffix)}`,
+    );
+  }
+
+  return parts.join("\n");
+}
+
+function normalizePlotlyDate(value) {
+  if (value instanceof Date && Number.isFinite(value.getTime())) {
+    return toIsoDate(value);
+  }
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return toIsoDate(new Date(value));
+  }
+
+  if (typeof value === "string") {
+    const time = Date.parse(value);
+
+    if (Number.isFinite(time)) {
+      return toIsoDate(new Date(time));
+    }
+  }
+
+  return null;
+}
+
+function getDateFromChartPointer(chartNode, event) {
+  const fullLayout = chartNode?._fullLayout;
+  const xaxis = fullLayout?.xaxis;
+  const plotSize = fullLayout?._size;
+  const rect = chartNode.getBoundingClientRect();
+
+  if (xaxis?.p2d && plotSize) {
+    const xPixel = Math.min(Math.max(event.clientX - rect.left - plotSize.l, 0), plotSize.w);
+    const plotlyDate = xaxis.p2d(xPixel);
+    const normalizedDate = normalizePlotlyDate(plotlyDate);
+
+    if (normalizedDate) {
+      return normalizedDate;
+    }
+  }
+
+  const start = chartNode.dataset.promptStart;
+  const end = chartNode.dataset.promptEnd;
+
+  if (start && end) {
+    const left = plotSize ? rect.left + plotSize.l : rect.left;
+    const width = plotSize?.w || rect.width;
+    const ratio = Math.min(Math.max((event.clientX - left) / width, 0), 1);
+    const startTime = Date.parse(`${start}T00:00:00`);
+    const endTime = Date.parse(`${end}T00:00:00`);
+
+    if (Number.isFinite(startTime) && Number.isFinite(endTime)) {
+      return toIsoDate(new Date(startTime + (endTime - startTime) * ratio));
+    }
+  }
+
+  return chartNode.dataset.promptDate || null;
+}
+
+function buildMacroPrompt(dateText) {
+  const selected = axisOrder.slice(0, 2);
+  const lines = selected.map((id) => {
+    const indicator = getIndicator(id);
+    return formatPromptSeriesLine({
+      name: indicator.name,
+      unit: indicator.unitLabel,
+      rows: indicatorData.get(id) || [],
+      dateText,
+      valueField: "value",
+      decimals: indicator.decimals,
+      suffix: indicator.valueSuffix,
+    });
+  });
+
+  return [
+    "Market indicator analysis request",
+    "",
+    `Selected date: ${dateText}`,
+    `Dashboard section: Macro`,
+    `Visible range selected in dashboard: ${activeRange}`,
+    `Selected indicators: ${selected.map((id) => getIndicator(id).name).join(", ") || "none"}`,
+    "",
+    "Nearest actual observations from the dashboard CSV files:",
+    lines.join("\n"),
+    "",
+    "Please explain what was happening around this date and why these indicators may have moved up or down.",
+    "Use historical macro/market context, mention uncertainty, and avoid implying causation when the evidence is only correlation.",
+  ].join("\n");
+}
+
+function buildFxPrompt(dateText) {
+  const seriesDefinitions = [
+    {
+      id: "USDJPY",
+      name: "USD/JPY",
+      unit: "Exchange Rate",
+      field: "USDJPY",
+      decimals: 2,
+      suffix: "",
+    },
+    {
+      id: "US_Japan_2Y_Spread",
+      name: "US-JP 2Y Spread",
+      unit: "Percentage Points",
+      field: "US_Japan_2Y_Spread",
+      decimals: 2,
+      suffix: " pp",
+    },
+  ].filter((series) => visibleFxSeries.has(series.id));
+
+  const lines = seriesDefinitions.map((series) =>
+    formatPromptSeriesLine({
+      name: series.name,
+      unit: series.unit,
+      rows: fxData,
+      dateText,
+      valueField: series.field,
+      decimals: series.decimals,
+      suffix: series.suffix,
+    }),
+  );
+
+  return [
+    "Market indicator analysis request",
+    "",
+    `Selected date: ${dateText}`,
+    `Dashboard section: FX`,
+    `Visible range selected in dashboard: ${activeFxRange}`,
+    `Selected indicators: ${seriesDefinitions.map((series) => series.name).join(", ") || "none"}`,
+    "",
+    "Nearest actual observations from the dashboard CSV files:",
+    lines.join("\n"),
+    "",
+    "Please explain what was happening around this date and why these indicators may have moved up or down.",
+    "For USD/JPY and the US-JP 2Y spread, discuss rate differentials, central bank expectations, risk sentiment, and any major market events around the date.",
+  ].join("\n");
+}
+
+function setupPromptCopy(chartNode, buildPrompt) {
+  if (!chartNode || typeof chartNode.addEventListener !== "function" || chartNode.dataset.promptCopyReady === "true") {
+    return;
+  }
+
+  chartNode.dataset.promptCopyReady = "true";
+
+  if (typeof chartNode.on === "function") {
+    chartNode.on("plotly_hover", (eventData) => {
+      const hoveredDate = normalizePlotlyDate(eventData?.points?.[0]?.x);
+
+      if (hoveredDate) {
+        chartNode.dataset.promptDate = hoveredDate;
+      }
+    });
+  }
+
+  function clearLongPress() {
+    const timer = longPressTimers.get(chartNode);
+
+    if (timer?.timeoutId) {
+      window.clearTimeout(timer.timeoutId);
+    }
+
+    longPressTimers.delete(chartNode);
+  }
+
+  function startLongPress(event, clientX, clientY) {
+    clearLongPress();
+    const timeoutId = window.setTimeout(async () => {
+      const dateText = getDateFromChartPointer(chartNode, { clientX, clientY });
+
+      if (!dateText) {
+        showCopyToast("Copy failed");
+        clearLongPress();
+        return;
+      }
+
+      try {
+        await copyText(buildPrompt(dateText));
+        showCopyToast("Copied");
+      } catch {
+        showCopyToast("Copy failed");
+      } finally {
+        clearLongPress();
+      }
+    }, longPressDelayMs);
+
+    longPressTimers.set(chartNode, { timeoutId, startX: clientX, startY: clientY });
+  }
+
+  chartNode.addEventListener("pointerdown", (event) => {
+    if (event.button && event.button !== 0) {
+      return;
+    }
+
+    startLongPress(event, event.clientX, event.clientY);
+  });
+
+  function cancelWhenMoved(clientX, clientY) {
+    const timer = longPressTimers.get(chartNode);
+
+    if (!timer) {
+      return;
+    }
+
+    const moved = Math.hypot(clientX - timer.startX, clientY - timer.startY);
+
+    if (moved > longPressMoveLimit) {
+      clearLongPress();
+    }
+  }
+
+  chartNode.addEventListener("pointermove", (event) => {
+    cancelWhenMoved(event.clientX, event.clientY);
+  });
+
+  chartNode.addEventListener(
+    "touchstart",
+    (event) => {
+      if (event.touches.length !== 1) {
+        clearLongPress();
+        return;
+      }
+
+      const touch = event.touches[0];
+      startLongPress(event, touch.clientX, touch.clientY);
+    },
+    { passive: true },
+  );
+
+  chartNode.addEventListener(
+    "touchmove",
+    (event) => {
+      if (event.touches.length !== 1) {
+        clearLongPress();
+        return;
+      }
+
+      const touch = event.touches[0];
+      cancelWhenMoved(touch.clientX, touch.clientY);
+    },
+    { passive: true },
+  );
+
+  chartNode.addEventListener("touchend", clearLongPress);
+  chartNode.addEventListener("touchcancel", clearLongPress);
+
+  chartNode.addEventListener("contextmenu", (event) => {
+    if (longPressTimers.has(chartNode)) {
+      event.preventDefault();
+    }
+  });
+
+  ["pointerup", "pointercancel", "pointerleave"].forEach((eventName) => {
+    chartNode.addEventListener(eventName, clearLongPress);
+  });
 }
 
 function setupBoundedXAxis(chartNode, getBounds) {
@@ -784,7 +1151,13 @@ function renderChart() {
 
   if (chartElement && window.Plotly) {
     Plotly.react(chartElement, traces, layout, getPlotlyConfig()).then(() => {
+      if (xBounds) {
+        chartElement.dataset.promptStart = xBounds.start;
+        chartElement.dataset.promptEnd = xBounds.end;
+      }
+
       setupBoundedXAxis(chartElement, getMacroXBounds);
+      setupPromptCopy(chartElement, buildMacroPrompt);
     });
   }
 }
@@ -1048,7 +1421,13 @@ function renderFxChart() {
     },
     getPlotlyConfig(),
   ).then(() => {
+    if (xBounds) {
+      fxChartElement.dataset.promptStart = xBounds.start;
+      fxChartElement.dataset.promptEnd = xBounds.end;
+    }
+
     setupBoundedXAxis(fxChartElement, getFxXBounds);
+    setupPromptCopy(fxChartElement, buildFxPrompt);
   });
 }
 
