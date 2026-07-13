@@ -135,6 +135,8 @@ const clampingCharts = new WeakSet();
 const longPressTimers = new WeakMap();
 const longPressMoveLimit = 12;
 const longPressDelayMs = 700;
+const turningPointLookbackDays = 365;
+const turningPointLookaheadDays = 365;
 
 const statusClassNames = {
   "Up to date": "up-to-date",
@@ -630,34 +632,221 @@ function formatPromptValue(value, decimals, suffix = "") {
   return `${Number(value).toFixed(decimals)}${suffix}`;
 }
 
-function formatPromptSeriesLine({ name, unit, rows, dateText, valueField, decimals, suffix }) {
+function daysBetween(firstDateText, secondDateText) {
+  const first = Date.parse(`${firstDateText}T00:00:00`);
+  const second = Date.parse(`${secondDateText}T00:00:00`);
+
+  if (!Number.isFinite(first) || !Number.isFinite(second)) {
+    return null;
+  }
+
+  return Math.round((second - first) / 86400000);
+}
+
+function formatSignedNumber(value, decimals, suffix = "") {
+  const sign = value > 0 ? "+" : "";
+  return `${sign}${formatPromptValue(value, decimals, suffix)}`;
+}
+
+function formatMove(fromRow, toRow, valueField, decimals, suffix = "") {
+  if (!fromRow || !toRow || fromRow.date === toRow.date) {
+    return "not enough data to calculate a move";
+  }
+
+  const change = toRow[valueField] - fromRow[valueField];
+  const days = Math.abs(daysBetween(fromRow.date, toRow.date));
+  const pctChange =
+    fromRow[valueField] !== 0 && Number.isFinite(fromRow[valueField])
+      ? ` (${formatSignedNumber((change / Math.abs(fromRow[valueField])) * 100, 1, "%")})`
+      : "";
+
+  return `${formatSignedNumber(change, decimals, suffix)}${pctChange} over ${days} days`;
+}
+
+function getRowsWithinWindow(rows, dateText, beforeDays, afterDays, valueField) {
+  const start = addDays(dateText, -beforeDays);
+  const end = addDays(dateText, afterDays);
+
+  return rows.filter((row) => row.date >= start && row.date <= end && Number.isFinite(row[valueField]));
+}
+
+function medianDayGap(rows) {
+  const gaps = rows
+    .slice(1)
+    .map((row, index) => Math.abs(daysBetween(rows[index].date, row.date)))
+    .filter((gap) => Number.isFinite(gap) && gap > 0)
+    .sort((a, b) => a - b);
+
+  if (gaps.length === 0) {
+    return 30;
+  }
+
+  return gaps[Math.floor(gaps.length / 2)];
+}
+
+function getTurningWindowSize(rows) {
+  const gap = medianDayGap(rows);
+
+  if (gap >= 20) {
+    return 3;
+  }
+
+  if (gap >= 5) {
+    return 8;
+  }
+
+  return 21;
+}
+
+function getTurningPointCandidates(rows, valueField) {
+  if (rows.length < 5) {
+    return [];
+  }
+
+  const windowSize = Math.min(getTurningWindowSize(rows), Math.max(1, Math.floor((rows.length - 1) / 2)));
+  const values = rows.map((row) => row[valueField]).filter(Number.isFinite);
+  const fullRange = Math.max(...values) - Math.min(...values) || Math.max(Math.abs(values[0] || 1), 1);
+  const candidates = [];
+
+  for (let index = 0; index < rows.length; index += 1) {
+    const startIndex = Math.max(0, index - windowSize);
+    const endIndex = Math.min(rows.length - 1, index + windowSize);
+    const segment = rows.slice(startIndex, endIndex + 1);
+    const value = rows[index][valueField];
+    const segmentValues = segment.map((row) => row[valueField]);
+    const segmentMin = Math.min(...segmentValues);
+    const segmentMax = Math.max(...segmentValues);
+    const segmentRange = segmentMax - segmentMin;
+
+    if (segmentRange <= fullRange * 0.015) {
+      continue;
+    }
+
+    if (value === segmentMax && value > segmentMin) {
+      candidates.push({
+        ...rows[index],
+        type: "local high",
+        score: segmentRange / fullRange,
+      });
+    } else if (value === segmentMin && value < segmentMax) {
+      candidates.push({
+        ...rows[index],
+        type: "local low",
+        score: segmentRange / fullRange,
+      });
+    }
+  }
+
+  return candidates.filter((candidate, index, allCandidates) => {
+    const previous = allCandidates[index - 1];
+    return !previous || previous.type !== candidate.type || Math.abs(daysBetween(previous.date, candidate.date)) > 7;
+  });
+}
+
+function pickNearestTurningPoint(candidates, dateText) {
+  return [...candidates].sort((a, b) => {
+    const distanceA = Math.abs(daysBetween(dateText, a.date));
+    const distanceB = Math.abs(daysBetween(dateText, b.date));
+
+    if (distanceA !== distanceB) {
+      return distanceA - distanceB;
+    }
+
+    return b.score - a.score;
+  })[0];
+}
+
+function pickImportantTurningPoint(candidates) {
+  return [...candidates].sort((a, b) => {
+    if (b.score !== a.score) {
+      return b.score - a.score;
+    }
+
+    return a.date.localeCompare(b.date);
+  })[0];
+}
+
+function analyzeTurningPoints({ name, unit, rows, dateText, valueField, decimals, suffix }) {
   const nearest = findNearestRow(rows, dateText, valueField);
 
   if (!nearest) {
-    return `- ${name}: no available observation near ${dateText}.`;
+    return {
+      name,
+      nearest,
+      turningPoint: null,
+      line: `- ${name}: no available observation near ${dateText}.`,
+    };
   }
 
-  const prior = findNearestRow(rows, addDays(nearest.date, -30), valueField);
-  const after = findNearestRow(rows, addDays(nearest.date, 30), valueField);
+  const windowRows = getRowsWithinWindow(rows, dateText, turningPointLookbackDays, turningPointLookaheadDays, valueField);
+  const analysisRows = windowRows.length > 0 ? windowRows : [nearest];
+  const candidates = getTurningPointCandidates(windowRows, valueField);
+  const turningPoint =
+    pickNearestTurningPoint(candidates, nearest.date) ||
+    pickImportantTurningPoint([
+      {
+        ...analysisRows.reduce((min, row) => (row[valueField] < min[valueField] ? row : min), analysisRows[0]),
+        type: "window low",
+        score: 0,
+      },
+      {
+        ...analysisRows.reduce((max, row) => (row[valueField] > max[valueField] ? row : max), analysisRows[0]),
+        type: "window high",
+        score: 0,
+      },
+    ].filter(Boolean));
+  const priorTurningPoint = pickImportantTurningPoint(
+    candidates.filter((candidate) => candidate.date < nearest.date && Math.abs(daysBetween(candidate.date, nearest.date)) <= turningPointLookbackDays),
+  );
+  const nextTurningPoint = pickImportantTurningPoint(
+    candidates.filter((candidate) => candidate.date > nearest.date && Math.abs(daysBetween(nearest.date, candidate.date)) <= turningPointLookaheadDays),
+  );
   const parts = [
     `- ${name}: ${formatPromptValue(nearest[valueField], decimals, suffix)} on ${nearest.date} (${unit})`,
   ];
 
-  if (prior && prior.date !== nearest.date) {
-    const change = nearest[valueField] - prior[valueField];
+  if (turningPoint) {
     parts.push(
-      `  - roughly 1M before: ${formatPromptValue(prior[valueField], decimals, suffix)} on ${prior.date}; change to selected point: ${formatPromptValue(change, decimals, suffix)}`,
+      `  - nearest turning point within +/- 1Y: ${turningPoint.type || "turning point"} on ${turningPoint.date}, ${formatPromptValue(turningPoint[valueField], decimals, suffix)} (${Math.abs(daysBetween(nearest.date, turningPoint.date))} days from selected observation)`,
     );
   }
 
-  if (after && after.date !== nearest.date) {
-    const change = after[valueField] - nearest[valueField];
+  if (priorTurningPoint) {
     parts.push(
-      `  - roughly 1M after: ${formatPromptValue(after[valueField], decimals, suffix)} on ${after.date}; change after selected point: ${formatPromptValue(change, decimals, suffix)}`,
+      `  - important prior turning point within 1Y: ${priorTurningPoint.type} on ${priorTurningPoint.date}, ${formatPromptValue(priorTurningPoint[valueField], decimals, suffix)}; move to selected observation: ${formatMove(priorTurningPoint, nearest, valueField, decimals, suffix)}`,
     );
   }
 
-  return parts.join("\n");
+  if (nextTurningPoint) {
+    parts.push(
+      `  - important next turning point within 1Y: ${nextTurningPoint.type} on ${nextTurningPoint.date}, ${formatPromptValue(nextTurningPoint[valueField], decimals, suffix)}; move from selected observation: ${formatMove(nearest, nextTurningPoint, valueField, decimals, suffix)}`,
+    );
+  }
+
+  return {
+    name,
+    nearest,
+    turningPoint,
+    line: parts.join("\n"),
+  };
+}
+
+function formatLeadLag(analyses) {
+  if (analyses.length !== 2 || !analyses[0].turningPoint || !analyses[1].turningPoint) {
+    return "Lead/lag: not enough turning point information for both selected indicators.";
+  }
+
+  const [first, second] = analyses;
+  const lagDays = daysBetween(first.turningPoint.date, second.turningPoint.date);
+
+  if (lagDays === 0) {
+    return `Lead/lag: ${first.name} and ${second.name} had nearest turning points on the same date (${first.turningPoint.date}).`;
+  }
+
+  const leader = lagDays > 0 ? first : second;
+  const follower = lagDays > 0 ? second : first;
+
+  return `Lead/lag: ${leader.name} turned ${Math.abs(lagDays)} days before ${follower.name} (${leader.turningPoint.date} vs ${follower.turningPoint.date}).`;
 }
 
 function normalizePlotlyDate(value) {
@@ -716,9 +905,9 @@ function getDateFromChartPointer(chartNode, event) {
 
 function buildMacroPrompt(dateText) {
   const selected = axisOrder.slice(0, 2);
-  const lines = selected.map((id) => {
+  const analyses = selected.map((id) => {
     const indicator = getIndicator(id);
-    return formatPromptSeriesLine({
+    return analyzeTurningPoints({
       name: indicator.name,
       unit: indicator.unitLabel,
       rows: indicatorData.get(id) || [],
@@ -737,10 +926,15 @@ function buildMacroPrompt(dateText) {
     `Visible range selected in dashboard: ${activeRange}`,
     `Selected indicators: ${selected.map((id) => getIndicator(id).name).join(", ") || "none"}`,
     "",
-    "Nearest actual observations from the dashboard CSV files:",
-    lines.join("\n"),
+    "Turning point scan:",
+    "- The dashboard searched up to 1 year before and 1 year after the selected date.",
+    "- Turning points are detected from actual observations only; no forward fill or interpolation is used.",
+    analyses.map((analysis) => analysis.line).join("\n"),
+    "",
+    formatLeadLag(analyses),
     "",
     "Please explain what was happening around this date and why these indicators may have moved up or down.",
+    "Pay attention to the detected turning points and any lead/lag between the selected indicators.",
     "Use historical macro/market context, mention uncertainty, and avoid implying causation when the evidence is only correlation.",
   ].join("\n");
 }
@@ -765,8 +959,8 @@ function buildFxPrompt(dateText) {
     },
   ].filter((series) => visibleFxSeries.has(series.id));
 
-  const lines = seriesDefinitions.map((series) =>
-    formatPromptSeriesLine({
+  const analyses = seriesDefinitions.map((series) =>
+    analyzeTurningPoints({
       name: series.name,
       unit: series.unit,
       rows: fxData,
@@ -785,10 +979,15 @@ function buildFxPrompt(dateText) {
     `Visible range selected in dashboard: ${activeFxRange}`,
     `Selected indicators: ${seriesDefinitions.map((series) => series.name).join(", ") || "none"}`,
     "",
-    "Nearest actual observations from the dashboard CSV files:",
-    lines.join("\n"),
+    "Turning point scan:",
+    "- The dashboard searched up to 1 year before and 1 year after the selected date.",
+    "- Turning points are detected from actual observations only; no forward fill or interpolation is used.",
+    analyses.map((analysis) => analysis.line).join("\n"),
+    "",
+    formatLeadLag(analyses),
     "",
     "Please explain what was happening around this date and why these indicators may have moved up or down.",
+    "Pay attention to the detected turning points and any lead/lag between the selected indicators.",
     "For USD/JPY and the US-JP 2Y spread, discuss rate differentials, central bank expectations, risk sentiment, and any major market events around the date.",
   ].join("\n");
 }
