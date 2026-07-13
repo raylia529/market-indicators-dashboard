@@ -1161,14 +1161,24 @@ function renderIndicatorLinks(indicator) {
   const validSources = sourceUrls.filter((source) => source?.url);
 
   if (validSources.length === 0) {
-    return `<strong>${escapeHtml(indicator.display_name)}</strong>`;
+    return `<strong>
+      <span class="status-name-full">${escapeHtml(indicator.display_name)}</span>
+      <span class="status-name-short">${escapeHtml(indicator.short_name || indicator.display_name)}</span>
+    </strong>`;
   }
 
   return validSources
     .map(
       (source, index) => `
         <a class="indicator-source-link" href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">
-          ${index === 0 ? `<strong>${escapeHtml(indicator.display_name)}</strong>` : escapeHtml(source.label || "Additional source")}
+          ${
+            index === 0
+              ? `<strong>
+                  <span class="status-name-full">${escapeHtml(indicator.display_name)}</span>
+                  <span class="status-name-short">${escapeHtml(indicator.short_name || indicator.display_name)}</span>
+                </strong>`
+              : escapeHtml(source.label || "Additional source")
+          }
         </a>
       `,
     )
@@ -1209,6 +1219,10 @@ function renderDataStatus(metadata) {
           <tr>
             <td>
               <div class="indicator-source-links">${renderIndicatorLinks(indicator)}</div>
+              <div class="status-mobile-meta">
+                <span><strong>Latest</strong> ${escapeHtml(indicator.latest_available_date || "--")}</span>
+                ${renderStatusBadge(indicator.status)}
+              </div>
               ${formula}
               ${releaseNote}
               ${errorDetails}

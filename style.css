@@ -589,6 +589,11 @@ h2 {
   text-decoration: underline;
 }
 
+.status-name-short,
+.status-mobile-meta {
+  display: none;
+}
+
 .data-status-badge {
   display: inline-flex;
   align-items: center;
@@ -666,7 +671,72 @@ h2 {
   }
 
   .data-status-table-wrap {
-    margin: 0 -2px;
+    margin: 14px 0 0;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  .data-status-table {
+    display: block;
+    min-width: 0;
+    font-size: 0.88rem;
+  }
+
+  .data-status-table colgroup,
+  .data-status-table thead {
+    display: none;
+  }
+
+  .data-status-table tbody {
+    display: grid;
+    gap: 8px;
+  }
+
+  .data-status-table tr {
+    display: block;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+  }
+
+  .data-status-table td {
+    display: none;
+    border: 0;
+  }
+
+  .data-status-table td:first-child {
+    display: block;
+    padding: 14px;
+  }
+
+  .status-name-full {
+    display: none;
+  }
+
+  .status-name-short {
+    display: inline;
+    color: var(--ink);
+    font-size: 1rem;
+  }
+
+  .status-mobile-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 9px;
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+
+  .status-mobile-meta > span:first-child {
+    white-space: nowrap;
+  }
+
+  .data-status-table .formula-text,
+  .indicator-source-link:not(:first-child) {
+    display: none;
   }
 
   .tab-bar {

@@ -10,6 +10,7 @@ const indicatorDefinitions = [
   {
     key: "SP500",
     displayName: "S&P 500 Index",
+    shortName: "S&P 500",
     sourceName: "FRED SP500",
     sourceUrl: "https://fred.stlouisfed.org/series/SP500",
     sourceUrls: [{ label: "FRED SP500", url: "https://fred.stlouisfed.org/series/SP500" }],
@@ -21,6 +22,7 @@ const indicatorDefinitions = [
   {
     key: "VIXCLS",
     displayName: "CBOE Volatility Index (VIX)",
+    shortName: "VIX",
     sourceName: "FRED",
     sourceUrl: "https://fred.stlouisfed.org/series/VIXCLS",
     sourceUrls: [{ label: "FRED VIXCLS", url: "https://fred.stlouisfed.org/series/VIXCLS" }],
@@ -32,6 +34,7 @@ const indicatorDefinitions = [
   {
     key: "BAMLH0A0HYM2",
     displayName: "ICE BofA US High Yield Index Option-Adjusted Spread",
+    shortName: "HY OAS",
     sourceName: "FRED",
     sourceUrl: "https://fred.stlouisfed.org/series/BAMLH0A0HYM2",
     sourceUrls: [{ label: "FRED BAMLH0A0HYM2", url: "https://fred.stlouisfed.org/series/BAMLH0A0HYM2" }],
@@ -43,6 +46,7 @@ const indicatorDefinitions = [
   {
     key: "DGS10",
     displayName: "US 10-Year Treasury Yield",
+    shortName: "US 10Y Yield",
     sourceName: "FRED",
     sourceUrl: "https://fred.stlouisfed.org/series/DGS10",
     sourceUrls: [{ label: "FRED DGS10", url: "https://fred.stlouisfed.org/series/DGS10" }],
@@ -54,6 +58,7 @@ const indicatorDefinitions = [
   {
     key: "T10Y2Y",
     displayName: "US Treasury 10-Year Minus 2-Year Yield Spread",
+    shortName: "10Y-2Y Spread",
     sourceName: "FRED",
     sourceUrl: "https://fred.stlouisfed.org/series/T10Y2Y",
     sourceUrls: [{ label: "FRED T10Y2Y", url: "https://fred.stlouisfed.org/series/T10Y2Y" }],
@@ -65,6 +70,7 @@ const indicatorDefinitions = [
   {
     key: "FINRA_MARGIN_DEBT_YOY",
     displayName: "FINRA Margin Debt Year-over-Year Growth",
+    shortName: "Margin Debt YoY",
     sourceName: "FINRA Margin Statistics",
     sourceUrl: "https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics",
     sourceUrls: [
@@ -81,6 +87,7 @@ const indicatorDefinitions = [
   {
     key: "DEXJPUS",
     displayName: "USD/JPY Exchange Rate",
+    shortName: "USD/JPY",
     sourceName: "FRED + Yahoo Finance gap fill",
     sourceUrl: "https://fred.stlouisfed.org/series/DEXJPUS",
     sourceUrls: [
@@ -97,6 +104,7 @@ const indicatorDefinitions = [
   {
     key: "DGS2",
     displayName: "US 2-Year Treasury Yield",
+    shortName: "US 2Y Yield",
     sourceName: "FRED",
     sourceUrl: "https://fred.stlouisfed.org/series/DGS2",
     sourceUrls: [{ label: "FRED DGS2", url: "https://fred.stlouisfed.org/series/DGS2" }],
@@ -109,6 +117,7 @@ const indicatorDefinitions = [
   {
     key: "JAPAN_2Y_JGB",
     displayName: "Japan 2-Year JGB Yield",
+    shortName: "Japan 2Y Yield",
     sourceName: "Japan Ministry of Finance",
     sourceUrl: "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/",
     sourceUrls: [
@@ -126,6 +135,7 @@ const indicatorDefinitions = [
   {
     key: "US_JAPAN_2Y_SPREAD",
     displayName: "US-Japan 2-Year Government Bond Yield Spread",
+    shortName: "US-JP 2Y Spread",
     sourceName: "Calculated",
     sourceUrl: "https://fred.stlouisfed.org/series/DGS2",
     sourceUrls: [
@@ -351,6 +361,7 @@ function buildMetadata() {
 
     indicators[definition.key] = {
       display_name: definition.displayName,
+      short_name: definition.shortName,
       source_name: definition.sourceName,
       source_url: definition.sourceUrl,
       source_urls: definition.sourceUrls,
