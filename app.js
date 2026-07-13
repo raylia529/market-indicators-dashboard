@@ -137,6 +137,10 @@ const longPressMoveLimit = 12;
 const longPressDelayMs = 700;
 const turningPointLookbackDays = 365;
 const turningPointLookaheadDays = 365;
+const marginDebtExtremeThresholds = {
+  high: 45,
+  low: -25,
+};
 
 const statusClassNames = {
   "Up to date": "up-to-date",
@@ -766,7 +770,35 @@ function pickImportantTurningPoint(candidates) {
   })[0];
 }
 
-function analyzeTurningPoints({ name, unit, rows, dateText, valueField, decimals, suffix }) {
+function formatMarginDebtExtremeLine(windowRows) {
+  const highRows = windowRows.filter((row) => row.value >= marginDebtExtremeThresholds.high);
+  const lowRows = windowRows.filter((row) => row.value <= marginDebtExtremeThresholds.low);
+  const parts = [];
+
+  if (highRows.length > 0) {
+    const peak = highRows.reduce((max, row) => (row.value > max.value ? row : max), highRows[0]);
+    parts.push(
+      `  - Margin Debt YoY expansion zone: crossed above ${marginDebtExtremeThresholds.high}% ${highRows.length} time(s) within +/- 1Y; highest was ${formatPromptValue(peak.value, 1, "%")} on ${peak.date}`,
+    );
+  }
+
+  if (lowRows.length > 0) {
+    const trough = lowRows.reduce((min, row) => (row.value < min.value ? row : min), lowRows[0]);
+    parts.push(
+      `  - Margin Debt YoY contraction zone: crossed below ${marginDebtExtremeThresholds.low}% ${lowRows.length} time(s) within +/- 1Y; lowest was ${formatPromptValue(trough.value, 1, "%")} on ${trough.date}`,
+    );
+  }
+
+  if (parts.length === 0) {
+    parts.push(
+      `  - Margin Debt YoY did not cross the ${marginDebtExtremeThresholds.high}% expansion or ${marginDebtExtremeThresholds.low}% contraction threshold within +/- 1Y.`,
+    );
+  }
+
+  return parts.join("\n");
+}
+
+function analyzeTurningPoints({ id, name, unit, rows, dateText, valueField, decimals, suffix }) {
   const nearest = findNearestRow(rows, dateText, valueField);
 
   if (!nearest) {
@@ -821,6 +853,10 @@ function analyzeTurningPoints({ name, unit, rows, dateText, valueField, decimals
     parts.push(
       `  - important next turning point within 1Y: ${nextTurningPoint.type} on ${nextTurningPoint.date}, ${formatPromptValue(nextTurningPoint[valueField], decimals, suffix)}; move from selected observation: ${formatMove(nearest, nextTurningPoint, valueField, decimals, suffix)}`,
     );
+  }
+
+  if (id === "margin-debt-yoy") {
+    parts.push(formatMarginDebtExtremeLine(windowRows));
   }
 
   return {
@@ -908,6 +944,7 @@ function buildMacroPrompt(dateText) {
   const analyses = selected.map((id) => {
     const indicator = getIndicator(id);
     return analyzeTurningPoints({
+      id: indicator.id,
       name: indicator.name,
       unit: indicator.unitLabel,
       rows: indicatorData.get(id) || [],
@@ -961,6 +998,7 @@ function buildFxPrompt(dateText) {
 
   const analyses = seriesDefinitions.map((series) =>
     analyzeTurningPoints({
+      id: series.id,
       name: series.name,
       unit: series.unit,
       rows: fxData,
@@ -1319,6 +1357,71 @@ function getYAxisLayout(side, indicator, rows) {
   return axis;
 }
 
+function getLinearAxisRange(axis) {
+  if (!axis || axis.type === "log" || !Array.isArray(axis.range)) {
+    return null;
+  }
+
+  const [first, second] = axis.range.map(Number);
+
+  if (!Number.isFinite(first) || !Number.isFinite(second)) {
+    return null;
+  }
+
+  return [Math.min(first, second), Math.max(first, second)];
+}
+
+function getMarginDebtThresholdShapes(selected, layout) {
+  const marginDebtIndex = selected.indexOf("margin-debt-yoy");
+
+  if (marginDebtIndex === -1) {
+    return [];
+  }
+
+  const axisName = marginDebtIndex === 0 ? "yaxis" : "yaxis2";
+  const yref = marginDebtIndex === 0 ? "y" : "y2";
+  const range = getLinearAxisRange(layout[axisName]);
+
+  if (!range) {
+    return [];
+  }
+
+  const [min, max] = range;
+  const shapes = [];
+
+  if (max > marginDebtExtremeThresholds.high) {
+    shapes.push({
+      type: "rect",
+      xref: "paper",
+      yref,
+      x0: 0,
+      x1: 1,
+      y0: Math.max(marginDebtExtremeThresholds.high, min),
+      y1: max,
+      fillcolor: "rgba(239, 68, 68, 0.14)",
+      line: { width: 0 },
+      layer: "below",
+    });
+  }
+
+  if (min < marginDebtExtremeThresholds.low) {
+    shapes.push({
+      type: "rect",
+      xref: "paper",
+      yref,
+      x0: 0,
+      x1: 1,
+      y0: min,
+      y1: Math.min(marginDebtExtremeThresholds.low, max),
+      fillcolor: "rgba(16, 185, 129, 0.14)",
+      line: { width: 0 },
+      layer: "below",
+    });
+  }
+
+  return shapes;
+}
+
 function renderChart() {
   validateMacroScale();
   const selected = axisOrder.slice(0, 2);
@@ -1389,6 +1492,8 @@ function renderChart() {
   if (secondIndicator) {
     layout.yaxis2 = getYAxisLayout("right", secondIndicator, secondRows);
   }
+
+  layout.shapes = getMarginDebtThresholdShapes(selected, layout);
 
   if (chartElement && window.Plotly) {
     Plotly.react(chartElement, traces, layout, getPlotlyConfig()).then(() => {

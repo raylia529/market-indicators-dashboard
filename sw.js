@@ -1,12 +1,12 @@
-const CACHE_VERSION = "market-dashboard-v12";
+const CACHE_VERSION = "market-dashboard-v13";
 const APP_SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 
 const APP_SHELL_ASSETS = [
   "./",
   "./index.html",
-  "./style.css?v=turning-points-1",
-  "./app.js?v=turning-points-1",
+  "./style.css?v=margin-debt-zones-1",
+  "./app.js?v=margin-debt-zones-1",
   "./manifest.json",
   "./offline.html",
   "./icons/icon-192.png?v=2",
