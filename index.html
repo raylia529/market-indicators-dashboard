@@ -9,10 +9,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>Market Indicators Dashboard</title>
     <link rel="manifest" href="manifest.json" />
-    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
-    <link rel="stylesheet" href="style.css?v=data-status" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2" />
+    <link rel="stylesheet" href="style.css?v=data-status-compact-2" />
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
-    <script src="app.js?v=data-status" defer></script>
+    <script src="app.js?v=data-status-compact-2" defer></script>
   </head>
   <body>
     <main class="dashboard-shell">
@@ -129,7 +129,7 @@
             </div>
             <div id="fx-chart" aria-label="Interactive FX chart"></div>
             <p class="compare-note">
-              Sources: FRED DEXJPUS, FRED DGS2, Japan Ministry of Finance JGB interest rate CSV.
+              Sources: FRED DEXJPUS with Yahoo Finance recent-date gap fill, FRED DGS2, and Japan Ministry of Finance.
             </p>
           </section>
         </div>
@@ -154,26 +154,25 @@
             <span id="data-status-updated">Loading metadata</span>
           </div>
 
-          <div class="status-summary-grid" id="status-summary-grid" aria-label="Dashboard data status summary">
-            <p class="loading-message">Loading data status...</p>
-          </div>
-
           <div class="data-status-table-wrap" aria-label="Data source status table">
             <table class="data-status-table">
+              <colgroup>
+                <col class="status-col-indicator" />
+                <col class="status-col-frequency" />
+                <col class="status-col-date" />
+                <col class="status-col-state" />
+              </colgroup>
               <thead>
                 <tr>
                   <th scope="col">Indicator</th>
-                  <th scope="col">Data Source</th>
-                  <th scope="col">Source URL</th>
                   <th scope="col">Update Frequency</th>
                   <th scope="col">Latest Available Date</th>
-                  <th scope="col">Last Successful Refresh</th>
                   <th scope="col">Status</th>
                 </tr>
               </thead>
               <tbody id="data-status-body">
                 <tr>
-                  <td colspan="7">Loading data status...</td>
+                  <td colspan="4">Loading data status...</td>
                 </tr>
               </tbody>
             </table>

@@ -81,14 +81,18 @@ const indicatorDefinitions = [
   {
     key: "DEXJPUS",
     displayName: "USD/JPY Exchange Rate",
-    sourceName: "FRED",
+    sourceName: "FRED + Yahoo Finance gap fill",
     sourceUrl: "https://fred.stlouisfed.org/series/DEXJPUS",
-    sourceUrls: [{ label: "FRED DEXJPUS", url: "https://fred.stlouisfed.org/series/DEXJPUS" }],
-    frequency: "Daily, forex trading days",
+    sourceUrls: [
+      { label: "FRED DEXJPUS", url: "https://fred.stlouisfed.org/series/DEXJPUS" },
+      { label: "Yahoo Finance JPY=X", url: "https://finance.yahoo.com/quote/JPY%3DX/history/" },
+    ],
+    frequency: "Daily forex trading days",
+    releaseNote: "FRED remains the official historical source. Yahoo Finance only fills recent dates that FRED has not published yet.",
     file: "data/fx.csv",
     type: "fx",
     column: "USDJPY",
-    dailyLagDays: 7,
+    dailyLagDays: 4,
   },
   {
     key: "DGS2",
@@ -301,17 +305,18 @@ function calculateStatus(definition, latestAvailableDate, updateResult, todayTex
 
   if (definition.key === "FINRA_MARGIN_DEBT_YOY") {
     if (isFinraWaitingForRelease(latestAvailableDate, todayText)) {
-      return "Waiting for next official release";
+      return "Waiting";
     }
 
     return dateDiffDays(latestAvailableDate, todayText) > 70 ? "Stale data" : "Up to date";
   }
 
   const lagDays = dateDiffDays(latestAvailableDate, todayText);
+
   const dailyLagDays = definition.dailyLagDays ?? 5;
 
   if (lagDays <= dailyLagDays) {
-    return lagDays <= 2 ? "Up to date" : "Waiting for next official release";
+    return lagDays <= 2 ? "Up to date" : "Waiting";
   }
 
   return "Stale data";

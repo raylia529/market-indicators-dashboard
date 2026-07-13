@@ -108,7 +108,6 @@ const fxChartElement = document.getElementById("fx-chart");
 const fxRangeButtons = Array.from(document.querySelectorAll("[data-fx-range]"));
 const fxCards = Array.from(document.querySelectorAll("[data-fx-card]"));
 const dataStatusUpdated = document.getElementById("data-status-updated");
-const statusSummaryGrid = document.getElementById("status-summary-grid");
 const dataStatusBody = document.getElementById("data-status-body");
 
 let indicatorData = new Map();
@@ -137,6 +136,7 @@ const clampingCharts = new WeakSet();
 const statusClassNames = {
   "Up to date": "up-to-date",
   "Waiting for next official release": "waiting",
+  Waiting: "waiting",
   "Failed to update": "failed",
   "Stale data": "stale",
 };
@@ -1152,36 +1152,25 @@ async function loadDataStatus() {
   return response.json();
 }
 
-function renderSourceLinks(indicator) {
+function renderIndicatorLinks(indicator) {
   const sourceUrls =
     Array.isArray(indicator.source_urls) && indicator.source_urls.length > 0
       ? indicator.source_urls
       : [{ label: indicator.source_name, url: indicator.source_url }];
 
-  return sourceUrls
-    .filter((source) => source?.url)
-    .map(
-      (source) =>
-        `<a href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(
-          source.label || source.url,
-        )}</a>`,
-    )
-    .join("");
-}
+  const validSources = sourceUrls.filter((source) => source?.url);
 
-function renderSourceUrlLinks(indicator) {
-  const sourceUrls =
-    Array.isArray(indicator.source_urls) && indicator.source_urls.length > 0
-      ? indicator.source_urls
-      : [{ label: indicator.source_url, url: indicator.source_url }];
+  if (validSources.length === 0) {
+    return `<strong>${escapeHtml(indicator.display_name)}</strong>`;
+  }
 
-  return sourceUrls
-    .filter((source) => source?.url)
+  return validSources
     .map(
-      (source) =>
-        `<a class="source-url" href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(
-          source.url,
-        )}</a>`,
+      (source, index) => `
+        <a class="indicator-source-link" href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">
+          ${index === 0 ? `<strong>${escapeHtml(indicator.display_name)}</strong>` : escapeHtml(source.label || "Additional source")}
+        </a>
+      `,
     )
     .join("");
 }
@@ -1197,40 +1186,10 @@ function renderDataStatus(metadata) {
   }
 
   const indicators = Object.values(metadata.indicators);
-  const failedCount = indicators.filter((indicator) => indicator.status === "Failed to update").length;
-  const staleCount = indicators.filter((indicator) => indicator.status === "Stale data").length;
-
   if (dataStatusUpdated) {
     dataStatusUpdated.textContent = metadata.last_dashboard_refresh_display
       ? `Last dashboard refresh ${metadata.last_dashboard_refresh_display}`
       : "Data status loaded";
-  }
-
-  if (statusSummaryGrid) {
-    statusSummaryGrid.innerHTML = [
-      ["Dashboard Version", metadata.dashboard_version || "--"],
-      ["Last Dashboard Refresh", metadata.last_dashboard_refresh_display || formatDateTime(metadata.last_dashboard_refresh)],
-      [
-        "Data Update Duration",
-        Number.isFinite(metadata.update_duration_seconds)
-          ? `${metadata.update_duration_seconds.toFixed(1)} seconds`
-          : "--",
-      ],
-      ["Number of Indicators", indicators.length],
-      ["Last Git Commit", metadata.last_git_commit || "--"],
-      ["Python Version", metadata.python_version || "--"],
-      ["Failed Sources", failedCount],
-      ["Stale Sources", staleCount],
-    ]
-      .map(
-        ([label, value]) => `
-          <article class="status-summary-card">
-            <span>${escapeHtml(label)}</span>
-            <strong>${escapeHtml(value)}</strong>
-          </article>
-        `,
-      )
-      .join("");
   }
 
   if (dataStatusBody) {
@@ -1249,18 +1208,13 @@ function renderDataStatus(metadata) {
         return `
           <tr>
             <td>
-              <strong>${escapeHtml(indicator.display_name)}</strong>
+              <div class="indicator-source-links">${renderIndicatorLinks(indicator)}</div>
               ${formula}
               ${releaseNote}
               ${errorDetails}
             </td>
-            <td class="source-links">${renderSourceLinks(indicator) || escapeHtml(indicator.source_name || "--")}</td>
-            <td class="source-links">${renderSourceUrlLinks(indicator) || "--"}</td>
             <td>${escapeHtml(indicator.frequency || "--")}</td>
             <td>${escapeHtml(indicator.latest_available_date || "--")}</td>
-            <td>${escapeHtml(
-              indicator.last_successful_refresh_display || formatDateTime(indicator.last_successful_refresh),
-            )}</td>
             <td>${renderStatusBadge(indicator.status)}</td>
           </tr>
         `;
@@ -1274,14 +1228,10 @@ function renderDataStatusError(error) {
     dataStatusUpdated.textContent = "Data status unavailable";
   }
 
-  if (statusSummaryGrid) {
-    statusSummaryGrid.innerHTML = `<p class="error-message">${escapeHtml(error.message)}</p>`;
-  }
-
   if (dataStatusBody) {
     dataStatusBody.innerHTML = `
       <tr>
-        <td colspan="7">
+        <td colspan="4">
           <details class="error-details" open>
             <summary>Could not load data status metadata</summary>
             <p>${escapeHtml(error.message)}</p>

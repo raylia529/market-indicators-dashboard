@@ -103,7 +103,7 @@ All dashboard data is stored in `data/`.
 | 10Y-2Y Spread | `data/us-10y-minus-2y-spread.csv` | FRED `T10Y2Y` | 1976-06-01 | Daily/business daily |
 | Margin Debt YoY | `data/finra-margin-debt-yoy.csv` | FINRA Margin Statistics Excel, calculated YoY from debit balances | 1998-01-31 | Monthly |
 | US 10Y Yield | `data/us-10-year-treasury-yield.csv` | FRED `DGS10` | 1962-01-02 | Daily/business daily |
-| USD/JPY | `data/fx.csv` | FRED `DEXJPUS` | 1971-01-04 | Daily/business daily |
+| USD/JPY | `data/fx.csv` | FRED `DEXJPUS`, with Yahoo Finance `JPY=X` filling only recent unpublished dates | 1971-01-04 | Daily/forex trading days |
 | US-JP 2Y Spread | `data/fx.csv` | FRED `DGS2` minus Japan MOF 2Y JGB yield | 1976-06-01 | Daily/business daily with forward-filled published yield observations |
 
 Each single-series CSV uses:
@@ -124,7 +124,7 @@ The Data Status page reads generated metadata from:
 data/status.json
 ```
 
-This metadata separates the newest available source observation from the time the dashboard last successfully checked or refreshed that indicator.
+The Data Status table links each indicator name to its official source and shows its latest available observation and current update status.
 
 ## Update Scripts
 
@@ -165,7 +165,7 @@ The scripts use merge-and-validate workflows where applicable and avoid replacin
 
 ### FX
 
-- USD/JPY source: FRED `DEXJPUS`
+- USD/JPY source: FRED `DEXJPUS` remains the official complete-history source. Yahoo Finance `JPY=X` only fills recent dates that FRED has not published; duplicate dates always use FRED.
 - US 2-Year Treasury source: FRED `DGS2`
 - Japan 2-Year JGB source: Japan Ministry of Finance JGB interest rate CSV files:
   - Historical: `https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/historical/jgbcme_all.csv`
