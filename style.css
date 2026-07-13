@@ -265,6 +265,11 @@ h2 {
     transform 160ms ease;
 }
 
+.copy-toast.actionable {
+  cursor: pointer;
+  pointer-events: auto;
+}
+
 .copy-toast.show {
   opacity: 1;
   transform: translate(-50%, 0);

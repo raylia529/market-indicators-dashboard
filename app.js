@@ -464,7 +464,7 @@ function clearNotice() {
   selectionNoticeText.textContent = "";
 }
 
-function showCopyToast(message) {
+function showCopyToast(message, action = null) {
   let toast = document.getElementById("copy-toast");
 
   if (!toast) {
@@ -477,10 +477,20 @@ function showCopyToast(message) {
   }
 
   toast.textContent = message;
+  toast.onclick = null;
+  toast.classList.toggle("actionable", Boolean(action));
+  toast.setAttribute("aria-label", action ? message : "");
+
+  if (action) {
+    toast.onclick = action;
+  }
+
   toast.classList.add("show");
   window.clearTimeout(showCopyToast.timeoutId);
   showCopyToast.timeoutId = window.setTimeout(() => {
     toast.classList.remove("show");
+    toast.classList.remove("actionable");
+    toast.onclick = null;
   }, 1400);
 }
 
@@ -810,28 +820,58 @@ function setupPromptCopy(chartNode, buildPrompt) {
     longPressTimers.delete(chartNode);
   }
 
+  async function finishLongPressCopy() {
+    const timer = longPressTimers.get(chartNode);
+
+    if (!timer?.ready || !timer.prompt || timer.copied) {
+      clearLongPress();
+      return;
+    }
+
+    timer.copied = true;
+
+    try {
+      await copyText(timer.prompt);
+      showCopyToast("Copied");
+    } catch {
+      const prompt = timer.prompt;
+      showCopyToast("Tap to copy", async () => {
+        try {
+          await copyText(prompt);
+          showCopyToast("Copied");
+        } catch {
+          showCopyToast("Copy failed");
+        }
+      });
+    } finally {
+      clearLongPress();
+    }
+  }
+
   function startLongPress(event, clientX, clientY) {
     clearLongPress();
-    const timeoutId = window.setTimeout(async () => {
+    const timer = {
+      timeoutId: null,
+      startX: clientX,
+      startY: clientY,
+      ready: false,
+      copied: false,
+      prompt: "",
+    };
+
+    timer.timeoutId = window.setTimeout(() => {
       const dateText = getDateFromChartPointer(chartNode, { clientX, clientY });
 
       if (!dateText) {
-        showCopyToast("Copy failed");
         clearLongPress();
         return;
       }
 
-      try {
-        await copyText(buildPrompt(dateText));
-        showCopyToast("Copied");
-      } catch {
-        showCopyToast("Copy failed");
-      } finally {
-        clearLongPress();
-      }
+      timer.ready = true;
+      timer.prompt = buildPrompt(dateText);
     }, longPressDelayMs);
 
-    longPressTimers.set(chartNode, { timeoutId, startX: clientX, startY: clientY });
+    longPressTimers.set(chartNode, timer);
   }
 
   chartNode.addEventListener("pointerdown", (event) => {
@@ -888,7 +928,7 @@ function setupPromptCopy(chartNode, buildPrompt) {
     { passive: true },
   );
 
-  chartNode.addEventListener("touchend", clearLongPress);
+  chartNode.addEventListener("touchend", finishLongPressCopy);
   chartNode.addEventListener("touchcancel", clearLongPress);
 
   chartNode.addEventListener("contextmenu", (event) => {
@@ -897,7 +937,9 @@ function setupPromptCopy(chartNode, buildPrompt) {
     }
   });
 
-  ["pointerup", "pointercancel", "pointerleave"].forEach((eventName) => {
+  chartNode.addEventListener("pointerup", finishLongPressCopy);
+
+  ["pointercancel", "pointerleave"].forEach((eventName) => {
     chartNode.addEventListener(eventName, clearLongPress);
   });
 }
