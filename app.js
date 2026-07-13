@@ -115,8 +115,8 @@ let indicatorColors = loadStoredColors(
   "macroIndicatorColors",
   new Map(indicators.map((indicator) => [indicator.id, indicator.color])),
 );
-let selectedIndicatorIds = ["sp500", "high-yield-oas"];
-let axisOrder = ["sp500", "high-yield-oas"];
+let selectedIndicatorIds = ["sp500"];
+let axisOrder = ["sp500"];
 let manualAxisOrder = false;
 let activeRange = "5Y";
 let macroScale = "linear";
