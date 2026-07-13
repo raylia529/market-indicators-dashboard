@@ -138,7 +138,7 @@ const longPressDelayMs = 700;
 const turningPointLookbackDays = 365;
 const turningPointLookaheadDays = 365;
 const marginDebtExtremeThresholds = {
-  high: 45,
+  high: 55,
   low: -25,
 };
 
