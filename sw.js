@@ -1,12 +1,12 @@
-const CACHE_VERSION = "market-dashboard-v15";
+const CACHE_VERSION = "market-dashboard-v17";
 const APP_SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 
 const APP_SHELL_ASSETS = [
   "./",
   "./index.html",
-  "./style.css?v=macro-default-sp500",
-  "./app.js?v=macro-default-sp500",
+  "./style.css?v=card-full-date",
+  "./app.js?v=card-full-date",
   "./manifest.json",
   "./offline.html",
   "./icons/icon-192.png?v=2",
@@ -85,6 +85,27 @@ async function cacheFirst(request) {
   }
 }
 
+async function networkFirstAppShell(request) {
+  try {
+    const response = await fetch(request);
+
+    if (response.ok && isLocalRequest(request)) {
+      const cache = await caches.open(APP_SHELL_CACHE);
+      await cache.put(request, response.clone());
+    }
+
+    return response;
+  } catch (error) {
+    const cached = await caches.match(request);
+
+    if (cached) {
+      return cached;
+    }
+
+    return caches.match("./offline.html");
+  }
+}
+
 async function networkFirstData(request) {
   const url = new URL(request.url);
   const cacheKey = new Request(`${url.origin}${url.pathname}`, { method: "GET" });
@@ -118,6 +139,11 @@ self.addEventListener("fetch", (event) => {
 
   if (isMarketDataRequest(request)) {
     event.respondWith(networkFirstData(request));
+    return;
+  }
+
+  if (request.mode === "navigate") {
+    event.respondWith(networkFirstAppShell(request));
     return;
   }
 

@@ -309,6 +309,11 @@ function formatDate(dateText) {
   return `${date.getFullYear()}/${date.getMonth() + 1}`;
 }
 
+function formatFullDate(dateText) {
+  const date = new Date(`${dateText}T00:00:00`);
+  return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+}
+
 function formatYearMonth(dateText) {
   return formatDate(dateText);
 }
@@ -1245,7 +1250,7 @@ function renderCards() {
         <article class="metric-card indicator-card ${isActive ? "active" : ""}" data-indicator="${indicator.id}" tabindex="0">
           <span class="indicator-label">${indicator.name}</span>
           <strong>${latest ? formatValue(latest.value, indicator) : "--"}</strong>
-          <small class="indicator-date">${latest ? `Updated ${formatDate(latest.date)}` : "Loading"}</small>
+          <small class="indicator-date">${latest ? `Updated ${formatFullDate(latest.date)}` : "Loading"}</small>
           ${renderColorPalette({
             activeColor: indicatorColors.get(indicator.id),
             targetId: indicator.id,
@@ -1578,7 +1583,7 @@ function renderFxCards() {
   setFxText("fx-usdjpy-value", latestUsdJpy ? latestUsdJpy.USDJPY.toFixed(2) : "--");
   setFxText(
     "fx-usdjpy-date",
-    latestUsdJpy ? `Updated ${formatDate(latestUsdJpy.date)}` : "Unavailable",
+    latestUsdJpy ? `Updated ${formatFullDate(latestUsdJpy.date)}` : "Unavailable",
   );
   setFxText(
     "fx-spread-value",
@@ -1586,11 +1591,11 @@ function renderFxCards() {
   );
   setFxText(
     "fx-spread-date",
-    latestSpread ? `Updated ${formatDate(latestSpread.date)}` : "Unavailable",
+    latestSpread ? `Updated ${formatFullDate(latestSpread.date)}` : "Unavailable",
   );
   setFxText(
     "fx-updated",
-    latestAny ? `Dataset through ${formatDate(latestAny.date)}` : "FX data unavailable",
+    latestAny ? `Dataset through ${formatFullDate(latestAny.date)}` : "FX data unavailable",
   );
 
   fxCards.forEach((card) => {
