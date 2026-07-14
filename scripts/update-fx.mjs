@@ -15,6 +15,10 @@ const sources = {
 
 const outputFile = path.join("data", "fx.csv");
 
+function isValidUsdJpyValue(value) {
+  return Number.isFinite(value) && value > 50 && value < 300;
+}
+
 function download(url, headers = {}) {
   return new Promise((resolve, reject) => {
     https
@@ -74,7 +78,7 @@ function parseYahooUsdJpy(text) {
     .filter(
       (row) =>
         row.date &&
-        Number.isFinite(row.value) &&
+        isValidUsdJpyValue(row.value) &&
         !(marketIsOpen && row.timestamp === regularMarketTime),
     );
 }
@@ -239,7 +243,7 @@ function validate(rows) {
   const duplicateDates = dates.length - new Set(dates).size;
   const sorted = rows.every((row, index) => index === 0 || rows[index - 1].date <= row.date);
   const validSpreadRows = rows.filter((row) => Number.isFinite(row.US_Japan_2Y_Spread));
-  const validUsdJpyRows = rows.filter((row) => Number.isFinite(row.USDJPY));
+  const validUsdJpyRows = rows.filter((row) => isValidUsdJpyValue(row.USDJPY));
 
   if (!sorted) {
     throw new Error("FX dataset dates are not sorted.");
@@ -340,7 +344,7 @@ async function main() {
   }
 
   const existingUsdJpy = existingRows
-    .filter((row) => Number.isFinite(row.USDJPY))
+    .filter((row) => isValidUsdJpyValue(row.USDJPY))
     .map((row) => ({ date: row.date, value: row.USDJPY }));
   const existingUs2y = existingRows
     .filter((row) => Number.isFinite(row.US_2Y_Yield))

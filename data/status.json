@@ -1,9 +1,9 @@
 {
-  "last_dashboard_refresh": "2026-07-13T09:50:02+09:00",
-  "last_dashboard_refresh_display": "2026-07-13 09:50 JST",
+  "last_dashboard_refresh": "2026-07-14T09:13:33+09:00",
+  "last_dashboard_refresh_display": "2026-07-14 09:13 JST",
   "update_duration_seconds": 0,
   "dashboard_version": "1.0.0",
-  "last_git_commit": "71b1261",
+  "last_git_commit": "88f69f3",
   "python_version": "Python 3.13.3",
   "indicators": {
     "SP500": {
@@ -17,11 +17,11 @@
           "url": "https://fred.stlouisfed.org/series/SP500"
         }
       ],
-      "latest_available_date": "2026-07-10",
-      "last_successful_refresh": "2026-07-13T09:50:02+09:00",
-      "last_successful_refresh_display": "2026-07-13 09:50 JST",
+      "latest_available_date": "2026-07-13",
+      "last_successful_refresh": "2026-07-14T09:13:33+09:00",
+      "last_successful_refresh_display": "2026-07-14 09:13 JST",
       "frequency": "Daily, US trading days",
-      "status": "Waiting",
+      "status": "Up to date",
       "error_message": null,
       "formula": null,
       "release_note": null
@@ -37,9 +37,9 @@
           "url": "https://fred.stlouisfed.org/series/VIXCLS"
         }
       ],
-      "latest_available_date": "2026-07-09",
-      "last_successful_refresh": "2026-07-13T09:50:02+09:00",
-      "last_successful_refresh_display": "2026-07-13 09:50 JST",
+      "latest_available_date": "2026-07-10",
+      "last_successful_refresh": "2026-07-14T09:13:33+09:00",
+      "last_successful_refresh_display": "2026-07-14 09:13 JST",
       "frequency": "Daily, US trading days",
       "status": "Waiting",
       "error_message": null,
@@ -57,9 +57,9 @@
           "url": "https://fred.stlouisfed.org/series/BAMLH0A0HYM2"
         }
       ],
-      "latest_available_date": "2026-07-09",
-      "last_successful_refresh": "2026-07-13T09:50:02+09:00",
-      "last_successful_refresh_display": "2026-07-13 09:50 JST",
+      "latest_available_date": "2026-07-10",
+      "last_successful_refresh": "2026-07-14T09:13:33+09:00",
+      "last_successful_refresh_display": "2026-07-14 09:13 JST",
       "frequency": "Daily",
       "status": "Waiting",
       "error_message": null,
@@ -77,9 +77,9 @@
           "url": "https://fred.stlouisfed.org/series/DGS10"
         }
       ],
-      "latest_available_date": "2026-07-09",
-      "last_successful_refresh": "2026-07-13T09:50:02+09:00",
-      "last_successful_refresh_display": "2026-07-13 09:50 JST",
+      "latest_available_date": "2026-07-10",
+      "last_successful_refresh": "2026-07-14T09:13:33+09:00",
+      "last_successful_refresh_display": "2026-07-14 09:13 JST",
       "frequency": "Daily",
       "status": "Waiting",
       "error_message": null,
@@ -97,11 +97,11 @@
           "url": "https://fred.stlouisfed.org/series/T10Y2Y"
         }
       ],
-      "latest_available_date": "2026-07-10",
-      "last_successful_refresh": "2026-07-13T09:50:02+09:00",
-      "last_successful_refresh_display": "2026-07-13 09:50 JST",
+      "latest_available_date": "2026-07-13",
+      "last_successful_refresh": "2026-07-14T09:13:33+09:00",
+      "last_successful_refresh_display": "2026-07-14 09:13 JST",
       "frequency": "Daily",
-      "status": "Waiting",
+      "status": "Up to date",
       "error_message": null,
       "formula": null,
       "release_note": null
@@ -118,8 +118,8 @@
         }
       ],
       "latest_available_date": "2026-05-31",
-      "last_successful_refresh": "2026-07-13T09:50:02+09:00",
-      "last_successful_refresh_display": "2026-07-13 09:50 JST",
+      "last_successful_refresh": "2026-07-14T09:13:33+09:00",
+      "last_successful_refresh_display": "2026-07-14 09:13 JST",
       "frequency": "Monthly",
       "status": "Up to date",
       "error_message": null,
@@ -141,11 +141,11 @@
           "url": "https://finance.yahoo.com/quote/JPY%3DX/history/"
         }
       ],
-      "latest_available_date": "2026-07-10",
-      "last_successful_refresh": "2026-07-13T09:50:02+09:00",
-      "last_successful_refresh_display": "2026-07-13 09:50 JST",
+      "latest_available_date": "2026-07-13",
+      "last_successful_refresh": "2026-07-14T09:13:33+09:00",
+      "last_successful_refresh_display": "2026-07-14 09:13 JST",
       "frequency": "Daily forex trading days",
-      "status": "Waiting",
+      "status": "Up to date",
       "error_message": null,
       "formula": null,
       "release_note": "FRED remains the official historical source. Yahoo Finance only fills recent dates that FRED has not published yet."
@@ -161,11 +161,11 @@
           "url": "https://fred.stlouisfed.org/series/DGS2"
         }
       ],
-      "latest_available_date": "2026-07-10",
-      "last_successful_refresh": "2026-07-13T09:50:02+09:00",
-      "last_successful_refresh_display": "2026-07-13 09:50 JST",
+      "latest_available_date": "2026-07-14",
+      "last_successful_refresh": "2026-07-14T09:13:33+09:00",
+      "last_successful_refresh_display": "2026-07-14 09:13 JST",
       "frequency": "Daily",
-      "status": "Waiting",
+      "status": "Up to date",
       "error_message": null,
       "formula": null,
       "release_note": null
@@ -181,11 +181,11 @@
           "url": "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/"
         }
       ],
-      "latest_available_date": "2026-07-10",
-      "last_successful_refresh": "2026-07-13T09:50:02+09:00",
-      "last_successful_refresh_display": "2026-07-13 09:50 JST",
+      "latest_available_date": "2026-07-14",
+      "last_successful_refresh": "2026-07-14T09:13:33+09:00",
+      "last_successful_refresh_display": "2026-07-14 09:13 JST",
       "frequency": "Daily, Japan business days",
-      "status": "Waiting",
+      "status": "Up to date",
       "error_message": null,
       "formula": null,
       "release_note": null
@@ -205,11 +205,11 @@
           "url": "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/"
         }
       ],
-      "latest_available_date": "2026-07-10",
-      "last_successful_refresh": "2026-07-13T09:50:02+09:00",
-      "last_successful_refresh_display": "2026-07-13 09:50 JST",
+      "latest_available_date": "2026-07-14",
+      "last_successful_refresh": "2026-07-14T09:13:33+09:00",
+      "last_successful_refresh_display": "2026-07-14 09:13 JST",
       "frequency": "Daily",
-      "status": "Waiting",
+      "status": "Up to date",
       "error_message": null,
       "formula": "US 2-Year Treasury Yield - Japan 2-Year JGB Yield",
       "release_note": null
