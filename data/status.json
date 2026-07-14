@@ -1,9 +1,9 @@
 {
-  "last_dashboard_refresh": "2026-07-14T09:13:33+09:00",
-  "last_dashboard_refresh_display": "2026-07-14 09:13 JST",
+  "last_dashboard_refresh": "2026-07-15T00:20:59+09:00",
+  "last_dashboard_refresh_display": "2026-07-15 00:20 JST",
   "update_duration_seconds": 0,
   "dashboard_version": "1.0.0",
-  "last_git_commit": "88f69f3",
+  "last_git_commit": "c50b918",
   "python_version": "Python 3.13.3",
   "indicators": {
     "SP500": {
@@ -18,8 +18,8 @@
         }
       ],
       "latest_available_date": "2026-07-13",
-      "last_successful_refresh": "2026-07-14T09:13:33+09:00",
-      "last_successful_refresh_display": "2026-07-14 09:13 JST",
+      "last_successful_refresh": "2026-07-15T00:20:59+09:00",
+      "last_successful_refresh_display": "2026-07-15 00:20 JST",
       "frequency": "Daily, US trading days",
       "status": "Up to date",
       "error_message": null,
@@ -37,11 +37,11 @@
           "url": "https://fred.stlouisfed.org/series/VIXCLS"
         }
       ],
-      "latest_available_date": "2026-07-10",
-      "last_successful_refresh": "2026-07-14T09:13:33+09:00",
-      "last_successful_refresh_display": "2026-07-14 09:13 JST",
+      "latest_available_date": "2026-07-13",
+      "last_successful_refresh": "2026-07-15T00:20:59+09:00",
+      "last_successful_refresh_display": "2026-07-15 00:20 JST",
       "frequency": "Daily, US trading days",
-      "status": "Waiting",
+      "status": "Up to date",
       "error_message": null,
       "formula": null,
       "release_note": null
@@ -58,8 +58,8 @@
         }
       ],
       "latest_available_date": "2026-07-10",
-      "last_successful_refresh": "2026-07-14T09:13:33+09:00",
-      "last_successful_refresh_display": "2026-07-14 09:13 JST",
+      "last_successful_refresh": "2026-07-15T00:20:59+09:00",
+      "last_successful_refresh_display": "2026-07-15 00:20 JST",
       "frequency": "Daily",
       "status": "Waiting",
       "error_message": null,
@@ -78,8 +78,8 @@
         }
       ],
       "latest_available_date": "2026-07-10",
-      "last_successful_refresh": "2026-07-14T09:13:33+09:00",
-      "last_successful_refresh_display": "2026-07-14 09:13 JST",
+      "last_successful_refresh": "2026-07-15T00:20:59+09:00",
+      "last_successful_refresh_display": "2026-07-15 00:20 JST",
       "frequency": "Daily",
       "status": "Waiting",
       "error_message": null,
@@ -98,8 +98,8 @@
         }
       ],
       "latest_available_date": "2026-07-13",
-      "last_successful_refresh": "2026-07-14T09:13:33+09:00",
-      "last_successful_refresh_display": "2026-07-14 09:13 JST",
+      "last_successful_refresh": "2026-07-15T00:20:59+09:00",
+      "last_successful_refresh_display": "2026-07-15 00:20 JST",
       "frequency": "Daily",
       "status": "Up to date",
       "error_message": null,
@@ -118,13 +118,209 @@
         }
       ],
       "latest_available_date": "2026-05-31",
-      "last_successful_refresh": "2026-07-14T09:13:33+09:00",
-      "last_successful_refresh_display": "2026-07-14 09:13 JST",
+      "last_successful_refresh": "2026-07-15T00:20:59+09:00",
+      "last_successful_refresh_display": "2026-07-15 00:20 JST",
       "frequency": "Monthly",
       "status": "Up to date",
       "error_message": null,
       "formula": null,
       "release_note": "Usually published during the third week of the following month."
+    },
+    "MOVE": {
+      "display_name": "MOVE Index",
+      "short_name": "MOVE",
+      "source_name": "Yahoo Finance",
+      "source_url": "https://finance.yahoo.com/quote/%5EMOVE/",
+      "source_urls": [
+        {
+          "label": "Yahoo Finance ^MOVE",
+          "url": "https://finance.yahoo.com/quote/%5EMOVE/"
+        }
+      ],
+      "latest_available_date": "2026-07-10",
+      "last_successful_refresh": "2026-07-15T00:20:59+09:00",
+      "last_successful_refresh_display": "2026-07-15 00:20 JST",
+      "frequency": "Daily, US trading days",
+      "status": "Waiting",
+      "error_message": null,
+      "formula": null,
+      "release_note": null
+    },
+    "WALCL": {
+      "display_name": "Federal Reserve Balance Sheet",
+      "short_name": "Fed Balance Sheet",
+      "source_name": "FRED",
+      "source_url": "https://fred.stlouisfed.org/series/WALCL",
+      "source_urls": [
+        {
+          "label": "FRED WALCL",
+          "url": "https://fred.stlouisfed.org/series/WALCL"
+        }
+      ],
+      "latest_available_date": "2026-07-08",
+      "last_successful_refresh": "2026-07-15T00:20:59+09:00",
+      "last_successful_refresh_display": "2026-07-15 00:20 JST",
+      "frequency": "Weekly, Wednesday level",
+      "status": "Waiting",
+      "error_message": null,
+      "formula": null,
+      "release_note": null
+    },
+    "NFCI": {
+      "display_name": "Chicago Fed National Financial Conditions Index",
+      "short_name": "NFCI",
+      "source_name": "FRED",
+      "source_url": "https://fred.stlouisfed.org/series/NFCI",
+      "source_urls": [
+        {
+          "label": "FRED NFCI",
+          "url": "https://fred.stlouisfed.org/series/NFCI"
+        }
+      ],
+      "latest_available_date": "2026-07-03",
+      "last_successful_refresh": "2026-07-15T00:20:59+09:00",
+      "last_successful_refresh_display": "2026-07-15 00:20 JST",
+      "frequency": "Weekly, ending Friday",
+      "status": "Waiting",
+      "error_message": null,
+      "formula": null,
+      "release_note": null
+    },
+    "SKEW": {
+      "display_name": "CBOE SKEW Index",
+      "short_name": "SKEW",
+      "source_name": "Cboe",
+      "source_url": "https://www.cboe.com/us/indices/dashboard/skew/",
+      "source_urls": [
+        {
+          "label": "Cboe SKEW",
+          "url": "https://www.cboe.com/us/indices/dashboard/skew/"
+        },
+        {
+          "label": "Cboe SKEW history CSV",
+          "url": "https://cdn.cboe.com/api/global/us_indices/daily_prices/SKEW_History.csv"
+        }
+      ],
+      "latest_available_date": "2026-07-13",
+      "last_successful_refresh": "2026-07-15T00:20:59+09:00",
+      "last_successful_refresh_display": "2026-07-15 00:20 JST",
+      "frequency": "Daily, US trading days",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": null
+    },
+    "ADVANCE_DECLINE_LINE": {
+      "display_name": "S&P 500 Advance / Decline Line",
+      "short_name": "A/D Line",
+      "source_name": "Calculated from Yahoo Finance constituent prices",
+      "source_url": "https://finance.yahoo.com/",
+      "source_urls": [
+        {
+          "label": "Yahoo Finance",
+          "url": "https://finance.yahoo.com/"
+        },
+        {
+          "label": "S&P 500 constituent list",
+          "url": "https://github.com/datasets/s-and-p-500-companies"
+        }
+      ],
+      "latest_available_date": "2026-07-14",
+      "last_successful_refresh": "2026-07-15T00:20:59+09:00",
+      "last_successful_refresh_display": "2026-07-15 00:20 JST",
+      "frequency": "Daily, US trading days",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": "Calculated from current S&P 500 constituents; historical membership changes are not reconstructed."
+    },
+    "SP500_ABOVE_200DMA": {
+      "display_name": "S&P 500 Percent of Stocks Above 200-Day Moving Average",
+      "short_name": "% Above 200DMA",
+      "source_name": "Calculated from Yahoo Finance constituent prices",
+      "source_url": "https://finance.yahoo.com/",
+      "source_urls": [
+        {
+          "label": "Yahoo Finance",
+          "url": "https://finance.yahoo.com/"
+        },
+        {
+          "label": "S&P 500 constituent list",
+          "url": "https://github.com/datasets/s-and-p-500-companies"
+        }
+      ],
+      "latest_available_date": "2026-07-14",
+      "last_successful_refresh": "2026-07-15T00:20:59+09:00",
+      "last_successful_refresh_display": "2026-07-15 00:20 JST",
+      "frequency": "Daily, US trading days",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": "Calculated from current S&P 500 constituents; historical membership changes are not reconstructed."
+    },
+    "SOX": {
+      "display_name": "PHLX Semiconductor Sector Index",
+      "short_name": "SOX",
+      "source_name": "Yahoo Finance",
+      "source_url": "https://finance.yahoo.com/quote/%5ESOX/",
+      "source_urls": [
+        {
+          "label": "Yahoo Finance ^SOX",
+          "url": "https://finance.yahoo.com/quote/%5ESOX/"
+        }
+      ],
+      "latest_available_date": "2026-07-14",
+      "last_successful_refresh": "2026-07-15T00:20:59+09:00",
+      "last_successful_refresh_display": "2026-07-15 00:20 JST",
+      "frequency": "Daily, US trading days",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": null
+    },
+    "TSMC_REVENUE_YOY": {
+      "display_name": "TSMC Revenue Year-over-Year Growth",
+      "short_name": "TSMC Rev YoY",
+      "source_name": "MOPS monthly operating revenue",
+      "source_url": "https://mops.twse.com.tw/mops/#/web/t05st10_ifrs",
+      "source_urls": [
+        {
+          "label": "MOPS monthly operating revenue",
+          "url": "https://mops.twse.com.tw/mops/#/web/t05st10_ifrs"
+        },
+        {
+          "label": "MOPSOV monthly revenue endpoint",
+          "url": "https://mopsov.twse.com.tw/mops/web/t05st10_ifrs"
+        }
+      ],
+      "latest_available_date": "2026-06-30",
+      "last_successful_refresh": "2026-07-15T00:20:59+09:00",
+      "last_successful_refresh_display": "2026-07-15 00:20 JST",
+      "frequency": "Monthly",
+      "status": "Waiting",
+      "error_message": null,
+      "formula": null,
+      "release_note": "Historical archive is parsed from MOPSOV single-company monthly operating revenue for TSMC 2330. The updater merges newly available months and keeps existing history if a source request fails."
+    },
+    "AI_CAPEX": {
+      "display_name": "AI CapEx: Microsoft, Amazon, Alphabet, and Meta",
+      "short_name": "AI CapEx",
+      "source_name": "SEC companyfacts",
+      "source_url": "https://www.sec.gov/edgar/sec-api-documentation",
+      "source_urls": [
+        {
+          "label": "SEC companyfacts API",
+          "url": "https://www.sec.gov/edgar/sec-api-documentation"
+        }
+      ],
+      "latest_available_date": "2026-03-31",
+      "last_successful_refresh": "2026-07-15T00:20:59+09:00",
+      "last_successful_refresh_display": "2026-07-15 00:20 JST",
+      "frequency": "Quarterly",
+      "status": "Waiting",
+      "error_message": null,
+      "formula": "Microsoft CapEx + Amazon CapEx + Alphabet CapEx + Meta CapEx",
+      "release_note": null
     },
     "DEXJPUS": {
       "display_name": "USD/JPY Exchange Rate",
@@ -142,8 +338,8 @@
         }
       ],
       "latest_available_date": "2026-07-13",
-      "last_successful_refresh": "2026-07-14T09:13:33+09:00",
-      "last_successful_refresh_display": "2026-07-14 09:13 JST",
+      "last_successful_refresh": "2026-07-15T00:20:59+09:00",
+      "last_successful_refresh_display": "2026-07-15 00:20 JST",
       "frequency": "Daily forex trading days",
       "status": "Up to date",
       "error_message": null,
@@ -162,8 +358,8 @@
         }
       ],
       "latest_available_date": "2026-07-14",
-      "last_successful_refresh": "2026-07-14T09:13:33+09:00",
-      "last_successful_refresh_display": "2026-07-14 09:13 JST",
+      "last_successful_refresh": "2026-07-15T00:20:59+09:00",
+      "last_successful_refresh_display": "2026-07-15 00:20 JST",
       "frequency": "Daily",
       "status": "Up to date",
       "error_message": null,
@@ -182,8 +378,8 @@
         }
       ],
       "latest_available_date": "2026-07-14",
-      "last_successful_refresh": "2026-07-14T09:13:33+09:00",
-      "last_successful_refresh_display": "2026-07-14 09:13 JST",
+      "last_successful_refresh": "2026-07-15T00:20:59+09:00",
+      "last_successful_refresh_display": "2026-07-15 00:20 JST",
       "frequency": "Daily, Japan business days",
       "status": "Up to date",
       "error_message": null,
@@ -206,8 +402,8 @@
         }
       ],
       "latest_available_date": "2026-07-14",
-      "last_successful_refresh": "2026-07-14T09:13:33+09:00",
-      "last_successful_refresh_display": "2026-07-14 09:13 JST",
+      "last_successful_refresh": "2026-07-15T00:20:59+09:00",
+      "last_successful_refresh_display": "2026-07-15 00:20 JST",
       "frequency": "Daily",
       "status": "Up to date",
       "error_message": null,

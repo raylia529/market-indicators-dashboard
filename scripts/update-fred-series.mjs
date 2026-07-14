@@ -18,6 +18,18 @@ const series = [
     outputFile: path.join("data", "us-10-year-treasury-yield.csv"),
     label: "US 10-Year Treasury yield",
   },
+  {
+    id: "WALCL",
+    outputFile: path.join("data", "fed-balance-sheet.csv"),
+    label: "Fed Balance Sheet",
+    decimals: 0,
+  },
+  {
+    id: "NFCI",
+    outputFile: path.join("data", "nfci.csv"),
+    label: "Chicago Fed National Financial Conditions Index",
+    decimals: 3,
+  },
 ];
 
 function download(url) {
@@ -99,8 +111,9 @@ async function updateSeries(item) {
   const text = await download(url);
   const rows = parseFredCsv(text, item.id);
   const validation = validate(rows, item.label);
+  const decimals = item.decimals ?? 2;
   const output = `date,value\n${rows
-    .map((row) => `${row.date},${row.value.toFixed(2)}`)
+    .map((row) => `${row.date},${row.value.toFixed(decimals)}`)
     .join("\n")}\n`;
   const tempFile = `${item.outputFile}.tmp`;
 

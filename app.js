@@ -61,6 +61,112 @@ const indicators = [
     color: "#8b5cf6",
     decimals: 2,
   },
+  {
+    id: "move",
+    name: "MOVE Index",
+    file: "data/move.csv",
+    unitLabel: "Index",
+    valueSuffix: "",
+    category: "volatility",
+    color: "#ec4899",
+    decimals: 2,
+  },
+  {
+    id: "fed-balance-sheet",
+    name: "Fed Balance Sheet",
+    file: "data/fed-balance-sheet.csv",
+    unitLabel: "Millions of U.S. Dollars",
+    valueSuffix: "",
+    category: "balance-sheet",
+    color: "#64748b",
+    decimals: 0,
+  },
+  {
+    id: "nfci",
+    name: "NFCI",
+    file: "data/nfci.csv",
+    unitLabel: "Index",
+    valueSuffix: "",
+    category: "financial-conditions",
+    color: "#b45309",
+    decimals: 3,
+  },
+  {
+    id: "skew",
+    name: "SKEW Index",
+    file: "data/skew.csv",
+    unitLabel: "Index",
+    valueSuffix: "",
+    category: "volatility",
+    color: "#111827",
+    decimals: 2,
+  },
+];
+
+const breadthIndicators = [
+  {
+    id: "breadth-sp500",
+    name: "S&P 500",
+    file: "data/sp500.csv",
+    unitLabel: "Index",
+    valueSuffix: "",
+    category: "price",
+    color: "#2563eb",
+    decimals: 2,
+  },
+  {
+    id: "advance-decline-line",
+    name: "Advance / Decline Line",
+    file: "data/advance-decline-line.csv",
+    unitLabel: "Cumulative Net Advances",
+    valueSuffix: "",
+    category: "breadth",
+    color: "#10b981",
+    decimals: 0,
+  },
+  {
+    id: "sp500-above-200dma",
+    name: "% Above 200DMA",
+    file: "data/sp500-above-200dma.csv",
+    unitLabel: "Percent",
+    valueSuffix: "%",
+    category: "percentage",
+    color: "#f97316",
+    decimals: 1,
+  },
+];
+
+const semiconductorIndicators = [
+  {
+    id: "sox",
+    name: "SOX Index",
+    file: "data/sox.csv",
+    unitLabel: "Index",
+    valueSuffix: "",
+    category: "price",
+    color: "#2563eb",
+    decimals: 2,
+  },
+  {
+    id: "tsmc-revenue-yoy",
+    name: "TSMC Revenue YoY",
+    file: "data/tsmc-revenue-yoy.csv",
+    unitLabel: "Percent YoY",
+    valueSuffix: "%",
+    category: "percentage",
+    color: "#14b8a6",
+    decimals: 1,
+  },
+  {
+    id: "ai-capex",
+    name: "AI CapEx",
+    file: "data/ai-capex.csv",
+    unitLabel: "Millions of U.S. Dollars",
+    valueSuffix: "",
+    category: "capex",
+    color: "#8b5cf6",
+    decimals: 0,
+  },
 ];
 
 const colorPalette = [
@@ -100,7 +206,7 @@ const selectionNoticeClose = document.getElementById("selection-notice-close");
 const clearButton = document.getElementById("clear-selection");
 const swapButton = document.getElementById("swap-axes");
 const macroLogScaleInput = document.getElementById("macro-log-scale");
-const rangeButtons = Array.from(document.querySelectorAll("[data-range]"));
+const rangeButtons = Array.from(document.querySelectorAll("[data-range]:not([data-comparison-range])"));
 const tabButtons = Array.from(document.querySelectorAll("[data-tab]"));
 const tabPanels = Array.from(document.querySelectorAll("[data-tab-panel]"));
 const mobileViewButtons = Array.from(document.querySelectorAll("[data-mobile-view-button]"));
@@ -201,7 +307,11 @@ function renderColorPalette({ activeColor, targetId, targetType }) {
 
 function renderColorPaletteContent({ activeColor, targetId, targetType }) {
   const controlAttribute =
-    targetType === "macro" ? `data-color-panel-for="${targetId}"` : `data-fx-color-panel-for="${targetId}"`;
+    targetType === "macro"
+      ? `data-color-panel-for="${targetId}"`
+      : targetType === "fx"
+        ? `data-fx-color-panel-for="${targetId}"`
+        : `data-${targetType}-color-panel-for="${targetId}"`;
 
   return `
     <span>Line color</span>
@@ -222,7 +332,9 @@ function renderColorPaletteContent({ activeColor, targetId, targetType }) {
               const dataAttribute =
                 targetType === "macro"
                   ? `data-color-indicator="${targetId}"`
-                  : `data-fx-color="${targetId}"`;
+                  : targetType === "fx"
+                    ? `data-fx-color="${targetId}"`
+                    : `data-${targetType}-color="${targetId}"`;
 
               return `
                 <button
@@ -1794,6 +1906,457 @@ function renderAll() {
   renderChart();
 }
 
+function createComparisonSection(config) {
+  const state = {
+    data: new Map(),
+    colors: loadStoredColors(
+      config.storageKey,
+      new Map(config.indicators.map((indicator) => [indicator.id, indicator.color])),
+    ),
+    selectedIds: [...config.defaultSelectedIds],
+    axisOrder: [...config.defaultSelectedIds],
+    manualAxisOrder: false,
+    activeRange: config.defaultRange || "5Y",
+    scale: "linear",
+  };
+
+  const elements = {
+    grid: document.getElementById(`${config.key}-indicator-grid`),
+    chart: document.getElementById(`${config.key}-chart`),
+    title: document.getElementById(`${config.key}-chart-title`),
+    meta: document.getElementById(`${config.key}-chart-meta`),
+    compareNote: document.getElementById(`${config.key}-compare-note`),
+    notice: document.getElementById(`${config.key}-selection-notice`),
+    noticeText: document.getElementById(`${config.key}-selection-notice-text`),
+    noticeClose: document.getElementById(`${config.key}-selection-notice-close`),
+    clearButton: document.getElementById(`${config.key}-clear-selection`),
+    swapButton: document.getElementById(`${config.key}-swap-axes`),
+    logScaleInput: document.getElementById(`${config.key}-log-scale`),
+    rangeButtons: Array.from(document.querySelectorAll(`[data-comparison-range="${config.key}"]`)),
+  };
+
+  function getLocalIndicator(id) {
+    return config.indicators.find((indicator) => indicator.id === id);
+  }
+
+  function showLocalNotice(message) {
+    elements.noticeText.textContent = message;
+    elements.notice.hidden = false;
+  }
+
+  function clearLocalNotice() {
+    elements.notice.hidden = true;
+    elements.noticeText.textContent = "";
+  }
+
+  function getXBounds() {
+    const selected = state.axisOrder.slice(0, 2);
+    const latestDateText = selected
+      .flatMap((id) => state.data.get(id) || [])
+      .map((row) => row.date)
+      .sort((a, b) => a.localeCompare(b))
+      .at(-1);
+
+    if (!latestDateText) {
+      return null;
+    }
+
+    const endDate = toDate(latestDateText);
+    const startDate =
+      state.activeRange === "Max" ? toDate(maxStartDate) : shiftDateByRange(endDate, state.activeRange);
+
+    return {
+      start: toIsoDate(startDate),
+      end: toIsoDate(endDate),
+    };
+  }
+
+  function getFilteredRows(indicatorId) {
+    const rows = state.data.get(indicatorId) || [];
+    const bounds = getXBounds();
+
+    if (rows.length === 0) {
+      return [];
+    }
+
+    if (!bounds) {
+      const start = state.activeRange === "Max" ? toDate(maxStartDate) : shiftDateByRange(toDate(rows.at(-1).date), state.activeRange);
+      return rows.filter((row) => toDate(row.date) >= start);
+    }
+
+    return rows.filter((row) => row.date >= bounds.start && row.date <= bounds.end);
+  }
+
+  function getAutoOrder(ids) {
+    if (ids.length !== 2) {
+      return ids;
+    }
+
+    const [first, second] = ids.map(getLocalIndicator);
+    const firstIsPrice = first.category === "price";
+    const secondIsPrice = second.category === "price";
+
+    if (firstIsPrice && !secondIsPrice) {
+      return [first.id, second.id];
+    }
+
+    if (secondIsPrice && !firstIsPrice) {
+      return [second.id, first.id];
+    }
+
+    return ids;
+  }
+
+  function syncLocalAxisOrder() {
+    state.axisOrder = state.axisOrder.filter((id) => state.selectedIds.includes(id));
+
+    for (const id of state.selectedIds) {
+      if (!state.axisOrder.includes(id)) {
+        state.axisOrder.push(id);
+      }
+    }
+
+    if (!state.manualAxisOrder) {
+      state.axisOrder = getAutoOrder(state.selectedIds);
+    }
+  }
+
+  function canUseLocalLog(rows) {
+    return rows.length > 0 && rows.every((row) => row.value > 0);
+  }
+
+  function selectedRowsAllowLocalLog() {
+    return state.axisOrder.slice(0, 2).every((id) => canUseLocalLog(getFilteredRows(id)));
+  }
+
+  function validateLocalScale() {
+    if (state.scale === "log" && !selectedRowsAllowLocalLog()) {
+      state.scale = "linear";
+      elements.logScaleInput.checked = false;
+      showLocalNotice("Log scale is unavailable because the selected range includes zero or negative values.");
+    }
+  }
+
+  function getLocalYAxisLayout(side, indicator, rows) {
+    const color = state.colors.get(indicator.id);
+    const scale = state.scale === "log" && canUseLocalLog(rows) ? "log" : "linear";
+    const range = getAutoRange(rows, scale);
+    const axis = {
+      title: {
+        text: `${indicator.name}<br>${indicator.unitLabel}`,
+        font: { color, weight: 700 },
+      },
+      gridcolor: side === "left" ? "#e5e7eb" : "rgba(229,231,235,0)",
+      zeroline: true,
+      zerolinecolor: "#d1d5db",
+      tickfont: { color, weight: 700 },
+      type: scale,
+    };
+
+    if (range) {
+      axis.range = scale === "log" ? range.map((value) => Math.log10(value)) : range;
+    }
+
+    if (side === "right") {
+      axis.overlaying = "y";
+      axis.side = "right";
+      axis.showgrid = false;
+    }
+
+    return axis;
+  }
+
+  function renderLocalRangeButtons() {
+    elements.rangeButtons.forEach((button) => {
+      const isActive = button.dataset.range === state.activeRange;
+      button.classList.toggle("active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+  }
+
+  function renderLocalCards() {
+    elements.grid.innerHTML = config.indicators
+      .map((indicator) => {
+        const rows = state.data.get(indicator.id) || [];
+        const latest = rows.at(-1);
+        const isActive = state.selectedIds.includes(indicator.id);
+
+        return `
+          <article class="metric-card indicator-card ${isActive ? "active" : ""}" data-${config.key}-indicator="${indicator.id}" tabindex="0">
+            <span class="indicator-label">${indicator.name}</span>
+            <strong>${latest ? formatValue(latest.value, indicator) : "--"}</strong>
+            <small class="indicator-date">${latest ? `Updated ${formatFullDate(latest.date)}` : "Loading"}</small>
+            ${renderColorPalette({
+              activeColor: state.colors.get(indicator.id),
+              targetId: indicator.id,
+              targetType: config.key,
+            })}
+          </article>
+        `;
+      })
+      .join("");
+
+    function toggleCard(card) {
+      const id = card.dataset[`${config.key}Indicator`];
+
+      if (state.selectedIds.includes(id)) {
+        state.selectedIds = state.selectedIds.filter((selectedId) => selectedId !== id);
+      } else if (state.selectedIds.length < 2) {
+        state.selectedIds.push(id);
+      } else {
+        showLocalNotice("You can compare up to two indicators at a time.");
+        return;
+      }
+
+      clearLocalNotice();
+      state.manualAxisOrder = false;
+      renderLocalAll();
+    }
+
+    elements.grid.querySelectorAll(`[data-${config.key}-indicator]`).forEach((card) => {
+      card.addEventListener("click", () => toggleCard(card));
+      card.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          toggleCard(card);
+        }
+      });
+    });
+
+    elements.grid.querySelectorAll("[data-color-control]").forEach((control) => {
+      control.addEventListener("click", (event) => event.stopPropagation());
+      control.addEventListener("keydown", (event) => event.stopPropagation());
+    });
+
+    elements.grid.querySelectorAll("[data-color-menu-toggle]").forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.stopPropagation();
+        toggleColorPanel(button);
+      });
+    });
+
+    elements.grid.querySelectorAll(`[data-${config.key}-color]`).forEach((swatch) => {
+      swatch.addEventListener("keydown", (event) => event.stopPropagation());
+      swatch.addEventListener("click", (event) => {
+        event.stopPropagation();
+        state.colors.set(swatch.dataset[`${config.key}Color`], swatch.dataset.colorValue);
+        storeColors(config.storageKey, state.colors);
+        closeColorPanels();
+        renderLocalCards();
+        renderLocalChart();
+      });
+    });
+  }
+
+  function renderLocalChart() {
+    validateLocalScale();
+    const selected = state.axisOrder.slice(0, 2);
+    const traces = selected.map((id, index) => {
+      const side = index === 0 ? "left" : "right";
+      const indicator = getLocalIndicator(id);
+      const rows = getFilteredRows(id);
+
+      return {
+        x: rows.map((row) => row.date),
+        y: rows.map((row) => row.value),
+        type: "scatter",
+        mode: "lines",
+        name: `${indicator.name} (${side} axis)`,
+        yaxis: index === 0 ? "y" : "y2",
+        line: {
+          color: state.colors.get(indicator.id),
+          width: 1.5,
+          dash: "solid",
+        },
+        hovertemplate: `<b>${indicator.name}</b><br>%{y:.${indicator.decimals}f} ${indicator.unitLabel}<extra></extra>`,
+      };
+    });
+
+    const title = selected.map((id) => getLocalIndicator(id).name).join(" vs ");
+    elements.title.textContent = title || "Select up to two indicators";
+    elements.meta.textContent = `${state.activeRange} range · Max starts ${formatYearMonth(maxStartDate)}`;
+    elements.compareNote.hidden = selected.length !== 2;
+    elements.swapButton.disabled = selected.length !== 2;
+
+    const xBounds = getXBounds();
+    const firstRows = selected[0] ? getFilteredRows(selected[0]) : [];
+    const secondRows = selected[1] ? getFilteredRows(selected[1]) : [];
+    const firstIndicator = selected[0] ? getLocalIndicator(selected[0]) : null;
+    const secondIndicator = selected[1] ? getLocalIndicator(selected[1]) : null;
+    const layout = {
+      margin: { t: 18, r: selected.length === 2 ? 72 : 22, b: 48, l: 72 },
+      paper_bgcolor: "rgba(0,0,0,0)",
+      plot_bgcolor: "rgba(0,0,0,0)",
+      font: {
+        family:
+          'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        color: "#111827",
+      },
+      legend: { orientation: "h", x: 0, y: 1.14 },
+      xaxis: {
+        range: xBounds ? [xBounds.start, xBounds.end] : undefined,
+        minallowed: xBounds?.start,
+        maxallowed: xBounds?.end,
+        showgrid: false,
+        tickformat: "%Y/%-m",
+        hoverformat: "%Y/%-m/%-d",
+        tickfont: { color: "#64748b", weight: 700 },
+      },
+      hovermode: "x unified",
+      dragmode: getChartDragMode(),
+    };
+
+    if (firstIndicator) {
+      layout.yaxis = getLocalYAxisLayout("left", firstIndicator, firstRows);
+    }
+
+    if (secondIndicator) {
+      layout.yaxis2 = getLocalYAxisLayout("right", secondIndicator, secondRows);
+    }
+
+    if (elements.chart && window.Plotly) {
+      Plotly.react(elements.chart, traces, layout, getPlotlyConfig()).then(() => {
+        if (xBounds) {
+          elements.chart.dataset.promptStart = xBounds.start;
+          elements.chart.dataset.promptEnd = xBounds.end;
+        }
+
+        setupBoundedXAxis(elements.chart, getXBounds);
+        setupPromptCopy(elements.chart, (dateText) => buildComparisonPrompt(config.label, state, config.indicators, dateText));
+      });
+    }
+  }
+
+  function renderLocalAll() {
+    syncLocalAxisOrder();
+    renderLocalRangeButtons();
+    renderLocalCards();
+    renderLocalChart();
+  }
+
+  elements.rangeButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      state.activeRange = button.dataset.range;
+      validateLocalScale();
+      renderLocalAll();
+    });
+  });
+
+  elements.logScaleInput.addEventListener("change", () => {
+    if (elements.logScaleInput.checked && !selectedRowsAllowLocalLog()) {
+      elements.logScaleInput.checked = false;
+      state.scale = "linear";
+      showLocalNotice("Log scale is unavailable because the selected range includes zero or negative values.");
+      renderLocalChart();
+      return;
+    }
+
+    state.scale = elements.logScaleInput.checked ? "log" : "linear";
+    clearLocalNotice();
+    renderLocalChart();
+  });
+
+  elements.noticeClose.addEventListener("click", clearLocalNotice);
+
+  elements.clearButton.addEventListener("click", () => {
+    state.selectedIds = [];
+    state.axisOrder = [];
+    state.manualAxisOrder = false;
+    clearLocalNotice();
+    renderLocalAll();
+  });
+
+  elements.swapButton.addEventListener("click", () => {
+    if (state.axisOrder.length === 2) {
+      state.axisOrder = [state.axisOrder[1], state.axisOrder[0]];
+      state.selectedIds = [...state.axisOrder];
+      state.manualAxisOrder = true;
+      renderLocalAll();
+    }
+  });
+
+  return {
+    key: config.key,
+    chartElement: elements.chart,
+    async load() {
+      const datasets = await Promise.all(
+        config.indicators.map(async (indicator) => {
+          const response = await fetch(`${indicator.file}?updated=${Date.now()}`, {
+            cache: "no-store",
+          });
+
+          if (!response.ok) {
+            throw new Error(`Could not load ${indicator.file}`);
+          }
+
+          return [indicator.id, parseCsv(await response.text())];
+        }),
+      );
+
+      state.data = new Map(datasets);
+      renderLocalAll();
+    },
+    showError(error) {
+      elements.grid.innerHTML = `<p class="error-message">${error.message}</p>`;
+    },
+  };
+}
+
+function buildComparisonPrompt(sectionLabel, state, definitions, dateText) {
+  const selected = state.axisOrder.slice(0, 2);
+  const analyses = selected.map((id) => {
+    const indicator = definitions.find((item) => item.id === id);
+    return analyzeTurningPoints({
+      id: indicator.id,
+      name: indicator.name,
+      unit: indicator.unitLabel,
+      rows: state.data.get(id) || [],
+      dateText,
+      valueField: "value",
+      decimals: indicator.decimals,
+      suffix: indicator.valueSuffix,
+    });
+  });
+
+  return [
+    "Market indicator analysis request",
+    "",
+    `Selected date: ${dateText}`,
+    `Dashboard section: ${sectionLabel}`,
+    `Visible range selected in dashboard: ${state.activeRange}`,
+    `Selected indicators: ${selected.map((id) => definitions.find((item) => item.id === id).name).join(", ") || "none"}`,
+    "",
+    "Turning point scan:",
+    "- The dashboard searched up to 1 year before and 1 year after the selected date.",
+    "- Turning points are detected from actual observations only; no forward fill or interpolation is used.",
+    analyses.map((analysis) => analysis.line).join("\n"),
+    "",
+    formatLeadLag(analyses),
+    "",
+    "Please explain what was happening around this date and why these indicators may have moved up or down.",
+    "Use historical market context, mention uncertainty, and avoid implying causation when the evidence is only correlation.",
+  ].join("\n");
+}
+
+const comparisonSections = [
+  createComparisonSection({
+    key: "breadth",
+    label: "Breadth",
+    indicators: breadthIndicators,
+    defaultSelectedIds: ["breadth-sp500"],
+    defaultRange: "5Y",
+    storageKey: "breadthIndicatorColors",
+  }),
+  createComparisonSection({
+    key: "semiconductor",
+    label: "Chips & AI",
+    indicators: semiconductorIndicators,
+    defaultSelectedIds: ["sox"],
+    defaultRange: "5Y",
+    storageKey: "semiconductorIndicatorColors",
+  }),
+];
+
 function resizeVisibleCharts() {
   if (!window.Plotly) {
     return;
@@ -1806,6 +2369,12 @@ function resizeVisibleCharts() {
   if (fxChartElement) {
     Plotly.Plots.resize(fxChartElement);
   }
+
+  comparisonSections.forEach((section) => {
+    if (section.chartElement) {
+      Plotly.Plots.resize(section.chartElement);
+    }
+  });
 }
 
 function setMobileView(group, view) {
@@ -2128,6 +2697,12 @@ loadFxData()
   .catch((error) => {
     setFxText("fx-updated", error.message);
   });
+
+comparisonSections.forEach((section) => {
+  section.load().catch((error) => {
+    section.showError(error);
+  });
+});
 
 loadDataStatus().then(renderDataStatus).catch(renderDataStatusError);
 

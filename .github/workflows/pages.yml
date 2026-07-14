@@ -112,7 +112,8 @@ jobs:
 
           run_update "S&P 500" "node scripts/update-sp500.mjs" "SP500"
           run_update "HY OAS" "node scripts/update-hy-oas.mjs" "BAMLH0A0HYM2"
-          run_update "FRED macro series" "node scripts/update-fred-series.mjs" "VIXCLS,T10Y2Y,DGS10"
+          run_update "FRED macro series" "node scripts/update-fred-series.mjs" "VIXCLS,T10Y2Y,DGS10,WALCL,NFCI"
+          run_update "Extra market indicators" "node scripts/update-extra-indicators.mjs" "MOVE,SKEW,SOX,TSMC_REVENUE_YOY,AI_CAPEX,ADVANCE_DECLINE_LINE,SP500_ABOVE_200DMA"
           run_update "FX series" "node scripts/update-fx.mjs" "DEXJPUS,DGS2,JAPAN_2Y_JGB,US_JAPAN_2Y_SPREAD"
           run_update "FINRA Margin Debt YoY" "python scripts/update-finra-margin-debt-yoy.py" "FINRA_MARGIN_DEBT_YOY"
 
@@ -129,6 +130,7 @@ jobs:
           node --check scripts/update-sp500.mjs
           node --check scripts/update-hy-oas.mjs
           node --check scripts/update-fred-series.mjs
+          node --check scripts/update-extra-indicators.mjs
           node --check scripts/update-fx.mjs
           python -B -m py_compile scripts/update-finra-margin-debt-yoy.py
 
