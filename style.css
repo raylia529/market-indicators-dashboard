@@ -837,6 +837,28 @@ h2 {
   margin: 0;
 }
 
+.glossary-inline-link {
+  display: inline;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--blue);
+  font: inherit;
+  font-weight: 900;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.glossary-inline-link:hover,
+.glossary-inline-link:focus-visible {
+  color: var(--blue-strong);
+  outline: 0;
+  text-decoration-thickness: 2px;
+}
+
 .data-status-badge {
   display: inline-flex;
   align-items: center;

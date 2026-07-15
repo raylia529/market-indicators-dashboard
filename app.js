@@ -504,7 +504,7 @@ let visibleFxSeries = new Set(["USDJPY", "US_Japan_2Y_Spread"]);
 let glossaryEntries = [];
 let glossarySearchText = "";
 let activeGlossaryLanguage = "zh";
-let expandedGlossaryIds = new Set();
+let expandedGlossaryId = null;
 let fxColors = loadStoredColors(
   "fxIndicatorColors",
   new Map([
@@ -3016,7 +3016,94 @@ function renderDataStatusError(error) {
   }
 }
 
-function renderGlossaryText(text) {
+function normalizeGlossaryAlias(alias) {
+  return typeof alias === "string" ? alias.replace(/\s+/g, " ").trim() : "";
+}
+
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function getGlossaryLinkAliases(currentEntryId) {
+  const aliases = new Map();
+
+  glossaryEntries.forEach((entry) => {
+    if (!entry?.id || entry.id === currentEntryId) {
+      return;
+    }
+
+    [
+      entry.short_name,
+      entry.full_name,
+      ...Object.values(entry.headings || {}),
+    ].forEach((alias) => {
+      const normalized = normalizeGlossaryAlias(alias);
+      if (!normalized) {
+        return;
+      }
+
+      const key = normalized.toLowerCase();
+      if (!aliases.has(key) || normalized.length > aliases.get(key).alias.length) {
+        aliases.set(key, {
+          alias: normalized,
+          id: entry.id,
+        });
+      }
+    });
+  });
+
+  return Array.from(aliases.values()).sort((a, b) => b.alias.length - a.alias.length);
+}
+
+function renderGlossaryLinkedText(text, currentEntryId) {
+  const aliases = getGlossaryLinkAliases(currentEntryId);
+  let segments = [{ type: "text", value: escapeHtml(text) }];
+
+  aliases.forEach(({ alias, id }) => {
+    const escapedAlias = escapeHtml(alias);
+    const pattern = new RegExp(`(^|[^A-Za-z0-9_])(${escapeRegex(escapedAlias)})(?=$|[^A-Za-z0-9_])`, "g");
+
+    segments = segments.flatMap((segment) => {
+      if (segment.type !== "text") {
+        return [segment];
+      }
+
+      const linkedSegments = [];
+      let lastIndex = 0;
+      let match;
+
+      while ((match = pattern.exec(segment.value)) !== null) {
+        const matchedAlias = match[2];
+        const aliasStart = match.index + match[1].length;
+        const aliasEnd = aliasStart + matchedAlias.length;
+
+        if (aliasStart > lastIndex) {
+          linkedSegments.push({ type: "text", value: segment.value.slice(lastIndex, aliasStart) });
+        }
+
+        linkedSegments.push({
+          type: "html",
+          value: `<button class="glossary-inline-link" type="button" data-glossary-link="${escapeHtml(id)}">${matchedAlias}</button>`,
+        });
+        lastIndex = aliasEnd;
+      }
+
+      if (!linkedSegments.length) {
+        return [segment];
+      }
+
+      if (lastIndex < segment.value.length) {
+        linkedSegments.push({ type: "text", value: segment.value.slice(lastIndex) });
+      }
+
+      return linkedSegments;
+    });
+  });
+
+  return segments.map((segment) => segment.value).join("");
+}
+
+function renderGlossaryText(text, currentEntryId) {
   if (!text) {
     return `<p>No glossary text available.</p>`;
   }
@@ -3025,7 +3112,7 @@ function renderGlossaryText(text) {
     .split(/\n{2,}/)
     .map((paragraph) => paragraph.trim())
     .filter(Boolean)
-    .map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`)
+    .map((paragraph) => `<p>${renderGlossaryLinkedText(paragraph, currentEntryId)}</p>`)
     .join("");
 }
 
@@ -3062,6 +3149,19 @@ function syncGlossaryLanguageButtons() {
   });
 }
 
+function scrollGlossaryEntryIntoView(id) {
+  if (!glossaryBody || !id) {
+    return;
+  }
+
+  requestAnimationFrame(() => {
+    const targetRow = Array.from(glossaryBody.querySelectorAll("[data-glossary-row]")).find(
+      (row) => row.dataset.glossaryRow === id,
+    );
+    targetRow?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  });
+}
+
 function renderGlossary(glossary) {
   glossaryEntries = Array.isArray(glossary?.indicators) ? glossary.indicators : [];
   const visibleEntries = filterGlossaryEntries(glossaryEntries);
@@ -3091,7 +3191,7 @@ function renderGlossary(glossary) {
     .map((entry) => {
       const activeLanguage = activeGlossaryLanguage;
       const description = entry.descriptions?.[activeLanguage] || "";
-      const expanded = expandedGlossaryIds.has(entry.id);
+      const expanded = expandedGlossaryId === entry.id;
 
       return `
         <tr
@@ -3125,7 +3225,7 @@ function renderGlossary(glossary) {
               expanded
                 ? `
                   <div class="glossary-description" lang="${escapeHtml(activeLanguage)}">
-                    ${renderGlossaryText(description)}
+                    ${renderGlossaryText(description, entry.id)}
                   </div>
                 `
                 : ""
@@ -3268,15 +3368,25 @@ if (selectionNoticeClose) {
 
 if (glossaryBody) {
   glossaryBody.addEventListener("click", (event) => {
+    const glossaryLink = event.target.closest("[data-glossary-link]");
+
+    if (glossaryLink) {
+      event.stopPropagation();
+      expandedGlossaryId = glossaryLink.dataset.glossaryLink;
+      glossarySearchText = "";
+      if (glossarySearchInput) {
+        glossarySearchInput.value = "";
+      }
+      renderGlossary({ indicators: glossaryEntries });
+      scrollGlossaryEntryIntoView(expandedGlossaryId);
+      return;
+    }
+
     const target = event.target.closest("[data-glossary-expand], [data-glossary-row]");
 
     if (target) {
       const id = target.dataset.glossaryExpand || target.dataset.glossaryRow;
-      if (expandedGlossaryIds.has(id)) {
-        expandedGlossaryIds.delete(id);
-      } else {
-        expandedGlossaryIds.add(id);
-      }
+      expandedGlossaryId = expandedGlossaryId === id ? null : id;
       renderGlossary({ indicators: glossaryEntries });
       return;
     }
@@ -3295,11 +3405,7 @@ if (glossaryBody) {
 
     event.preventDefault();
     const id = row.dataset.glossaryRow;
-    if (expandedGlossaryIds.has(id)) {
-      expandedGlossaryIds.delete(id);
-    } else {
-      expandedGlossaryIds.add(id);
-    }
+    expandedGlossaryId = expandedGlossaryId === id ? null : id;
     renderGlossary({ indicators: glossaryEntries });
   });
 }
