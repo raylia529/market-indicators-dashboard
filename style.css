@@ -659,6 +659,14 @@ h2 {
   text-decoration: underline;
 }
 
+.status-source-note {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
 .status-name-short,
 .status-mobile-meta {
   display: none;
@@ -728,6 +736,19 @@ h2 {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+}
+
+.glossary-table tr[data-glossary-row] {
+  cursor: pointer;
+}
+
+.glossary-table tr[data-glossary-row]:hover {
+  background: #f8fafc;
+}
+
+.glossary-table tr[data-glossary-row]:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.18);
+  outline-offset: -3px;
 }
 
 .glossary-expand-button {
@@ -875,6 +896,21 @@ h2 {
 .status-details summary:focus-visible {
   color: var(--blue);
   outline: 0;
+}
+
+.terms-note {
+  margin: 14px 0 0;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.terms-note strong {
+  color: var(--ink);
+  font-weight: 900;
 }
 
 .error-details {

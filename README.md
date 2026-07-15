@@ -134,6 +134,15 @@ All dashboard data is stored in `data/`.
 | USD/TWD | `data/usdtwd.csv` | Yahoo Finance `TWD=X` | 2004-03-24 | Daily/forex trading days |
 | Taiwan Margin Financing Balance YoY | `data/taiwan-margin-financing-balance-yoy.csv` | FinMind TWSE-derived total-market history, recent TWSE MI_MARGN overwrite, then calculated YoY | 2002-01-03 | Daily/Taiwan trading days |
 
+## Source and Terms Notes
+
+This is a personal dashboard built from publicly accessible sources. The repository keeps source attribution in Data Status, and `data/status.json` is regenerated during each refresh so the visible source list stays aligned with the update pipeline.
+
+- Official or public-agency sources used here include FRED, SEC EDGAR companyfacts, FINRA, Japan Ministry of Finance, JPX, TWSE/MOPS, and Taiwan Ministry of Finance.
+- Free market-data endpoints used here include Yahoo Finance, Yahoo Japan, and Cboe public CSV downloads where available.
+- Some sources may still be subject to provider terms, third-party data rights, rate limits, or redistribution restrictions. This is especially relevant for ICE-linked HY OAS data available through FRED, Yahoo Finance data, Cboe data, and New York Fed term premium data.
+- For personal, low-traffic use, the current setup is intended to be practical and transparent. Before commercial use, broad redistribution, or presenting this as a data service, review the relevant provider terms and replace any source whose terms are not suitable.
+
 Each single-series CSV uses:
 
 ```csv

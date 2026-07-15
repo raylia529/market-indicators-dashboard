@@ -2920,6 +2920,19 @@ function renderIndicatorLinks(indicator) {
     .join("");
 }
 
+function renderStatusSourceNote(indicator) {
+  const sources =
+    Array.isArray(indicator.source_urls) && indicator.source_urls.length > 0
+      ? indicator.source_urls.map((source) => source?.label).filter(Boolean)
+      : [indicator.source_name].filter(Boolean);
+
+  if (!sources.length) {
+    return "";
+  }
+
+  return `<p class="status-source-note">Source: ${escapeHtml(sources.join(" / "))}</p>`;
+}
+
 function renderStatusBadge(status) {
   const className = statusClassNames[status] || "unknown";
   return `<span class="data-status-badge ${className}">${escapeHtml(status || "Unknown")}</span>`;
@@ -2966,6 +2979,7 @@ function renderDataStatus(metadata) {
           <tr>
             <td>
               <div class="indicator-source-links">${renderIndicatorLinks(indicator)}</div>
+              ${renderStatusSourceNote(indicator)}
               <div class="status-mobile-meta">
                 ${renderStatusDates(indicator)}
                 ${renderStatusBadge(indicator.status)}
@@ -3080,7 +3094,12 @@ function renderGlossary(glossary) {
       const expanded = expandedGlossaryIds.has(entry.id);
 
       return `
-        <tr class="${expanded ? "glossary-row-expanded" : ""}">
+        <tr
+          class="${expanded ? "glossary-row-expanded" : ""}"
+          data-glossary-row="${escapeHtml(entry.id)}"
+          tabindex="0"
+          aria-expanded="${expanded}"
+        >
           <td>
             <div class="glossary-card-head">
               <div>
@@ -3249,10 +3268,10 @@ if (selectionNoticeClose) {
 
 if (glossaryBody) {
   glossaryBody.addEventListener("click", (event) => {
-    const expandButton = event.target.closest("[data-glossary-expand]");
+    const target = event.target.closest("[data-glossary-expand], [data-glossary-row]");
 
-    if (expandButton) {
-      const id = expandButton.dataset.glossaryExpand;
+    if (target) {
+      const id = target.dataset.glossaryExpand || target.dataset.glossaryRow;
       if (expandedGlossaryIds.has(id)) {
         expandedGlossaryIds.delete(id);
       } else {
@@ -3261,6 +3280,27 @@ if (glossaryBody) {
       renderGlossary({ indicators: glossaryEntries });
       return;
     }
+  });
+
+  glossaryBody.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    const row = event.target.closest("[data-glossary-row]");
+
+    if (!row) {
+      return;
+    }
+
+    event.preventDefault();
+    const id = row.dataset.glossaryRow;
+    if (expandedGlossaryIds.has(id)) {
+      expandedGlossaryIds.delete(id);
+    } else {
+      expandedGlossaryIds.add(id);
+    }
+    renderGlossary({ indicators: glossaryEntries });
   });
 }
 
