@@ -523,6 +523,7 @@ const marginDebtExtremeThresholds = {
   high: 55,
   low: -25,
 };
+const glossaryLinkAliasMaxLength = 24;
 
 const statusClassNames = {
   "Up to date": "up-to-date",
@@ -3034,11 +3035,10 @@ function getGlossaryLinkAliases(currentEntryId) {
 
     [
       entry.short_name,
-      entry.full_name,
       ...Object.values(entry.headings || {}),
     ].forEach((alias) => {
       const normalized = normalizeGlossaryAlias(alias);
-      if (!normalized) {
+      if (!normalized || normalized.length > glossaryLinkAliasMaxLength) {
         return;
       }
 
@@ -3048,6 +3048,27 @@ function getGlossaryLinkAliases(currentEntryId) {
           alias: normalized,
           id: entry.id,
         });
+      }
+    });
+
+    [
+      entry.full_name,
+      ...Object.values(entry.headings || {}),
+    ].forEach((label) => {
+      const matches = String(label || "").matchAll(/[\(（]([A-Za-z][A-Za-z0-9/%.-]{1,14})[\)）]/g);
+      for (const match of matches) {
+        const normalized = normalizeGlossaryAlias(match[1]);
+        if (!normalized) {
+          continue;
+        }
+
+        const key = normalized.toLowerCase();
+        if (!aliases.has(key)) {
+          aliases.set(key, {
+            alias: normalized,
+            id: entry.id,
+          });
+        }
       }
     });
   });
