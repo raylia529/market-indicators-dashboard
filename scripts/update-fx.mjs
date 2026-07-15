@@ -14,6 +14,35 @@ const sources = {
 };
 
 const outputFile = path.join("data", "fx.csv");
+const profileArg = process.argv.find((argument) => argument.startsWith("--profile="));
+const updateProfile = profileArg ? profileArg.slice("--profile=".length).toLowerCase() : "full";
+const onlyArg = process.argv.find((argument) => argument.startsWith("--only="));
+
+if (!["full", "us", "asia"].includes(updateProfile)) {
+  throw new Error(`Unsupported FX update profile: ${updateProfile}`);
+}
+
+const defaultSourcesByProfile = {
+  full: ["usdjpy", "us2y", "japan2y"],
+  us: ["usdjpy", "us2y"],
+  asia: ["japan2y"],
+};
+const requestedSources = new Set(
+  onlyArg
+    ? onlyArg
+        .slice("--only=".length)
+        .split(",")
+        .map((value) => value.trim().toLowerCase())
+        .filter(Boolean)
+    : defaultSourcesByProfile[updateProfile],
+);
+const unsupportedSources = Array.from(requestedSources).filter(
+  (source) => !["usdjpy", "us2y", "japan2y"].includes(source),
+);
+
+if (requestedSources.size === 0 || unsupportedSources.length > 0) {
+  throw new Error(`Unsupported FX source selection: ${Array.from(requestedSources).join(",")}`);
+}
 
 function isValidUsdJpyValue(value) {
   return Number.isFinite(value) && value > 50 && value < 300;
@@ -310,33 +339,48 @@ async function main() {
   let japan2yRows = [];
   const warnings = [];
 
-  try {
-    usdJpyRows = parseFred(await download(sources.usdJpy), "DEXJPUS");
-  } catch (error) {
-    warnings.push(`WARNING: USDJPY download/parse failed. ${error.message}`);
+  let usdJpySourceSucceeded = false;
+  let us2ySourceSucceeded = false;
+  let japan2ySourceSucceeded = false;
+
+  if (requestedSources.has("usdjpy")) {
+    try {
+      usdJpyRows = parseFred(await download(sources.usdJpy), "DEXJPUS");
+      usdJpySourceSucceeded = true;
+    } catch (error) {
+      warnings.push(`WARNING: USDJPY download/parse failed. ${error.message}`);
+    }
+
+    try {
+      yahooUsdJpyRows = parseYahooUsdJpy(
+        await download(sources.usdJpyYahoo, { "User-Agent": "Mozilla/5.0" }),
+      );
+      usdJpySourceSucceeded = true;
+    } catch (error) {
+      warnings.push(`WARNING: Yahoo USDJPY gap-fill download/parse failed. ${error.message}`);
+    }
+
   }
 
-  try {
-    yahooUsdJpyRows = parseYahooUsdJpy(
-      await download(sources.usdJpyYahoo, { "User-Agent": "Mozilla/5.0" }),
-    );
-  } catch (error) {
-    warnings.push(`WARNING: Yahoo USDJPY gap-fill download/parse failed. ${error.message}`);
+  if (requestedSources.has("us2y")) {
+    try {
+      us2yRows = parseFred(await download(sources.us2y), "DGS2");
+      us2ySourceSucceeded = true;
+    } catch (error) {
+      warnings.push(`WARNING: US 2Y download/parse failed. ${error.message}`);
+    }
   }
 
-  try {
-    us2yRows = parseFred(await download(sources.us2y), "DGS2");
-  } catch (error) {
-    warnings.push(`WARNING: US 2Y download/parse failed. ${error.message}`);
-  }
-
-  try {
-    japan2yRows = mergeSeries([
-      ...parseMofJapan2y(await download(sources.japan2yHistorical)),
-      ...parseMofJapan2y(await download(sources.japan2yCurrent)),
-    ]);
-  } catch (error) {
-    warnings.push(`WARNING: Japan 2Y download/parse failed. ${error.message}`);
+  if (requestedSources.has("japan2y")) {
+    try {
+      japan2yRows = mergeSeries([
+        ...parseMofJapan2y(await download(sources.japan2yHistorical)),
+        ...parseMofJapan2y(await download(sources.japan2yCurrent)),
+      ]);
+      japan2ySourceSucceeded = true;
+    } catch (error) {
+      warnings.push(`WARNING: Japan 2Y download/parse failed. ${error.message}`);
+    }
   }
 
   for (const warning of warnings) {
@@ -392,6 +436,14 @@ async function main() {
       4,
     )}`,
   );
+
+  const selectedSourceFailed =
+    (requestedSources.has("usdjpy") && !usdJpySourceSucceeded) ||
+    (requestedSources.has("us2y") && !us2ySourceSucceeded) ||
+    (requestedSources.has("japan2y") && !japan2ySourceSucceeded);
+  if (selectedSourceFailed) {
+    process.exitCode = 1;
+  }
 }
 
 main().catch((error) => {

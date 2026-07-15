@@ -32,6 +32,17 @@ const series = [
   },
 ];
 
+const seriesArg = process.argv.find((argument) => argument.startsWith("--series="));
+const requestedSeries = seriesArg
+  ? new Set(
+      seriesArg
+        .slice("--series=".length)
+        .split(",")
+        .map((value) => value.trim().toUpperCase())
+        .filter(Boolean),
+    )
+  : null;
+
 function download(url) {
   return new Promise((resolve, reject) => {
     https
@@ -130,7 +141,15 @@ async function updateSeries(item) {
 }
 
 async function main() {
-  for (const item of series) {
+  const selectedSeries = requestedSeries
+    ? series.filter((item) => requestedSeries.has(item.id))
+    : series;
+
+  if (selectedSeries.length === 0) {
+    throw new Error(`No matching FRED series requested: ${Array.from(requestedSeries || []).join(",")}`);
+  }
+
+  for (const item of selectedSeries) {
     await updateSeries(item);
   }
 }

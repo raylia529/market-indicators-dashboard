@@ -97,6 +97,30 @@ const indicatorDefinitions = [
     dailyLagDays: 5,
   },
   {
+    key: "ACMTP10",
+    displayName: "US 10-Year Treasury Term Premium",
+    shortName: "US Term Premium",
+    sourceName: "Federal Reserve Bank of New York",
+    sourceUrl: "https://www.newyorkfed.org/research/data_indicators/term-premia-tabs",
+    sourceUrls: [
+      {
+        label: "New York Fed Treasury Term Premia",
+        url: "https://www.newyorkfed.org/research/data_indicators/term-premia-tabs",
+      },
+      {
+        label: "ACMTermPremium.xls",
+        url: "https://www.newyorkfed.org/medialibrary/media/research/data_indicators/ACMTermPremium.xls",
+      },
+    ],
+    frequency: "Daily, business days",
+    unit: "Percentage Points",
+    releaseNote:
+      "Adrian, Crump, and Moench ACM Daily sheet, column ACMTP10. Public redistribution terms for committed derived CSV data are not explicitly confirmed.",
+    file: "data/us-10y-term-premium.csv",
+    type: "single",
+    dailyLagDays: 7,
+  },
+  {
     key: "WALCL",
     displayName: "Federal Reserve Balance Sheet",
     shortName: "Fed Balance Sheet",
@@ -288,6 +312,169 @@ const indicatorDefinitions = [
     column: "US_Japan_2Y_Spread",
     dailyLagDays: 5,
   },
+  {
+    key: "JAPAN_10Y_JGB",
+    displayName: "Japan 10-Year JGB Yield",
+    shortName: "Japan 10Y JGB",
+    sourceName: "Japan Ministry of Finance",
+    sourceUrl: "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/",
+    sourceUrls: [
+      {
+        label: "Japan Ministry of Finance JGB yields",
+        url: "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/",
+      },
+    ],
+    frequency: "Daily, Japan business days",
+    unit: "Percent",
+    file: "data/japan-10-year-jgb-yield.csv",
+    type: "single",
+    dailyLagDays: 5,
+  },
+  {
+    key: "JAPAN_10Y_2Y_SPREAD",
+    displayName: "Japan 10-Year Minus 2-Year JGB Yield Spread",
+    shortName: "Japan 10Y-2Y",
+    sourceName: "Calculated",
+    sourceUrl: "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/",
+    sourceUrls: [
+      {
+        label: "Japan Ministry of Finance JGB yields",
+        url: "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/",
+      },
+    ],
+    formula: "Japan 10-Year JGB Yield - Japan 2-Year JGB Yield",
+    frequency: "Daily, Japan business days",
+    unit: "Percentage Points",
+    file: "data/japan-10y-minus-2y-spread.csv",
+    type: "single",
+    dailyLagDays: 5,
+  },
+  {
+    key: "NIKKEI_225",
+    displayName: "Nikkei 225",
+    shortName: "Nikkei 225",
+    sourceName: "Yahoo Finance",
+    sourceUrl: "https://finance.yahoo.com/quote/%5EN225/",
+    sourceUrls: [{ label: "Yahoo Finance ^N225", url: "https://finance.yahoo.com/quote/%5EN225/" }],
+    frequency: "Daily, Japan trading days",
+    unit: "Index",
+    file: "data/nikkei-225.csv",
+    type: "single",
+    dailyLagDays: 5,
+  },
+  {
+    key: "TOPIX",
+    displayName: "TOPIX",
+    shortName: "TOPIX",
+    sourceName: "JPX / Yahoo Japan",
+    sourceUrl: "https://www.jpx.co.jp/english/markets/statistics-equities/monthly/",
+    sourceUrls: [
+      { label: "JPX monthly statistics", url: "https://www.jpx.co.jp/english/markets/statistics-equities/monthly/" },
+      { label: "Yahoo Japan recent TOPIX history", url: "https://finance.yahoo.co.jp/quote/998405.T/history" },
+      { label: "JPX TOPIX definition", url: "https://www.jpx.co.jp/english/markets/indices/topix/" },
+    ],
+    frequency: "Daily, Japan trading days",
+    unit: "Index",
+    releaseNote: "Official daily closes are parsed from JPX monthly statistics PDFs from 2016 onward; Yahoo Japan fills recent dates when available.",
+    file: "data/topix.csv",
+    type: "single",
+    dailyLagDays: 5,
+  },
+  {
+    key: "JAPAN_FOREIGN_NET_BUYING",
+    displayName: "Foreign Investors Net Buying of Japanese Equities",
+    shortName: "Japan Foreign Net Buying",
+    sourceName: "JPX Trading by Type of Investors",
+    sourceUrl: "https://www.jpx.co.jp/english/markets/statistics-equities/investor-type/",
+    sourceUrls: [
+      { label: "JPX Trading by Type of Investors", url: "https://www.jpx.co.jp/english/markets/statistics-equities/investor-type/" },
+    ],
+    frequency: "Weekly",
+    unit: "JPY Billions",
+    releaseNote: "Weekly purchases minus sales for Foreigners in the JPX Tokyo & Nagoya value workbook.",
+    file: "data/japan-foreign-investor-net-buying.csv",
+    type: "single",
+    dailyLagDays: 14,
+  },
+  {
+    key: "TAIEX",
+    displayName: "TAIEX",
+    shortName: "TAIEX",
+    sourceName: "Yahoo Finance",
+    sourceUrl: "https://finance.yahoo.com/quote/%5ETWII/",
+    sourceUrls: [{ label: "Yahoo Finance ^TWII", url: "https://finance.yahoo.com/quote/%5ETWII/" }],
+    frequency: "Daily, Taiwan trading days",
+    unit: "Index",
+    file: "data/taiex.csv",
+    type: "single",
+    dailyLagDays: 5,
+  },
+  {
+    key: "TAIWAN_FOREIGN_NET_BUYING",
+    displayName: "Foreign Investors Net Buying of Taiwan Equities",
+    shortName: "Taiwan Foreign Net Buying",
+    sourceName: "TWSE / FinMind",
+    sourceUrl: "https://www.twse.com.tw/en/trading/foreign/bfi82u.html",
+    sourceUrls: [
+      { label: "TWSE institutional investor trading", url: "https://www.twse.com.tw/en/trading/foreign/bfi82u.html" },
+      { label: "FinMind total-market history", url: "https://finmind.github.io/en/tutor/TaiwanMarket/Chip/" },
+    ],
+    frequency: "Daily, Taiwan trading days",
+    unit: "TWD Millions",
+    releaseNote: "FinMind provides the TWSE-derived bulk history; recent dates are overwritten by official TWSE BFI82U values.",
+    file: "data/taiwan-foreign-investor-net-buying.csv",
+    type: "single",
+    dailyLagDays: 5,
+  },
+  {
+    key: "TAIWAN_ELECTRONICS_EXPORTS_YOY",
+    displayName: "Taiwan Electronics Exports YoY",
+    shortName: "Taiwan Electronics Exports YoY",
+    sourceName: "Taiwan Ministry of Finance",
+    sourceUrl: "https://data.gov.tw/en/datasets/8380",
+    sourceUrls: [
+      { label: "Taiwan MOF exports by main commodity", url: "https://data.gov.tw/en/datasets/8380" },
+      { label: "Taiwan Ministry of Finance trade statistics", url: "https://web02.mof.gov.tw/njswww/" },
+    ],
+    frequency: "Monthly",
+    unit: "Percent YoY",
+    releaseNote: "Calculated from the Ministry of Finance monthly electronic-components export value in USD.",
+    file: "data/taiwan-electronics-exports-yoy.csv",
+    type: "single",
+    dailyLagDays: 45,
+  },
+  {
+    key: "USDTWD",
+    displayName: "USD/TWD Exchange Rate",
+    shortName: "USD/TWD",
+    sourceName: "Yahoo Finance",
+    sourceUrl: "https://finance.yahoo.com/quote/TWD%3DX/",
+    sourceUrls: [{ label: "Yahoo Finance TWD=X", url: "https://finance.yahoo.com/quote/TWD%3DX/" }],
+    frequency: "Daily forex trading days",
+    unit: "TWD per USD",
+    releaseNote: "Definition: 1 USD = X TWD.",
+    file: "data/usdtwd.csv",
+    type: "single",
+    dailyLagDays: 4,
+  },
+  {
+    key: "TAIWAN_MARGIN_FINANCING_BALANCE_YOY",
+    displayName: "Taiwan Margin Financing Balance YoY",
+    shortName: "Taiwan Margin YoY",
+    sourceName: "TWSE / FinMind",
+    sourceUrl: "https://www.twse.com.tw/en/trading/margin/mi-margn.html",
+    sourceUrls: [
+      { label: "TWSE margin trading", url: "https://www.twse.com.tw/exchangeReport/MI_MARGN?response=html" },
+      { label: "FinMind total-market history", url: "https://finmind.github.io/en/tutor/TaiwanMarket/Chip/" },
+    ],
+    frequency: "Daily, Taiwan trading days",
+    unit: "Percent YoY",
+    formula: "(Current margin financing balance / comparable prior-year balance - 1) * 100",
+    releaseNote: "FinMind provides TWSE-derived bulk history; recent official TWSE values take priority. YoY uses the latest prior-year trading observation within seven days.",
+    file: "data/taiwan-margin-financing-balance-yoy.csv",
+    type: "single",
+    dailyLagDays: 5,
+  },
 ];
 
 function splitCsvLine(line) {
@@ -390,9 +577,81 @@ function dateDiffDays(fromDateText, toDateText) {
   return Math.floor((to - from) / 86400000);
 }
 
+function formatDateText(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function addDays(dateText, days) {
+  const date = new Date(`${dateText}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return formatDateText(date);
+}
+
+function addBusinessDays(dateText, days) {
+  const date = new Date(`${dateText}T00:00:00Z`);
+  let remaining = days;
+
+  while (remaining > 0) {
+    date.setUTCDate(date.getUTCDate() + 1);
+    const day = date.getUTCDay();
+
+    if (day !== 0 && day !== 6) {
+      remaining -= 1;
+    }
+  }
+
+  return formatDateText(date);
+}
+
 function addMonths(year, month, offset) {
   const date = new Date(Date.UTC(year, month - 1 + offset, 1));
   return { year: date.getUTCFullYear(), month: date.getUTCMonth() + 1 };
+}
+
+function endOfMonth(year, month) {
+  return formatDateText(new Date(Date.UTC(year, month, 0)));
+}
+
+function calculateNextExpectedUpdate(definition, latestAvailableDate) {
+  if (!latestAvailableDate || definition.statusOverride) {
+    return null;
+  }
+
+  const normalizedFrequency = definition.frequency.toLowerCase();
+
+  if (normalizedFrequency.includes("monthly")) {
+    const [year, month] = latestAvailableDate.split("-").map(Number);
+    const nextMonth = addMonths(year, month, 1);
+    return endOfMonth(nextMonth.year, nextMonth.month);
+  }
+
+  if (normalizedFrequency.includes("weekly")) {
+    return addDays(latestAvailableDate, 7);
+  }
+
+  if (normalizedFrequency.includes("daily")) {
+    return addBusinessDays(latestAvailableDate, 1);
+  }
+
+  return null;
+}
+
+function waitingStatusFor(definition) {
+  const normalizedFrequency = definition.frequency.toLowerCase();
+
+  if (normalizedFrequency.includes("quarterly")) {
+    return "Quarterly schedule";
+  }
+
+  if (normalizedFrequency.includes("monthly")) {
+    return "Monthly schedule";
+  }
+
+  if (normalizedFrequency.includes("weekly")) {
+    return "Weekly schedule";
+  }
+
+  return "Source lag";
 }
 
 function isFinraWaitingForRelease(latestDate, todayText) {
@@ -424,6 +683,18 @@ function loadUpdateResults() {
   }
 }
 
+function loadPreviousMetadata() {
+  if (!fs.existsSync(outputFile)) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(fs.readFileSync(outputFile, "utf8"));
+  } catch {
+    return {};
+  }
+}
+
 function readGitCommit() {
   try {
     return execFileSync("git", ["rev-parse", "--short", "HEAD"], { encoding: "utf8" }).trim();
@@ -441,6 +712,10 @@ function readPythonVersion() {
 }
 
 function calculateStatus(definition, latestAvailableDate, updateResult, todayText) {
+  if (definition.statusOverride) {
+    return definition.statusOverride;
+  }
+
   if (updateResult?.status === "failed") {
     return "Failed to update";
   }
@@ -451,7 +726,7 @@ function calculateStatus(definition, latestAvailableDate, updateResult, todayTex
 
   if (definition.key === "FINRA_MARGIN_DEBT_YOY") {
     if (isFinraWaitingForRelease(latestAvailableDate, todayText)) {
-      return "Waiting";
+      return "Monthly schedule";
     }
 
     return dateDiffDays(latestAvailableDate, todayText) > 70 ? "Stale data" : "Up to date";
@@ -462,7 +737,7 @@ function calculateStatus(definition, latestAvailableDate, updateResult, todayTex
   const dailyLagDays = definition.dailyLagDays ?? 5;
 
   if (lagDays <= dailyLagDays) {
-    return lagDays <= 2 ? "Up to date" : "Waiting";
+    return lagDays <= 2 ? "Up to date" : waitingStatusFor(definition);
   }
 
   return "Stale data";
@@ -479,6 +754,7 @@ function buildMetadata() {
       : null;
   const todayText = finishedAt.slice(0, 10);
   const updateResults = loadUpdateResults();
+  const previousMetadata = loadPreviousMetadata();
   const indicators = {};
 
   for (const definition of indicatorDefinitions) {
@@ -493,7 +769,14 @@ function buildMetadata() {
     }
 
     const status = calculateStatus(definition, latestAvailableDate, updateResult, todayText);
-    const lastSuccessfulRefresh = status === "Failed to update" ? updateResult?.last_successful_refresh || null : finishedAt;
+    const nextExpectedUpdate = calculateNextExpectedUpdate(definition, latestAvailableDate);
+    const previousIndicator = previousMetadata.indicators?.[definition.key] || null;
+    let lastSuccessfulRefresh = previousIndicator?.last_successful_refresh || null;
+    if (updateResult?.status === "success") {
+      lastSuccessfulRefresh = finishedAt;
+    } else if (!lastSuccessfulRefresh && status !== "Failed to update") {
+      lastSuccessfulRefresh = finishedAt;
+    }
 
     indicators[definition.key] = {
       display_name: definition.displayName,
@@ -502,9 +785,11 @@ function buildMetadata() {
       source_url: definition.sourceUrl,
       source_urls: definition.sourceUrls,
       latest_available_date: latestAvailableDate,
+      next_expected_update_date: nextExpectedUpdate,
       last_successful_refresh: lastSuccessfulRefresh,
       last_successful_refresh_display: formatJstDisplay(lastSuccessfulRefresh),
       frequency: definition.frequency,
+      unit: definition.unit || null,
       status,
       error_message: errorMessage,
       formula: definition.formula || null,

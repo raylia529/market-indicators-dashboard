@@ -1,10 +1,10 @@
 {
-  "last_dashboard_refresh": "2026-07-15T04:44:09+09:00",
-  "last_dashboard_refresh_display": "2026-07-15 04:44 JST",
-  "update_duration_seconds": 1317,
+  "last_dashboard_refresh": "2026-07-15T13:53:51+09:00",
+  "last_dashboard_refresh_display": "2026-07-15 13:53 JST",
+  "update_duration_seconds": 0,
   "dashboard_version": "1.0.0",
-  "last_git_commit": "31674f4",
-  "python_version": "Python 3.12.13",
+  "last_git_commit": "2800e6a",
+  "python_version": "Python 3.13.3",
   "indicators": {
     "SP500": {
       "display_name": "S&P 500 Index",
@@ -18,9 +18,11 @@
         }
       ],
       "latest_available_date": "2026-07-13",
-      "last_successful_refresh": "2026-07-15T04:44:09+09:00",
-      "last_successful_refresh_display": "2026-07-15 04:44 JST",
+      "next_expected_update_date": "2026-07-14",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
       "frequency": "Daily, US trading days",
+      "unit": null,
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -38,11 +40,13 @@
         }
       ],
       "latest_available_date": "2026-07-13",
-      "last_successful_refresh": null,
-      "last_successful_refresh_display": null,
+      "next_expected_update_date": "2026-07-14",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
       "frequency": "Daily, US trading days",
-      "status": "Failed to update",
-      "error_message": "read ECONNRESET",
+      "unit": null,
+      "status": "Up to date",
+      "error_message": null,
       "formula": null,
       "release_note": null
     },
@@ -58,10 +62,12 @@
         }
       ],
       "latest_available_date": "2026-07-10",
-      "last_successful_refresh": "2026-07-15T04:44:09+09:00",
-      "last_successful_refresh_display": "2026-07-15 04:44 JST",
+      "next_expected_update_date": "2026-07-13",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
       "frequency": "Daily",
-      "status": "Waiting",
+      "unit": null,
+      "status": "Source lag",
       "error_message": null,
       "formula": null,
       "release_note": null
@@ -78,11 +84,13 @@
         }
       ],
       "latest_available_date": "2026-07-10",
-      "last_successful_refresh": null,
-      "last_successful_refresh_display": null,
+      "next_expected_update_date": "2026-07-13",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
       "frequency": "Daily",
-      "status": "Failed to update",
-      "error_message": "read ECONNRESET",
+      "unit": null,
+      "status": "Source lag",
+      "error_message": null,
       "formula": null,
       "release_note": null
     },
@@ -98,11 +106,13 @@
         }
       ],
       "latest_available_date": "2026-07-13",
-      "last_successful_refresh": null,
-      "last_successful_refresh_display": null,
+      "next_expected_update_date": "2026-07-14",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
       "frequency": "Daily",
-      "status": "Failed to update",
-      "error_message": "read ECONNRESET",
+      "unit": null,
+      "status": "Up to date",
+      "error_message": null,
       "formula": null,
       "release_note": null
     },
@@ -118,9 +128,11 @@
         }
       ],
       "latest_available_date": "2026-05-31",
-      "last_successful_refresh": "2026-07-15T04:44:09+09:00",
-      "last_successful_refresh_display": "2026-07-15 04:44 JST",
+      "next_expected_update_date": "2026-06-30",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
       "frequency": "Monthly",
+      "unit": null,
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -138,13 +150,41 @@
         }
       ],
       "latest_available_date": "2026-07-10",
-      "last_successful_refresh": "2026-07-15T04:44:09+09:00",
-      "last_successful_refresh_display": "2026-07-15 04:44 JST",
+      "next_expected_update_date": "2026-07-13",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
       "frequency": "Daily, US trading days",
-      "status": "Waiting",
+      "unit": null,
+      "status": "Source lag",
       "error_message": null,
       "formula": null,
       "release_note": null
+    },
+    "ACMTP10": {
+      "display_name": "US 10-Year Treasury Term Premium",
+      "short_name": "US Term Premium",
+      "source_name": "Federal Reserve Bank of New York",
+      "source_url": "https://www.newyorkfed.org/research/data_indicators/term-premia-tabs",
+      "source_urls": [
+        {
+          "label": "New York Fed Treasury Term Premia",
+          "url": "https://www.newyorkfed.org/research/data_indicators/term-premia-tabs"
+        },
+        {
+          "label": "ACMTermPremium.xls",
+          "url": "https://www.newyorkfed.org/medialibrary/media/research/data_indicators/ACMTermPremium.xls"
+        }
+      ],
+      "latest_available_date": "2026-07-13",
+      "next_expected_update_date": "2026-07-14",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
+      "frequency": "Daily, business days",
+      "unit": "Percentage Points",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": "Adrian, Crump, and Moench ACM Daily sheet, column ACMTP10. Public redistribution terms for committed derived CSV data are not explicitly confirmed."
     },
     "WALCL": {
       "display_name": "Federal Reserve Balance Sheet",
@@ -158,11 +198,13 @@
         }
       ],
       "latest_available_date": "2026-07-08",
-      "last_successful_refresh": null,
-      "last_successful_refresh_display": null,
+      "next_expected_update_date": "2026-07-15",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
       "frequency": "Weekly, Wednesday level",
-      "status": "Failed to update",
-      "error_message": "read ECONNRESET",
+      "unit": null,
+      "status": "Weekly schedule",
+      "error_message": null,
       "formula": null,
       "release_note": null
     },
@@ -178,11 +220,13 @@
         }
       ],
       "latest_available_date": "2026-07-03",
-      "last_successful_refresh": null,
-      "last_successful_refresh_display": null,
+      "next_expected_update_date": "2026-07-10",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
       "frequency": "Weekly, ending Friday",
-      "status": "Failed to update",
-      "error_message": "read ECONNRESET",
+      "unit": null,
+      "status": "Weekly schedule",
+      "error_message": null,
       "formula": null,
       "release_note": null
     },
@@ -202,9 +246,11 @@
         }
       ],
       "latest_available_date": "2026-07-13",
-      "last_successful_refresh": "2026-07-15T04:44:09+09:00",
-      "last_successful_refresh_display": "2026-07-15 04:44 JST",
+      "next_expected_update_date": "2026-07-14",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
       "frequency": "Daily, US trading days",
+      "unit": null,
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -226,9 +272,11 @@
         }
       ],
       "latest_available_date": "2026-07-14",
-      "last_successful_refresh": "2026-07-15T04:44:09+09:00",
-      "last_successful_refresh_display": "2026-07-15 04:44 JST",
+      "next_expected_update_date": "2026-07-15",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
       "frequency": "Daily, US trading days",
+      "unit": null,
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -250,9 +298,11 @@
         }
       ],
       "latest_available_date": "2026-07-14",
-      "last_successful_refresh": "2026-07-15T04:44:09+09:00",
-      "last_successful_refresh_display": "2026-07-15 04:44 JST",
+      "next_expected_update_date": "2026-07-15",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
       "frequency": "Daily, US trading days",
+      "unit": null,
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -270,9 +320,11 @@
         }
       ],
       "latest_available_date": "2026-07-14",
-      "last_successful_refresh": "2026-07-15T04:44:09+09:00",
-      "last_successful_refresh_display": "2026-07-15 04:44 JST",
+      "next_expected_update_date": "2026-07-15",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
       "frequency": "Daily, US trading days",
+      "unit": null,
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -294,10 +346,12 @@
         }
       ],
       "latest_available_date": "2026-06-30",
-      "last_successful_refresh": "2026-07-15T04:44:09+09:00",
-      "last_successful_refresh_display": "2026-07-15 04:44 JST",
+      "next_expected_update_date": "2026-07-31",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
       "frequency": "Monthly",
-      "status": "Waiting",
+      "unit": null,
+      "status": "Monthly schedule",
       "error_message": null,
       "formula": null,
       "release_note": "Historical archive is parsed from MOPSOV single-company monthly operating revenue for TSMC 2330. The updater merges newly available months and keeps existing history if a source request fails."
@@ -314,10 +368,12 @@
         }
       ],
       "latest_available_date": "2026-03-31",
-      "last_successful_refresh": "2026-07-15T04:44:09+09:00",
-      "last_successful_refresh_display": "2026-07-15 04:44 JST",
+      "next_expected_update_date": null,
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
       "frequency": "Quarterly",
-      "status": "Waiting",
+      "unit": null,
+      "status": "Quarterly schedule",
       "error_message": null,
       "formula": "Microsoft CapEx + Amazon CapEx + Alphabet CapEx + Meta CapEx",
       "release_note": null
@@ -338,9 +394,11 @@
         }
       ],
       "latest_available_date": "2026-07-13",
-      "last_successful_refresh": "2026-07-15T04:44:09+09:00",
-      "last_successful_refresh_display": "2026-07-15 04:44 JST",
+      "next_expected_update_date": "2026-07-14",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
       "frequency": "Daily forex trading days",
+      "unit": null,
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -358,9 +416,11 @@
         }
       ],
       "latest_available_date": "2026-07-14",
-      "last_successful_refresh": "2026-07-15T04:44:09+09:00",
-      "last_successful_refresh_display": "2026-07-15 04:44 JST",
+      "next_expected_update_date": "2026-07-15",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
       "frequency": "Daily",
+      "unit": null,
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -378,9 +438,11 @@
         }
       ],
       "latest_available_date": "2026-07-14",
-      "last_successful_refresh": "2026-07-15T04:44:09+09:00",
-      "last_successful_refresh_display": "2026-07-15 04:44 JST",
+      "next_expected_update_date": "2026-07-15",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
       "frequency": "Daily, Japan business days",
+      "unit": null,
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -402,13 +464,255 @@
         }
       ],
       "latest_available_date": "2026-07-14",
-      "last_successful_refresh": "2026-07-15T04:44:09+09:00",
-      "last_successful_refresh_display": "2026-07-15 04:44 JST",
+      "next_expected_update_date": "2026-07-15",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
       "frequency": "Daily",
+      "unit": null,
       "status": "Up to date",
       "error_message": null,
       "formula": "US 2-Year Treasury Yield - Japan 2-Year JGB Yield",
       "release_note": null
+    },
+    "JAPAN_10Y_JGB": {
+      "display_name": "Japan 10-Year JGB Yield",
+      "short_name": "Japan 10Y JGB",
+      "source_name": "Japan Ministry of Finance",
+      "source_url": "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/",
+      "source_urls": [
+        {
+          "label": "Japan Ministry of Finance JGB yields",
+          "url": "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/"
+        }
+      ],
+      "latest_available_date": "2026-07-13",
+      "next_expected_update_date": "2026-07-14",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
+      "frequency": "Daily, Japan business days",
+      "unit": "Percent",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": null
+    },
+    "JAPAN_10Y_2Y_SPREAD": {
+      "display_name": "Japan 10-Year Minus 2-Year JGB Yield Spread",
+      "short_name": "Japan 10Y-2Y",
+      "source_name": "Calculated",
+      "source_url": "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/",
+      "source_urls": [
+        {
+          "label": "Japan Ministry of Finance JGB yields",
+          "url": "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/"
+        }
+      ],
+      "latest_available_date": "2026-07-14",
+      "next_expected_update_date": "2026-07-15",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
+      "frequency": "Daily, Japan business days",
+      "unit": "Percentage Points",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": "Japan 10-Year JGB Yield - Japan 2-Year JGB Yield",
+      "release_note": null
+    },
+    "NIKKEI_225": {
+      "display_name": "Nikkei 225",
+      "short_name": "Nikkei 225",
+      "source_name": "Yahoo Finance",
+      "source_url": "https://finance.yahoo.com/quote/%5EN225/",
+      "source_urls": [
+        {
+          "label": "Yahoo Finance ^N225",
+          "url": "https://finance.yahoo.com/quote/%5EN225/"
+        }
+      ],
+      "latest_available_date": "2026-07-15",
+      "next_expected_update_date": "2026-07-16",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
+      "frequency": "Daily, Japan trading days",
+      "unit": "Index",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": null
+    },
+    "TOPIX": {
+      "display_name": "TOPIX",
+      "short_name": "TOPIX",
+      "source_name": "JPX / Yahoo Japan",
+      "source_url": "https://www.jpx.co.jp/english/markets/statistics-equities/monthly/",
+      "source_urls": [
+        {
+          "label": "JPX monthly statistics",
+          "url": "https://www.jpx.co.jp/english/markets/statistics-equities/monthly/"
+        },
+        {
+          "label": "Yahoo Japan recent TOPIX history",
+          "url": "https://finance.yahoo.co.jp/quote/998405.T/history"
+        },
+        {
+          "label": "JPX TOPIX definition",
+          "url": "https://www.jpx.co.jp/english/markets/indices/topix/"
+        }
+      ],
+      "latest_available_date": "2026-07-14",
+      "next_expected_update_date": "2026-07-15",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
+      "frequency": "Daily, Japan trading days",
+      "unit": "Index",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": "Official daily closes are parsed from JPX monthly statistics PDFs from 2016 onward; Yahoo Japan fills recent dates when available."
+    },
+    "JAPAN_FOREIGN_NET_BUYING": {
+      "display_name": "Foreign Investors Net Buying of Japanese Equities",
+      "short_name": "Japan Foreign Net Buying",
+      "source_name": "JPX Trading by Type of Investors",
+      "source_url": "https://www.jpx.co.jp/english/markets/statistics-equities/investor-type/",
+      "source_urls": [
+        {
+          "label": "JPX Trading by Type of Investors",
+          "url": "https://www.jpx.co.jp/english/markets/statistics-equities/investor-type/"
+        }
+      ],
+      "latest_available_date": "2026-07-03",
+      "next_expected_update_date": "2026-07-10",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
+      "frequency": "Weekly",
+      "unit": "JPY Billions",
+      "status": "Weekly schedule",
+      "error_message": null,
+      "formula": null,
+      "release_note": "Weekly purchases minus sales for Foreigners in the JPX Tokyo & Nagoya value workbook."
+    },
+    "TAIEX": {
+      "display_name": "TAIEX",
+      "short_name": "TAIEX",
+      "source_name": "Yahoo Finance",
+      "source_url": "https://finance.yahoo.com/quote/%5ETWII/",
+      "source_urls": [
+        {
+          "label": "Yahoo Finance ^TWII",
+          "url": "https://finance.yahoo.com/quote/%5ETWII/"
+        }
+      ],
+      "latest_available_date": "2026-07-13",
+      "next_expected_update_date": "2026-07-14",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
+      "frequency": "Daily, Taiwan trading days",
+      "unit": "Index",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": null
+    },
+    "TAIWAN_FOREIGN_NET_BUYING": {
+      "display_name": "Foreign Investors Net Buying of Taiwan Equities",
+      "short_name": "Taiwan Foreign Net Buying",
+      "source_name": "TWSE / FinMind",
+      "source_url": "https://www.twse.com.tw/en/trading/foreign/bfi82u.html",
+      "source_urls": [
+        {
+          "label": "TWSE institutional investor trading",
+          "url": "https://www.twse.com.tw/en/trading/foreign/bfi82u.html"
+        },
+        {
+          "label": "FinMind total-market history",
+          "url": "https://finmind.github.io/en/tutor/TaiwanMarket/Chip/"
+        }
+      ],
+      "latest_available_date": "2026-07-15",
+      "next_expected_update_date": "2026-07-16",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
+      "frequency": "Daily, Taiwan trading days",
+      "unit": "TWD Millions",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": "FinMind provides the TWSE-derived bulk history; recent dates are overwritten by official TWSE BFI82U values."
+    },
+    "TAIWAN_ELECTRONICS_EXPORTS_YOY": {
+      "display_name": "Taiwan Electronics Exports YoY",
+      "short_name": "Taiwan Electronics Exports YoY",
+      "source_name": "Taiwan Ministry of Finance",
+      "source_url": "https://data.gov.tw/en/datasets/8380",
+      "source_urls": [
+        {
+          "label": "Taiwan MOF exports by main commodity",
+          "url": "https://data.gov.tw/en/datasets/8380"
+        },
+        {
+          "label": "Taiwan Ministry of Finance trade statistics",
+          "url": "https://web02.mof.gov.tw/njswww/"
+        }
+      ],
+      "latest_available_date": "2026-06-30",
+      "next_expected_update_date": "2026-07-31",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
+      "frequency": "Monthly",
+      "unit": "Percent YoY",
+      "status": "Monthly schedule",
+      "error_message": null,
+      "formula": null,
+      "release_note": "Calculated from the Ministry of Finance monthly electronic-components export value in USD."
+    },
+    "USDTWD": {
+      "display_name": "USD/TWD Exchange Rate",
+      "short_name": "USD/TWD",
+      "source_name": "Yahoo Finance",
+      "source_url": "https://finance.yahoo.com/quote/TWD%3DX/",
+      "source_urls": [
+        {
+          "label": "Yahoo Finance TWD=X",
+          "url": "https://finance.yahoo.com/quote/TWD%3DX/"
+        }
+      ],
+      "latest_available_date": "2026-07-15",
+      "next_expected_update_date": "2026-07-16",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
+      "frequency": "Daily forex trading days",
+      "unit": "TWD per USD",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": "Definition: 1 USD = X TWD."
+    },
+    "TAIWAN_MARGIN_FINANCING_BALANCE_YOY": {
+      "display_name": "Taiwan Margin Financing Balance YoY",
+      "short_name": "Taiwan Margin YoY",
+      "source_name": "TWSE / FinMind",
+      "source_url": "https://www.twse.com.tw/en/trading/margin/mi-margn.html",
+      "source_urls": [
+        {
+          "label": "TWSE margin trading",
+          "url": "https://www.twse.com.tw/exchangeReport/MI_MARGN?response=html"
+        },
+        {
+          "label": "FinMind total-market history",
+          "url": "https://finmind.github.io/en/tutor/TaiwanMarket/Chip/"
+        }
+      ],
+      "latest_available_date": "2026-07-14",
+      "next_expected_update_date": "2026-07-15",
+      "last_successful_refresh": "2026-07-15T13:53:51+09:00",
+      "last_successful_refresh_display": "2026-07-15 13:53 JST",
+      "frequency": "Daily, Taiwan trading days",
+      "unit": "Percent YoY",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": "(Current margin financing balance / comparable prior-year balance - 1) * 100",
+      "release_note": "FinMind provides TWSE-derived bulk history; recent official TWSE values take priority. YoY uses the latest prior-year trading observation within seven days."
     }
   }
 }

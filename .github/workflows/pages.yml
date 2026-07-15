@@ -5,18 +5,30 @@ on:
     branches:
       - main
   schedule:
-    - cron: "0 22 * * *"
-    - cron: "30 22 * * *"
-    - cron: "30 23 * * *"
-    - cron: "0 0 * * *"
-    - cron: "0 2 * * *"
-    - cron: "0 4 * * *"
-    - cron: "0 6 * * *"
-    - cron: "0 8 * * *"
-    - cron: "0 10 * * *"
-    - cron: "0 12 * * *"
-    - cron: "0 14 * * *"
+    # US close retries: 07:00, 08:30, then every two hours 10:00-22:00 JST.
+    - cron: "0 22 * * 1-5"
+    - cron: "30 23 * * 1-5"
+    - cron: "0 1 * * 2-6"
+    - cron: "0 3 * * 2-6"
+    - cron: "0 5 * * 2-6"
+    - cron: "0 7 * * 2-6"
+    - cron: "0 9 * * 2-6"
+    - cron: "0 11 * * 2-6"
+    - cron: "0 13 * * 2-6"
+    # Japan/Taiwan close retries: 16:30 and 21:30 JST on local weekdays.
+    - cron: "30 7 * * 1-5"
+    - cron: "30 12 * * 1-5"
   workflow_dispatch:
+    inputs:
+      update_profile:
+        description: Data group to refresh
+        required: true
+        default: full
+        type: choice
+        options:
+          - full
+          - us
+          - asia
 
 permissions:
   contents: write
@@ -54,11 +66,39 @@ jobs:
       - name: Mark refresh start time
         run: echo "DASHBOARD_REFRESH_STARTED_AT=$(TZ=Asia/Tokyo date +'%Y-%m-%dT%H:%M:%S+09:00')" >> "${GITHUB_ENV}"
 
+      - name: Select scheduled data group
+        if: github.event_name != 'push'
+        run: |
+          profile="${{ inputs.update_profile || 'full' }}"
+          run_us_slow=false
+          run_asia_slow=false
+
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            case "${{ github.event.schedule }}" in
+              "30 7 * * 1-5") profile=asia ;;
+              "30 12 * * 1-5") profile=asia; run_asia_slow=true ;;
+              *) profile=us ;;
+            esac
+
+            if [ "${{ github.event.schedule }}" = "0 13 * * 2-6" ]; then
+              run_us_slow=true
+            fi
+          else
+            run_us_slow=true
+            run_asia_slow=true
+          fi
+
+          echo "UPDATE_PROFILE=${profile}" >> "${GITHUB_ENV}"
+          echo "RUN_US_SLOW=${run_us_slow}" >> "${GITHUB_ENV}"
+          echo "RUN_ASIA_SLOW=${run_asia_slow}" >> "${GITHUB_ENV}"
+          echo "Selected ${profile} update group."
+
       - name: Update CSV data
         if: github.event_name != 'push'
         run: |
           set +e
           failures=0
+          attempted=0
           printf '{}\n' > .update-results.json
 
           record_update_result() {
@@ -96,30 +136,92 @@ jobs:
           }
 
           run_update() {
+            name="$1"
+            command="$2"
+            keys="$3"
+            mode="$4"
+            profile="$5"
+
+            if [ "${mode}" != "force" ]; then
+              node scripts/should-update.mjs "${profile}" "${mode}" "${keys}"
+              gate_code=$?
+              if [ "${gate_code}" -eq 3 ]; then
+                echo "::notice::${name} already complete for this cycle; skipped."
+                return
+              fi
+              if [ "${gate_code}" -ne 0 ]; then
+                echo "::warning::Could not evaluate ${name} freshness; running it as a precaution."
+              fi
+            fi
+
+            attempted=1
             echo "::group::$1"
-            output="$(${2} 2>&1)"
+            output="$(bash -lc "${command}" 2>&1)"
             exit_code=$?
             echo "${output}"
             if [ "${exit_code}" -ne 0 ]; then
-              echo "::warning::$1 failed; keeping existing committed data where available."
-              record_update_result "${3}" "failed" "${output}"
+              echo "::warning::${name} failed; keeping existing committed data where available."
+              record_update_result "${keys}" "failed" "${output}"
               failures=1
             else
-              record_update_result "${3}" "success" ""
+              record_update_result "${keys}" "success" ""
             fi
             echo "::endgroup::"
           }
 
-          run_update "S&P 500" "node scripts/update-sp500.mjs" "SP500"
-          run_update "HY OAS" "node scripts/update-hy-oas.mjs" "BAMLH0A0HYM2"
-          run_update "FRED macro series" "node scripts/update-fred-series.mjs" "VIXCLS,T10Y2Y,DGS10,WALCL,NFCI"
-          run_update "Extra market indicators" "node scripts/update-extra-indicators.mjs" "MOVE,SKEW,SOX,TSMC_REVENUE_YOY,AI_CAPEX,ADVANCE_DECLINE_LINE,SP500_ABOVE_200DMA"
-          run_update "FX series" "node scripts/update-fx.mjs" "DEXJPUS,DGS2,JAPAN_2Y_JGB,US_JAPAN_2Y_SPREAD"
-          run_update "FINRA Margin Debt YoY" "python scripts/update-finra-margin-debt-yoy.py" "FINRA_MARGIN_DEBT_YOY"
+          if [ "${UPDATE_PROFILE}" = "us" ]; then
+            run_update "S&P 500" "node scripts/update-sp500.mjs" "SP500" "daily" "us"
+            run_update "HY OAS" "node scripts/update-hy-oas.mjs" "BAMLH0A0HYM2" "daily" "us"
+            run_update "VIX" "node scripts/update-fred-series.mjs --series=VIXCLS" "VIXCLS" "daily" "us"
+            run_update "US 10Y-2Y spread" "node scripts/update-fred-series.mjs --series=T10Y2Y" "T10Y2Y" "daily" "us"
+            run_update "US 10Y yield" "node scripts/update-fred-series.mjs --series=DGS10" "DGS10" "daily" "us"
+            run_update "MOVE Index" "node scripts/update-extra-indicators.mjs --only=move" "MOVE" "daily" "us"
+            run_update "CBOE SKEW Index" "node scripts/update-extra-indicators.mjs --only=skew" "SKEW" "daily" "us"
+            run_update "SOX Index" "node scripts/update-extra-indicators.mjs --only=sox" "SOX" "daily" "us"
+            run_update "US breadth indicators" "node scripts/update-extra-indicators.mjs --only=breadth" "ADVANCE_DECLINE_LINE,SP500_ABOVE_200DMA" "daily" "us"
+            run_update "USD/JPY" "node scripts/update-fx.mjs --profile=us --only=usdjpy" "DEXJPUS" "daily" "us"
+            run_update "US 2Y and US-JP spread" "node scripts/update-fx.mjs --profile=us --only=us2y" "DGS2,US_JAPAN_2Y_SPREAD" "daily" "us"
+            run_update "US 10Y term premium" "node scripts/update-us-rates.mjs" "ACMTP10" "daily" "us"
+
+            if [ "${RUN_US_SLOW}" = "true" ]; then
+              run_update "Fed balance sheet" "node scripts/update-fred-series.mjs --series=WALCL" "WALCL" "once" "us"
+              run_update "NFCI" "node scripts/update-fred-series.mjs --series=NFCI" "NFCI" "once" "us"
+              run_update "AI CapEx" "node scripts/update-extra-indicators.mjs --only=ai-capex" "AI_CAPEX" "once" "us"
+              run_update "FINRA Margin Debt YoY" "python scripts/update-finra-margin-debt-yoy.py" "FINRA_MARGIN_DEBT_YOY" "once" "us"
+            fi
+          elif [ "${UPDATE_PROFILE}" = "asia" ]; then
+            run_update "Japan 2Y and spread" "node scripts/update-fx.mjs --profile=asia --only=japan2y" "JAPAN_2Y_JGB,US_JAPAN_2Y_SPREAD" "daily" "asia"
+            run_update "Japan 10Y rates" "node scripts/update-japan-rates.mjs" "JAPAN_10Y_JGB,JAPAN_10Y_2Y_SPREAD" "daily" "asia"
+            run_update "Nikkei 225" "node scripts/update-regional-markets.mjs --only=nikkei" "NIKKEI_225" "daily" "asia"
+            run_update "TOPIX" "python scripts/update-regional-official.py --only=topix" "TOPIX" "daily" "asia"
+            run_update "Taiwan foreign net buying" "python scripts/update-regional-official.py --only=taiwan-foreign" "TAIWAN_FOREIGN_NET_BUYING" "daily" "asia"
+            run_update "Taiwan margin financing YoY" "python scripts/update-regional-official.py --only=taiwan-margin" "TAIWAN_MARGIN_FINANCING_BALANCE_YOY" "daily" "asia"
+            run_update "TAIEX" "node scripts/update-regional-markets.mjs --only=taiex" "TAIEX" "daily" "asia"
+            run_update "USD/TWD" "node scripts/update-regional-markets.mjs --only=usdtwd" "USDTWD" "daily" "asia"
+
+            if [ "${RUN_ASIA_SLOW}" = "true" ]; then
+              run_update "TSMC Revenue YoY" "node scripts/update-extra-indicators.mjs --only=tsmc" "TSMC_REVENUE_YOY" "once" "asia"
+              run_update "Japan foreign net buying" "python scripts/update-regional-official.py --only=japan-foreign" "JAPAN_FOREIGN_NET_BUYING" "once" "asia"
+              run_update "Taiwan electronics exports YoY" "python scripts/update-regional-official.py --only=taiwan-exports" "TAIWAN_ELECTRONICS_EXPORTS_YOY" "once" "asia"
+            fi
+          else
+            run_update "S&P 500" "node scripts/update-sp500.mjs" "SP500" "force" "full"
+            run_update "HY OAS" "node scripts/update-hy-oas.mjs" "BAMLH0A0HYM2" "force" "full"
+            run_update "FRED macro series" "node scripts/update-fred-series.mjs" "VIXCLS,T10Y2Y,DGS10,WALCL,NFCI" "force" "full"
+            run_update "Extra market indicators" "node scripts/update-extra-indicators.mjs" "MOVE,SKEW,SOX,TSMC_REVENUE_YOY,AI_CAPEX,ADVANCE_DECLINE_LINE,SP500_ABOVE_200DMA" "force" "full"
+            run_update "FX series" "node scripts/update-fx.mjs --profile=full" "DEXJPUS,DGS2,JAPAN_2Y_JGB,US_JAPAN_2Y_SPREAD" "force" "full"
+            run_update "US rates" "node scripts/update-us-rates.mjs" "ACMTP10" "force" "full"
+            run_update "Japan rates" "node scripts/update-japan-rates.mjs" "JAPAN_10Y_JGB,JAPAN_10Y_2Y_SPREAD" "force" "full"
+            run_update "Regional markets" "node scripts/update-regional-markets.mjs" "NIKKEI_225,TAIEX,USDTWD" "force" "full"
+            run_update "Regional official indicators" "python scripts/update-regional-official.py" "TOPIX,JAPAN_FOREIGN_NET_BUYING,TAIWAN_FOREIGN_NET_BUYING,TAIWAN_ELECTRONICS_EXPORTS_YOY,TAIWAN_MARGIN_FINANCING_BALANCE_YOY" "force" "full"
+            run_update "FINRA Margin Debt YoY" "python scripts/update-finra-margin-debt-yoy.py" "FINRA_MARGIN_DEBT_YOY" "force" "full"
+          fi
 
           echo "DATA_UPDATE_FAILURES=${failures}" >> "${GITHUB_ENV}"
+          echo "ANY_UPDATE_ATTEMPTED=${attempted}" >> "${GITHUB_ENV}"
 
       - name: Generate data status metadata
+        if: github.event_name == 'push' || env.ANY_UPDATE_ATTEMPTED == '1'
         run: node scripts/generate-status.mjs
 
       - name: Validate scripts
@@ -132,6 +234,11 @@ jobs:
           node --check scripts/update-fred-series.mjs
           node --check scripts/update-extra-indicators.mjs
           node --check scripts/update-fx.mjs
+          node --check scripts/update-us-rates.mjs
+          node --check scripts/update-japan-rates.mjs
+          node --check scripts/update-regional-markets.mjs
+          node --check scripts/should-update.mjs
+          python -B -m py_compile scripts/update-regional-official.py
           python -B -m py_compile scripts/update-finra-margin-debt-yoy.py
 
       - name: Remove generated caches

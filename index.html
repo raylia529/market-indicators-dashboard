@@ -10,9 +10,9 @@
     <title>Market Indicators Dashboard</title>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2" />
-    <link rel="stylesheet" href="style.css?v=sections-v1" />
+    <link rel="stylesheet" href="style.css?v=status-polish-v1" />
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
-    <script src="app.js?v=sections-v1" defer></script>
+    <script src="app.js?v=status-polish-v1" defer></script>
   </head>
   <body>
     <main class="dashboard-shell">
@@ -26,8 +26,13 @@
         <button class="tab-button active" type="button" data-tab="macro">Macro</button>
         <button class="tab-button" type="button" data-tab="breadth">Breadth</button>
         <button class="tab-button" type="button" data-tab="semiconductor">Chips &amp; AI</button>
+        <button class="tab-button" type="button" data-tab="us-rates">US Rates</button>
+        <button class="tab-button" type="button" data-tab="jp-rates">JP Rates</button>
+        <button class="tab-button" type="button" data-tab="japan">Japan</button>
+        <button class="tab-button" type="button" data-tab="taiwan">Taiwan</button>
         <button class="tab-button" type="button" data-tab="fx">FX</button>
         <button class="tab-button" type="button" data-tab="data-status">Data Status</button>
+        <button class="tab-button" type="button" data-tab="glossary">Glossary</button>
       </nav>
 
       <section class="tab-panel active" data-tab-panel="macro">
@@ -258,6 +263,214 @@
         </section>
       </section>
 
+      <section class="tab-panel" data-tab-panel="us-rates">
+        <section class="dashboard-section" aria-labelledby="us-rates-chart-title">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">US Rates</p>
+              <h2 id="us-rates-chart-title">Loading indicators</h2>
+            </div>
+            <span id="us-rates-chart-meta">CSV source</span>
+          </div>
+          <div class="mobile-swipe-track" data-mobile-track="us-rates">
+            <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="US Rates indicator cards">
+              <p class="swipe-label">Cards</p>
+              <section class="metric-grid indicator-grid" id="us-rates-indicator-grid" aria-label="US Rates indicator cards">
+                <p class="loading-message">Loading CSV data...</p>
+              </section>
+            </section>
+            <section class="mobile-pane chart-pane" data-mobile-pane="charts" aria-label="US Rates charts">
+              <p class="swipe-label">Charts</p>
+              <div class="chart-toolbar">
+                <div class="range-selector" aria-label="US Rates date range selector">
+                  <button class="range-button" type="button" data-comparison-range="us-rates" data-range="1Y">1Y</button>
+                  <button class="range-button" type="button" data-comparison-range="us-rates" data-range="3Y">3Y</button>
+                  <button class="range-button" type="button" data-comparison-range="us-rates" data-range="5Y">5Y</button>
+                  <button class="range-button" type="button" data-comparison-range="us-rates" data-range="10Y">10Y</button>
+                  <button class="range-button" type="button" data-comparison-range="us-rates" data-range="Max">Max</button>
+                </div>
+                <div class="chart-actions">
+                  <label class="toggle-pill">
+                    <input type="checkbox" id="us-rates-log-scale" />
+                    Log scale
+                  </label>
+                  <button class="secondary-button" id="us-rates-clear-selection" type="button">Clear</button>
+                  <button class="secondary-button" id="us-rates-swap-axes" type="button">Swap axes</button>
+                </div>
+              </div>
+              <div class="selection-notice" id="us-rates-selection-notice" hidden>
+                <span id="us-rates-selection-notice-text"></span>
+                <button class="notice-close" id="us-rates-selection-notice-close" type="button" aria-label="Dismiss notice">x</button>
+              </div>
+              <div class="comparison-chart" id="us-rates-chart" aria-label="Interactive US Rates chart"></div>
+              <p class="compare-note" id="us-rates-compare-note">
+                The two series use independent Y-axis scales. Visual overlap does not imply equal magnitude or correlation.
+              </p>
+            </section>
+          </div>
+          <div class="mobile-view-switch" aria-label="US Rates mobile view">
+            <button class="mobile-view-button active" type="button" data-mobile-view-button="us-rates" data-mobile-view="cards" aria-pressed="true">Cards</button>
+            <button class="mobile-view-button" type="button" data-mobile-view-button="us-rates" data-mobile-view="charts" aria-pressed="false">Charts</button>
+          </div>
+        </section>
+      </section>
+
+      <section class="tab-panel" data-tab-panel="jp-rates">
+        <section class="dashboard-section" aria-labelledby="jp-rates-chart-title">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">JP Rates</p>
+              <h2 id="jp-rates-chart-title">Loading indicators</h2>
+            </div>
+            <span id="jp-rates-chart-meta">CSV source</span>
+          </div>
+          <div class="mobile-swipe-track" data-mobile-track="jp-rates">
+            <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="JP Rates indicator cards">
+              <p class="swipe-label">Cards</p>
+              <section class="metric-grid indicator-grid" id="jp-rates-indicator-grid" aria-label="JP Rates indicator cards">
+                <p class="loading-message">Loading CSV data...</p>
+              </section>
+            </section>
+            <section class="mobile-pane chart-pane" data-mobile-pane="charts" aria-label="JP Rates charts">
+              <p class="swipe-label">Charts</p>
+              <div class="chart-toolbar">
+                <div class="range-selector" aria-label="JP Rates date range selector">
+                  <button class="range-button" type="button" data-comparison-range="jp-rates" data-range="1Y">1Y</button>
+                  <button class="range-button" type="button" data-comparison-range="jp-rates" data-range="3Y">3Y</button>
+                  <button class="range-button" type="button" data-comparison-range="jp-rates" data-range="5Y">5Y</button>
+                  <button class="range-button" type="button" data-comparison-range="jp-rates" data-range="10Y">10Y</button>
+                  <button class="range-button" type="button" data-comparison-range="jp-rates" data-range="Max">Max</button>
+                </div>
+                <div class="chart-actions">
+                  <label class="toggle-pill">
+                    <input type="checkbox" id="jp-rates-log-scale" />
+                    Log scale
+                  </label>
+                  <button class="secondary-button" id="jp-rates-clear-selection" type="button">Clear</button>
+                  <button class="secondary-button" id="jp-rates-swap-axes" type="button">Swap axes</button>
+                </div>
+              </div>
+              <div class="selection-notice" id="jp-rates-selection-notice" hidden>
+                <span id="jp-rates-selection-notice-text"></span>
+                <button class="notice-close" id="jp-rates-selection-notice-close" type="button" aria-label="Dismiss notice">x</button>
+              </div>
+              <div class="comparison-chart" id="jp-rates-chart" aria-label="Interactive JP Rates chart"></div>
+              <p class="compare-note" id="jp-rates-compare-note">
+                The two series use independent Y-axis scales. Visual overlap does not imply equal magnitude or correlation.
+              </p>
+            </section>
+          </div>
+          <div class="mobile-view-switch" aria-label="JP Rates mobile view">
+            <button class="mobile-view-button active" type="button" data-mobile-view-button="jp-rates" data-mobile-view="cards" aria-pressed="true">Cards</button>
+            <button class="mobile-view-button" type="button" data-mobile-view-button="jp-rates" data-mobile-view="charts" aria-pressed="false">Charts</button>
+          </div>
+        </section>
+      </section>
+
+      <section class="tab-panel" data-tab-panel="japan">
+        <section class="dashboard-section" aria-labelledby="japan-chart-title">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Japan</p>
+              <h2 id="japan-chart-title">Loading indicators</h2>
+            </div>
+            <span id="japan-chart-meta">CSV source</span>
+          </div>
+          <div class="mobile-swipe-track" data-mobile-track="japan">
+            <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="Japan indicator cards">
+              <p class="swipe-label">Cards</p>
+              <section class="metric-grid indicator-grid" id="japan-indicator-grid" aria-label="Japan indicator cards">
+                <p class="loading-message">Loading CSV data...</p>
+              </section>
+            </section>
+            <section class="mobile-pane chart-pane" data-mobile-pane="charts" aria-label="Japan charts">
+              <p class="swipe-label">Charts</p>
+              <div class="chart-toolbar">
+                <div class="range-selector" aria-label="Japan date range selector">
+                  <button class="range-button" type="button" data-comparison-range="japan" data-range="1Y">1Y</button>
+                  <button class="range-button" type="button" data-comparison-range="japan" data-range="3Y">3Y</button>
+                  <button class="range-button" type="button" data-comparison-range="japan" data-range="5Y">5Y</button>
+                  <button class="range-button" type="button" data-comparison-range="japan" data-range="10Y">10Y</button>
+                  <button class="range-button" type="button" data-comparison-range="japan" data-range="Max">Max</button>
+                </div>
+                <div class="chart-actions">
+                  <label class="toggle-pill">
+                    <input type="checkbox" id="japan-log-scale" />
+                    Log scale
+                  </label>
+                  <button class="secondary-button" id="japan-clear-selection" type="button">Clear</button>
+                  <button class="secondary-button" id="japan-swap-axes" type="button">Swap axes</button>
+                </div>
+              </div>
+              <div class="selection-notice" id="japan-selection-notice" hidden>
+                <span id="japan-selection-notice-text"></span>
+                <button class="notice-close" id="japan-selection-notice-close" type="button" aria-label="Dismiss notice">x</button>
+              </div>
+              <div class="comparison-chart" id="japan-chart" aria-label="Interactive Japan chart"></div>
+              <p class="compare-note" id="japan-compare-note">
+                The two series use independent Y-axis scales. Visual overlap does not imply equal magnitude or correlation.
+              </p>
+            </section>
+          </div>
+          <div class="mobile-view-switch" aria-label="Japan mobile view">
+            <button class="mobile-view-button active" type="button" data-mobile-view-button="japan" data-mobile-view="cards" aria-pressed="true">Cards</button>
+            <button class="mobile-view-button" type="button" data-mobile-view-button="japan" data-mobile-view="charts" aria-pressed="false">Charts</button>
+          </div>
+        </section>
+      </section>
+
+      <section class="tab-panel" data-tab-panel="taiwan">
+        <section class="dashboard-section" aria-labelledby="taiwan-chart-title">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Taiwan</p>
+              <h2 id="taiwan-chart-title">Loading indicators</h2>
+            </div>
+            <span id="taiwan-chart-meta">CSV source</span>
+          </div>
+          <div class="mobile-swipe-track" data-mobile-track="taiwan">
+            <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="Taiwan indicator cards">
+              <p class="swipe-label">Cards</p>
+              <section class="metric-grid indicator-grid" id="taiwan-indicator-grid" aria-label="Taiwan indicator cards">
+                <p class="loading-message">Loading CSV data...</p>
+              </section>
+            </section>
+            <section class="mobile-pane chart-pane" data-mobile-pane="charts" aria-label="Taiwan charts">
+              <p class="swipe-label">Charts</p>
+              <div class="chart-toolbar">
+                <div class="range-selector" aria-label="Taiwan date range selector">
+                  <button class="range-button" type="button" data-comparison-range="taiwan" data-range="1Y">1Y</button>
+                  <button class="range-button" type="button" data-comparison-range="taiwan" data-range="3Y">3Y</button>
+                  <button class="range-button" type="button" data-comparison-range="taiwan" data-range="5Y">5Y</button>
+                  <button class="range-button" type="button" data-comparison-range="taiwan" data-range="10Y">10Y</button>
+                  <button class="range-button" type="button" data-comparison-range="taiwan" data-range="Max">Max</button>
+                </div>
+                <div class="chart-actions">
+                  <label class="toggle-pill">
+                    <input type="checkbox" id="taiwan-log-scale" />
+                    Log scale
+                  </label>
+                  <button class="secondary-button" id="taiwan-clear-selection" type="button">Clear</button>
+                  <button class="secondary-button" id="taiwan-swap-axes" type="button">Swap axes</button>
+                </div>
+              </div>
+              <div class="selection-notice" id="taiwan-selection-notice" hidden>
+                <span id="taiwan-selection-notice-text"></span>
+                <button class="notice-close" id="taiwan-selection-notice-close" type="button" aria-label="Dismiss notice">x</button>
+              </div>
+              <div class="comparison-chart" id="taiwan-chart" aria-label="Interactive Taiwan chart"></div>
+              <p class="compare-note" id="taiwan-compare-note">
+                The two series use independent Y-axis scales. Visual overlap does not imply equal magnitude or correlation.
+              </p>
+            </section>
+          </div>
+          <div class="mobile-view-switch" aria-label="Taiwan mobile view">
+            <button class="mobile-view-button active" type="button" data-mobile-view-button="taiwan" data-mobile-view="cards" aria-pressed="true">Cards</button>
+            <button class="mobile-view-button" type="button" data-mobile-view-button="taiwan" data-mobile-view="charts" aria-pressed="false">Charts</button>
+          </div>
+        </section>
+      </section>
+
       <section class="tab-panel" data-tab-panel="data-status">
         <section class="dashboard-section data-status-section" aria-labelledby="data-status-title">
           <div class="panel-header">
@@ -287,6 +500,57 @@
               <tbody id="data-status-body">
                 <tr>
                   <td colspan="4">Loading data status...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section class="tab-panel" data-tab-panel="glossary">
+        <section class="dashboard-section data-status-section glossary-section" aria-labelledby="glossary-title">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Reference</p>
+              <div class="glossary-title-row">
+                <h2 id="glossary-title">Glossary</h2>
+                <div class="glossary-language-controls glossary-global-language" id="glossary-language-controls" role="group" aria-label="Glossary language">
+                  <button class="glossary-language-button" type="button" data-glossary-global-language="en" aria-pressed="false">English</button>
+                  <button class="glossary-language-button" type="button" data-glossary-global-language="ja" aria-pressed="false">日本語</button>
+                  <button class="glossary-language-button active" type="button" data-glossary-global-language="zh" aria-pressed="true">中文</button>
+                </div>
+              </div>
+            </div>
+            <div class="glossary-header-tools">
+              <label class="visually-hidden" for="glossary-search">Search glossary</label>
+              <input
+                class="glossary-search-input"
+                id="glossary-search"
+                type="search"
+                placeholder="Search"
+                autocomplete="off"
+              />
+              <span id="glossary-meta">Loading glossary</span>
+            </div>
+          </div>
+
+          <div class="data-status-table-wrap" aria-label="Indicator glossary table">
+            <table class="data-status-table glossary-table">
+              <colgroup>
+                <col class="glossary-col-indicator" />
+                <col class="glossary-col-full-name" />
+                <col class="glossary-col-description" />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th scope="col">Indicator</th>
+                  <th scope="col">Full Name</th>
+                  <th scope="col">Description</th>
+                </tr>
+              </thead>
+              <tbody id="glossary-body">
+                <tr>
+                  <td colspan="3">Loading glossary...</td>
                 </tr>
               </tbody>
             </table>

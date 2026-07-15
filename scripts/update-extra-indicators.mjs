@@ -16,6 +16,16 @@ const files = {
 };
 
 const tsmcArchiveStartRocYear = 102;
+const onlyArg = process.argv.find((argument) => argument.startsWith("--only="));
+const requestedUpdates = onlyArg
+  ? new Set(
+      onlyArg
+        .slice("--only=".length)
+        .split(",")
+        .map((value) => value.trim().toLowerCase())
+        .filter(Boolean),
+    )
+  : null;
 
 function download(url, headers = {}) {
   return new Promise((resolve, reject) => {
@@ -622,25 +632,47 @@ async function updateBreadth() {
 async function runStep(label, fn) {
   try {
     await fn();
+    return true;
   } catch (error) {
     console.warn(`WARNING: ${label} failed. ${error.message}`);
-    if (!Object.values(files).some((file) => fs.existsSync(file))) {
-      process.exitCode = 1;
-    }
+    return false;
   }
 }
 
 async function main() {
-  await runStep("MOVE Index", () =>
-    updateYahooIndex({ symbol: "^MOVE", label: "MOVE Index", file: files.move }),
-  );
-  await runStep("CBOE SKEW Index", updateSkew);
-  await runStep("SOX Index", () =>
-    updateYahooIndex({ symbol: "^SOX", label: "SOX Index", file: files.sox }),
-  );
-  await runStep("TSMC Revenue YoY", updateTsmcRevenueYoy);
-  await runStep("AI CapEx", updateAiCapex);
-  await runStep("Breadth indicators", updateBreadth);
+  const steps = [
+    {
+      key: "move",
+      label: "MOVE Index",
+      update: () => updateYahooIndex({ symbol: "^MOVE", label: "MOVE Index", file: files.move }),
+    },
+    { key: "skew", label: "CBOE SKEW Index", update: updateSkew },
+    {
+      key: "sox",
+      label: "SOX Index",
+      update: () => updateYahooIndex({ symbol: "^SOX", label: "SOX Index", file: files.sox }),
+    },
+    { key: "tsmc", label: "TSMC Revenue YoY", update: updateTsmcRevenueYoy },
+    { key: "ai-capex", label: "AI CapEx", update: updateAiCapex },
+    { key: "breadth", label: "Breadth indicators", update: updateBreadth },
+  ];
+  const selectedSteps = requestedUpdates
+    ? steps.filter((step) => requestedUpdates.has(step.key))
+    : steps;
+
+  if (selectedSteps.length === 0) {
+    throw new Error(`No matching extra indicator update requested: ${Array.from(requestedUpdates || []).join(",")}`);
+  }
+
+  let failed = false;
+  for (const step of selectedSteps) {
+    const succeeded = await runStep(step.label, step.update);
+    failed ||= !succeeded;
+  }
+
+  if (failed) {
+    process.exitCode = 1;
+  }
 }
 
 main().catch((error) => {

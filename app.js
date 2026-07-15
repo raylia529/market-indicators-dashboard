@@ -169,6 +169,241 @@ const semiconductorIndicators = [
   },
 ];
 
+const usRatesIndicators = [
+  {
+    id: "us-2y-yield",
+    name: "US 2Y Yield",
+    file: "data/fx.csv",
+    column: "US_2Y_Yield",
+    unitLabel: "Percent",
+    valueSuffix: "%",
+    category: "rate",
+    color: "#2563eb",
+    decimals: 2,
+  },
+  {
+    id: "us-rates-10y-yield",
+    name: "US 10Y Yield",
+    file: "data/us-10-year-treasury-yield.csv",
+    unitLabel: "Percent",
+    valueSuffix: "%",
+    category: "rate",
+    color: "#14b8a6",
+    decimals: 2,
+  },
+  {
+    id: "us-rates-10y-2y-spread",
+    name: "10Y-2Y Spread",
+    file: "data/us-10y-minus-2y-spread.csv",
+    unitLabel: "Percentage Points",
+    valueSuffix: " pp",
+    category: "spread",
+    color: "#8b5cf6",
+    decimals: 2,
+  },
+  {
+    id: "us-rates-move",
+    name: "MOVE Index",
+    file: "data/move.csv",
+    unitLabel: "Index",
+    valueSuffix: "",
+    category: "volatility",
+    color: "#ec4899",
+    decimals: 2,
+  },
+  {
+    id: "us-10y-term-premium",
+    name: "US 10-Year Treasury Term Premium",
+    file: "data/us-10y-term-premium.csv",
+    unitLabel: "Percentage Points",
+    valueSuffix: " pp",
+    category: "spread",
+    color: "#f97316",
+    decimals: 2,
+  },
+  {
+    id: "us-rates-sp500",
+    name: "S&P 500",
+    file: "data/sp500.csv",
+    unitLabel: "Index",
+    valueSuffix: "",
+    category: "price",
+    color: "#2563eb",
+    decimals: 2,
+  },
+];
+
+const jpRatesIndicators = [
+  {
+    id: "japan-2y-jgb-yield",
+    name: "Japan 2-Year JGB Yield",
+    file: "data/fx.csv",
+    column: "Japan_2Y_Yield",
+    unitLabel: "Percent",
+    valueSuffix: "%",
+    category: "rate",
+    color: "#2563eb",
+    decimals: 3,
+  },
+  {
+    id: "japan-10y-jgb-yield",
+    name: "Japan 10-Year JGB Yield",
+    file: "data/japan-10-year-jgb-yield.csv",
+    unitLabel: "Percent",
+    valueSuffix: "%",
+    category: "rate",
+    color: "#14b8a6",
+    decimals: 3,
+  },
+  {
+    id: "japan-10y-2y-jgb-spread",
+    name: "Japan 10-Year Minus 2-Year JGB Yield Spread",
+    file: "data/japan-10y-minus-2y-spread.csv",
+    unitLabel: "Percentage Points",
+    valueSuffix: " pp",
+    category: "spread",
+    color: "#8b5cf6",
+    decimals: 3,
+  },
+  {
+    id: "jp-rates-topix",
+    name: "TOPIX",
+    file: "data/topix.csv",
+    unitLabel: "Index",
+    valueSuffix: "",
+    category: "price",
+    color: "#64748b",
+    decimals: 2,
+  },
+  {
+    id: "jp-rates-nikkei-225",
+    name: "Nikkei 225",
+    file: "data/nikkei-225.csv",
+    unitLabel: "Index",
+    valueSuffix: "",
+    category: "price",
+    color: "#2563eb",
+    decimals: 2,
+  },
+];
+
+const japanIndicators = [
+  {
+    id: "topix",
+    name: "TOPIX",
+    file: "data/topix.csv",
+    unitLabel: "Index",
+    valueSuffix: "",
+    category: "price",
+    color: "#64748b",
+    decimals: 2,
+  },
+  {
+    id: "nikkei-225",
+    name: "Nikkei 225",
+    file: "data/nikkei-225.csv",
+    unitLabel: "Index",
+    valueSuffix: "",
+    category: "price",
+    color: "#2563eb",
+    decimals: 2,
+  },
+  {
+    id: "japan-foreign-investor-net-buying",
+    name: "Foreign Investors Net Buying of Japanese Equities",
+    file: "data/japan-foreign-investor-net-buying.csv",
+    unitLabel: "JPY Billions",
+    valueSuffix: "",
+    category: "flow",
+    color: "#10b981",
+    decimals: 1,
+  },
+  {
+    id: "japan-tab-usdjpy",
+    name: "USD/JPY",
+    file: "data/fx.csv",
+    column: "USDJPY",
+    unitLabel: "JPY per USD",
+    valueSuffix: "",
+    category: "currency",
+    color: "#f97316",
+    decimals: 2,
+  },
+  {
+    id: "japan-tab-10y-jgb-yield",
+    name: "Japan 10-Year JGB Yield",
+    file: "data/japan-10-year-jgb-yield.csv",
+    unitLabel: "Percent",
+    valueSuffix: "%",
+    category: "rate",
+    color: "#14b8a6",
+    decimals: 3,
+  },
+];
+
+const taiwanIndicators = [
+  {
+    id: "taiex",
+    name: "TAIEX",
+    file: "data/taiex.csv",
+    unitLabel: "Index",
+    valueSuffix: "",
+    category: "price",
+    color: "#2563eb",
+    decimals: 2,
+  },
+  {
+    id: "taiwan-tsmc-revenue-yoy",
+    name: "TSMC Revenue YoY",
+    file: "data/tsmc-revenue-yoy.csv",
+    unitLabel: "Percent YoY",
+    valueSuffix: "%",
+    category: "percentage",
+    color: "#14b8a6",
+    decimals: 1,
+  },
+  {
+    id: "taiwan-foreign-investor-net-buying",
+    name: "Foreign Investors Net Buying of Taiwan Equities",
+    file: "data/taiwan-foreign-investor-net-buying.csv",
+    unitLabel: "TWD Millions",
+    valueSuffix: "",
+    category: "flow",
+    color: "#10b981",
+    decimals: 0,
+  },
+  {
+    id: "usdtwd",
+    name: "USD/TWD",
+    file: "data/usdtwd.csv",
+    unitLabel: "TWD per USD",
+    valueSuffix: "",
+    category: "currency",
+    color: "#8b5cf6",
+    decimals: 2,
+  },
+  {
+    id: "taiwan-margin-financing-balance-yoy",
+    name: "Taiwan Margin Financing Balance YoY",
+    file: "data/taiwan-margin-financing-balance-yoy.csv",
+    unitLabel: "Percent YoY",
+    valueSuffix: "%",
+    category: "percentage",
+    color: "#ec4899",
+    decimals: 1,
+  },
+  {
+    id: "taiwan-electronics-exports-yoy",
+    name: "Taiwan Electronics Exports YoY",
+    file: "data/taiwan-electronics-exports-yoy.csv",
+    unitLabel: "Percent YoY",
+    valueSuffix: "%",
+    category: "percentage",
+    color: "#f97316",
+    decimals: 1,
+  },
+];
+
 const colorPalette = [
   "#111827",
   "#2563eb",
@@ -195,6 +430,39 @@ const ranges = {
   Max: Infinity,
 };
 
+const indicatorChangeFormatOverrides = {
+  sp500: "percent",
+  "breadth-sp500": "percent",
+  "us-rates-sp500": "percent",
+  topix: "percent",
+  "jp-rates-topix": "percent",
+  "nikkei-225": "percent",
+  "jp-rates-nikkei-225": "percent",
+  taiex: "percent",
+  "japan-tab-usdjpy": "percent",
+  usdtwd: "percent",
+  "us-2y-yield": "bps",
+  "treasury-10y": "bps",
+  "us-rates-10y-yield": "bps",
+  "japan-2y-jgb-yield": "bps",
+  "japan-10y-jgb-yield": "bps",
+  "japan-tab-10y-jgb-yield": "bps",
+  "high-yield-oas": "bps",
+  "10y-2y-spread": "bps",
+  "us-rates-10y-2y-spread": "bps",
+  "japan-10y-2y-jgb-spread": "bps",
+  "move": "percent",
+  "us-rates-move": "percent",
+  vix: "percent",
+  "margin-debt-yoy": "pp",
+  "tsmc-revenue-yoy": "pp",
+  "taiwan-tsmc-revenue-yoy": "pp",
+  "taiwan-electronics-exports-yoy": "pp",
+  "taiwan-margin-financing-balance-yoy": "pp",
+  nfci: "points",
+  "fed-balance-sheet": "percent",
+};
+
 const indicatorGrid = document.getElementById("indicator-grid");
 const chartElement = document.getElementById("indicator-chart");
 const chartTitle = document.getElementById("chart-title");
@@ -215,6 +483,10 @@ const fxRangeButtons = Array.from(document.querySelectorAll("[data-fx-range]"));
 const fxCards = Array.from(document.querySelectorAll("[data-fx-card]"));
 const dataStatusUpdated = document.getElementById("data-status-updated");
 const dataStatusBody = document.getElementById("data-status-body");
+const glossaryMeta = document.getElementById("glossary-meta");
+const glossaryBody = document.getElementById("glossary-body");
+const glossarySearchInput = document.getElementById("glossary-search");
+const glossaryLanguageButtons = Array.from(document.querySelectorAll("[data-glossary-global-language]"));
 
 let indicatorData = new Map();
 let indicatorColors = loadStoredColors(
@@ -229,6 +501,10 @@ let macroScale = "linear";
 let fxData = [];
 let activeFxRange = "3M";
 let visibleFxSeries = new Set(["USDJPY", "US_Japan_2Y_Spread"]);
+let glossaryEntries = [];
+let glossarySearchText = "";
+let activeGlossaryLanguage = "zh";
+let expandedGlossaryIds = new Set();
 let fxColors = loadStoredColors(
   "fxIndicatorColors",
   new Map([
@@ -252,8 +528,13 @@ const statusClassNames = {
   "Up to date": "up-to-date",
   "Waiting for next official release": "waiting",
   Waiting: "waiting",
+  "Source lag": "waiting",
+  "Weekly schedule": "waiting",
+  "Monthly schedule": "waiting",
+  "Quarterly schedule": "waiting",
   "Failed to update": "failed",
   "Stale data": "stale",
+  Unavailable: "unavailable",
 };
 
 function usesTouchChartMode() {
@@ -412,6 +693,20 @@ function parseFxCsv(csvText) {
     .filter((row) => row.date);
 }
 
+function parseIndicatorRows(csvText, indicator) {
+  if (!indicator.column) {
+    return parseCsv(csvText);
+  }
+
+  return parseFxCsv(csvText)
+    .map((row) => ({
+      date: row.date,
+      value: row[indicator.column],
+    }))
+    .filter((row) => row.date && Number.isFinite(row.value))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
 function getIndicator(id) {
   return indicators.find((indicator) => indicator.id === id);
 }
@@ -449,6 +744,95 @@ function formatValue(value, indicator) {
   }).format(value);
 
   return `${formatted}${indicator.valueSuffix}`;
+}
+
+function getIndicatorChangeFormat(indicator) {
+  if (indicator.changeFormat) {
+    return indicator.changeFormat;
+  }
+
+  if (indicatorChangeFormatOverrides[indicator.id]) {
+    return indicatorChangeFormatOverrides[indicator.id];
+  }
+
+  if (indicator.category === "price" || indicator.category === "currency") {
+    return "percent";
+  }
+
+  if (indicator.category === "rate" || indicator.category === "spread") {
+    return "bps";
+  }
+
+  if (indicator.category === "percentage") {
+    return "pp";
+  }
+
+  if (indicator.category === "volatility" || indicator.category === "balance-sheet" || indicator.category === "capex") {
+    return "percent";
+  }
+
+  return "points";
+}
+
+function formatSignedChange(value, decimals, suffix) {
+  const sign = value > 0 ? "+" : "";
+  const formatted = new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  }).format(value);
+
+  return `${sign}${formatted}${suffix}`;
+}
+
+function getIndicatorChange(latest, previous, indicator) {
+  if (!latest || !previous || !Number.isFinite(latest.value) || !Number.isFinite(previous.value)) {
+    return null;
+  }
+
+  const rawChange = latest.value - previous.value;
+  const direction = rawChange >= 0 ? "up" : "down";
+  const arrow = rawChange >= 0 ? "▲" : "▼";
+  const format = getIndicatorChangeFormat(indicator);
+
+  if (format === "percent") {
+    if (previous.value === 0) {
+      return null;
+    }
+
+    return {
+      direction,
+      text: `${arrow} ${formatSignedChange((rawChange / Math.abs(previous.value)) * 100, 2, "%")}`,
+    };
+  }
+
+  if (format === "bps") {
+    return {
+      direction,
+      text: `${arrow} ${formatSignedChange(rawChange * 100, 1, " bps")}`,
+    };
+  }
+
+  if (format === "pp") {
+    return {
+      direction,
+      text: `${arrow} ${formatSignedChange(rawChange, 1, " pp")}`,
+    };
+  }
+
+  return {
+    direction,
+    text: `${arrow} ${formatSignedChange(rawChange, indicator.decimals, "")}`,
+  };
+}
+
+function renderIndicatorChange(rows, indicator) {
+  const change = getIndicatorChange(rows.at(-1), rows.at(-2), indicator);
+
+  if (!change) {
+    return "";
+  }
+
+  return `<small class="indicator-change ${change.direction}">${change.text}</small>`;
 }
 
 function escapeHtml(value) {
@@ -1362,6 +1746,7 @@ function renderCards() {
         <article class="metric-card indicator-card ${isActive ? "active" : ""}" data-indicator="${indicator.id}" tabindex="0">
           <span class="indicator-label">${indicator.name}</span>
           <strong>${latest ? formatValue(latest.value, indicator) : "--"}</strong>
+          ${renderIndicatorChange(rows, indicator)}
           <small class="indicator-date">${latest ? `Updated ${formatFullDate(latest.date)}` : "Loading"}</small>
           ${renderColorPalette({
             activeColor: indicatorColors.get(indicator.id),
@@ -1909,6 +2294,7 @@ function renderAll() {
 function createComparisonSection(config) {
   const state = {
     data: new Map(),
+    loaded: false,
     colors: loadStoredColors(
       config.storageKey,
       new Map(config.indicators.map((indicator) => [indicator.id, indicator.color])),
@@ -2080,12 +2466,14 @@ function createComparisonSection(config) {
         const rows = state.data.get(indicator.id) || [];
         const latest = rows.at(-1);
         const isActive = state.selectedIds.includes(indicator.id);
+        const isUnavailable = state.loaded && !latest;
 
         return `
-          <article class="metric-card indicator-card ${isActive ? "active" : ""}" data-${config.key}-indicator="${indicator.id}" tabindex="0">
+          <article class="metric-card indicator-card ${isActive ? "active" : ""} ${isUnavailable ? "unavailable" : ""}" data-${config.key}-indicator="${indicator.id}" tabindex="0" ${isUnavailable ? 'aria-disabled="true"' : ""}>
             <span class="indicator-label">${indicator.name}</span>
             <strong>${latest ? formatValue(latest.value, indicator) : "--"}</strong>
-            <small class="indicator-date">${latest ? `Updated ${formatFullDate(latest.date)}` : "Loading"}</small>
+            ${renderIndicatorChange(rows, indicator)}
+            <small class="indicator-date">${latest ? `Updated ${formatFullDate(latest.date)}` : state.loaded ? "Unavailable" : "Loading"}</small>
             ${renderColorPalette({
               activeColor: state.colors.get(indicator.id),
               targetId: indicator.id,
@@ -2098,6 +2486,11 @@ function createComparisonSection(config) {
 
     function toggleCard(card) {
       const id = card.dataset[`${config.key}Indicator`];
+
+      if (state.loaded && (state.data.get(id) || []).length === 0) {
+        showLocalNotice(`${getLocalIndicator(id).name} data is currently unavailable.`);
+        return;
+      }
 
       if (state.selectedIds.includes(id)) {
         state.selectedIds = state.selectedIds.filter((selectedId) => selectedId !== id);
@@ -2289,11 +2682,12 @@ function createComparisonSection(config) {
             throw new Error(`Could not load ${indicator.file}`);
           }
 
-          return [indicator.id, parseCsv(await response.text())];
+          return [indicator.id, parseIndicatorRows(await response.text(), indicator)];
         }),
       );
 
       state.data = new Map(datasets);
+      state.loaded = true;
       renderLocalAll();
     },
     showError(error) {
@@ -2354,6 +2748,38 @@ const comparisonSections = [
     defaultSelectedIds: ["sox"],
     defaultRange: "5Y",
     storageKey: "semiconductorIndicatorColors",
+  }),
+  createComparisonSection({
+    key: "us-rates",
+    label: "US Rates",
+    indicators: usRatesIndicators,
+    defaultSelectedIds: ["us-rates-10y-yield"],
+    defaultRange: "5Y",
+    storageKey: "usRatesIndicatorColors",
+  }),
+  createComparisonSection({
+    key: "jp-rates",
+    label: "JP Rates",
+    indicators: jpRatesIndicators,
+    defaultSelectedIds: ["japan-10y-jgb-yield"],
+    defaultRange: "5Y",
+    storageKey: "jpRatesIndicatorColors",
+  }),
+  createComparisonSection({
+    key: "japan",
+    label: "Japan",
+    indicators: japanIndicators,
+    defaultSelectedIds: ["nikkei-225"],
+    defaultRange: "5Y",
+    storageKey: "japanIndicatorColors",
+  }),
+  createComparisonSection({
+    key: "taiwan",
+    label: "Taiwan",
+    indicators: taiwanIndicators,
+    defaultSelectedIds: ["taiex"],
+    defaultRange: "5Y",
+    storageKey: "taiwanIndicatorColors",
   }),
 ];
 
@@ -2424,7 +2850,7 @@ async function loadIndicatorData() {
         throw new Error(`Could not load ${indicator.file}`);
       }
 
-      return [indicator.id, parseCsv(await response.text())];
+      return [indicator.id, parseIndicatorRows(await response.text(), indicator)];
     }),
   );
 
@@ -2446,6 +2872,16 @@ async function loadDataStatus() {
 
   if (!response.ok) {
     throw new Error("Could not load data/status.json");
+  }
+
+  return response.json();
+}
+
+async function loadGlossary() {
+  const response = await fetch(`data/glossary.json?updated=${Date.now()}`, { cache: "no-store" });
+
+  if (!response.ok) {
+    throw new Error("Could not load data/glossary.json");
   }
 
   return response.json();
@@ -2489,6 +2925,15 @@ function renderStatusBadge(status) {
   return `<span class="data-status-badge ${className}">${escapeHtml(status || "Unknown")}</span>`;
 }
 
+function renderStatusDates(indicator) {
+  return `
+    <div class="status-date-stack">
+      <span><strong>Latest</strong> ${escapeHtml(indicator.latest_available_date || "--")}</span>
+      <span><strong>Next observation</strong> ${escapeHtml(indicator.next_expected_update_date || "--")}</span>
+    </div>
+  `;
+}
+
 function renderDataStatus(metadata) {
   if (!metadata || !metadata.indicators) {
     throw new Error("Data status metadata is missing indicators.");
@@ -2510,6 +2955,9 @@ function renderDataStatus(metadata) {
         const releaseNote = indicator.release_note
           ? `<p class="formula-text">${escapeHtml(indicator.release_note)}</p>`
           : "";
+        const details = formula || releaseNote
+          ? `<details class="status-details"><summary>Details</summary>${formula}${releaseNote}</details>`
+          : "";
         const errorDetails = indicator.error_message
           ? `<details class="error-details"><summary>Error details</summary><p>${escapeHtml(indicator.error_message)}</p></details>`
           : "";
@@ -2519,15 +2967,14 @@ function renderDataStatus(metadata) {
             <td>
               <div class="indicator-source-links">${renderIndicatorLinks(indicator)}</div>
               <div class="status-mobile-meta">
-                <span><strong>Latest</strong> ${escapeHtml(indicator.latest_available_date || "--")}</span>
+                ${renderStatusDates(indicator)}
                 ${renderStatusBadge(indicator.status)}
               </div>
-              ${formula}
-              ${releaseNote}
+              ${details}
               ${errorDetails}
             </td>
             <td>${escapeHtml(indicator.frequency || "--")}</td>
-            <td>${escapeHtml(indicator.latest_available_date || "--")}</td>
+            <td>${renderStatusDates(indicator)}</td>
             <td>${renderStatusBadge(indicator.status)}</td>
           </tr>
         `;
@@ -2547,6 +2994,141 @@ function renderDataStatusError(error) {
         <td colspan="4">
           <details class="error-details" open>
             <summary>Could not load data status metadata</summary>
+            <p>${escapeHtml(error.message)}</p>
+          </details>
+        </td>
+      </tr>
+    `;
+  }
+}
+
+function renderGlossaryText(text) {
+  if (!text) {
+    return `<p>No glossary text available.</p>`;
+  }
+
+  return text
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`)
+    .join("");
+}
+
+function glossarySearchHaystack(entry) {
+  const descriptions = Object.values(entry.descriptions || {}).join(" ");
+  const headings = Object.values(entry.headings || {}).join(" ");
+
+  return [
+    entry.short_name,
+    entry.full_name,
+    headings,
+    descriptions,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+function filterGlossaryEntries(entries) {
+  const query = glossarySearchText.trim().toLowerCase();
+
+  if (!query) {
+    return entries;
+  }
+
+  return entries.filter((entry) => glossarySearchHaystack(entry).includes(query));
+}
+
+function syncGlossaryLanguageButtons() {
+  glossaryLanguageButtons.forEach((button) => {
+    const active = button.dataset.glossaryGlobalLanguage === activeGlossaryLanguage;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+}
+
+function renderGlossary(glossary) {
+  glossaryEntries = Array.isArray(glossary?.indicators) ? glossary.indicators : [];
+  const visibleEntries = filterGlossaryEntries(glossaryEntries);
+
+  if (glossaryMeta) {
+    glossaryMeta.textContent = glossarySearchText
+      ? `${visibleEntries.length} of ${glossaryEntries.length} indicators`
+      : `${glossaryEntries.length} indicators`;
+  }
+
+  syncGlossaryLanguageButtons();
+
+  if (!glossaryBody) {
+    return;
+  }
+
+  if (!visibleEntries.length) {
+    glossaryBody.innerHTML = `
+      <tr>
+        <td colspan="3">No matching indicators.</td>
+      </tr>
+    `;
+    return;
+  }
+
+  glossaryBody.innerHTML = visibleEntries
+    .map((entry) => {
+      const activeLanguage = activeGlossaryLanguage;
+      const description = entry.descriptions?.[activeLanguage] || "";
+      const expanded = expandedGlossaryIds.has(entry.id);
+
+      return `
+        <tr class="${expanded ? "glossary-row-expanded" : ""}">
+          <td>
+            <div class="glossary-card-head">
+              <div>
+                <strong class="glossary-name-short">${escapeHtml(entry.short_name)}</strong>
+                <div class="status-mobile-meta glossary-mobile-meta">
+                  <span>${escapeHtml(entry.full_name)}</span>
+                </div>
+              </div>
+              <button
+                class="glossary-expand-button"
+                type="button"
+                data-glossary-expand="${escapeHtml(entry.id)}"
+                aria-label="${expanded ? "Collapse" : "Expand"} ${escapeHtml(entry.short_name)} glossary"
+                aria-expanded="${expanded}"
+              >
+                ▾
+              </button>
+            </div>
+          </td>
+          <td>${escapeHtml(entry.full_name)}</td>
+          <td class="glossary-description-cell">
+            ${
+              expanded
+                ? `
+                  <div class="glossary-description" lang="${escapeHtml(activeLanguage)}">
+                    ${renderGlossaryText(description)}
+                  </div>
+                `
+                : ""
+            }
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
+}
+
+function renderGlossaryError(error) {
+  if (glossaryMeta) {
+    glossaryMeta.textContent = "Glossary unavailable";
+  }
+
+  if (glossaryBody) {
+    glossaryBody.innerHTML = `
+      <tr>
+        <td colspan="3">
+          <details class="error-details" open>
+            <summary>Could not load glossary</summary>
             <p>${escapeHtml(error.message)}</p>
           </details>
         </td>
@@ -2665,6 +3247,37 @@ if (selectionNoticeClose) {
   selectionNoticeClose.addEventListener("click", clearNotice);
 }
 
+if (glossaryBody) {
+  glossaryBody.addEventListener("click", (event) => {
+    const expandButton = event.target.closest("[data-glossary-expand]");
+
+    if (expandButton) {
+      const id = expandButton.dataset.glossaryExpand;
+      if (expandedGlossaryIds.has(id)) {
+        expandedGlossaryIds.delete(id);
+      } else {
+        expandedGlossaryIds.add(id);
+      }
+      renderGlossary({ indicators: glossaryEntries });
+      return;
+    }
+  });
+}
+
+glossaryLanguageButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    activeGlossaryLanguage = button.dataset.glossaryGlobalLanguage;
+    renderGlossary({ indicators: glossaryEntries });
+  });
+});
+
+if (glossarySearchInput) {
+  glossarySearchInput.addEventListener("input", () => {
+    glossarySearchText = glossarySearchInput.value;
+    renderGlossary({ indicators: glossaryEntries });
+  });
+}
+
 clearButton.addEventListener("click", () => {
   selectedIndicatorIds = [];
   axisOrder = [];
@@ -2705,6 +3318,8 @@ comparisonSections.forEach((section) => {
 });
 
 loadDataStatus().then(renderDataStatus).catch(renderDataStatusError);
+
+loadGlossary().then(renderGlossary).catch(renderGlossaryError);
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
