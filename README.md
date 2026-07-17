@@ -32,15 +32,15 @@ The repository includes `.github/workflows/pages.yml`, which:
 
 - deploys the current static dashboard when changes are pushed to `main`;
 - separates refreshes by source weight so each scheduled run downloads only the sources that need that time slot;
-- checks U.S. FRED/rates data at 07:30, 09:30, and 12:00 JST, Tuesday through Saturday;
-- checks U.S. Yahoo/Cboe/breadth market data once at 10:30 JST, Tuesday through Saturday, to reduce Yahoo Finance request pressure;
+- checks U.S. FRED/rates data at 07:30, 09:00, and 12:00 JST, Tuesday through Saturday;
+- checks U.S. Yahoo/Cboe/breadth market data at 09:30, 10:30, and a 14:30 JST backup, Tuesday through Saturday, to balance freshness with Yahoo Finance request pressure;
 - checks slower U.S. weekly, monthly, and quarterly series once at 14:00 JST, Tuesday through Saturday;
-- checks Japan/Taiwan daily data once at 21:30 JST on local weekdays;
+- checks Japan/Taiwan daily data at 19:30 and 21:30 JST on local weekdays;
 - skips a daily indicator once its latest observation reaches the current market cycle, so later retry slots do not download it again;
 - can be run manually from the GitHub Actions tab for `full`, `us`, `us-fast`, `us-market`, `us-slow`, or `asia` with `workflow_dispatch`;
 - deploys `index.html`, `style.css`, `app.js`, PWA assets, icons, and `data/` to Pages.
 
-GitHub Actions cron expressions use UTC. The comments and times above are the intended fixed Japan Standard Time schedule. U.S. FRED/rates retries begin after both daylight-saving and standard-time market closes, while Yahoo-heavy checks run only once per day to avoid unnecessary request volume. Exchange holidays can cause a pending daily series to be checked again in later retry slots; existing committed data is retained if a source is unavailable.
+GitHub Actions cron expressions use UTC. The comments and times above are the intended fixed Japan Standard Time schedule. U.S. FRED/rates retries begin after both daylight-saving and standard-time market closes, while Yahoo-heavy checks are limited to three post-close attempts per day to avoid unnecessary request volume. Exchange holidays can cause a pending daily series to be checked again in later retry slots; existing committed data is retained if a source is unavailable.
 
 In GitHub, set `Settings -> Pages -> Build and deployment -> Source` to `GitHub Actions`.
 

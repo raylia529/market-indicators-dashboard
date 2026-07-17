@@ -5,15 +5,18 @@ on:
     branches:
       - main
   schedule:
-    # US fast checks, FRED/rates only: 07:30, 09:30, 12:00 JST Tue-Sat.
+    # US fast checks, FRED/rates only: 07:30, 09:00, 12:00 JST Tue-Sat.
     - cron: "30 22 * * 1-5"
-    - cron: "30 0 * * 2-6"
+    - cron: "0 0 * * 2-6"
     - cron: "0 3 * * 2-6"
-    # US market checks, Yahoo/Cboe/breadth only once: 10:30 JST Tue-Sat.
+    # US market checks, Yahoo/Cboe/breadth: 09:30, 10:30, 14:30 JST Tue-Sat.
+    - cron: "30 0 * * 2-6"
     - cron: "30 1 * * 2-6"
+    - cron: "30 5 * * 2-6"
     # US slow checks, weekly/monthly/quarterly only once: 14:00 JST Tue-Sat.
     - cron: "0 5 * * 2-6"
-    # Japan/Taiwan daily check once after local markets and official updates: 21:30 JST.
+    # Japan/Taiwan daily checks after local markets and official updates: 19:30, 21:30 JST.
+    - cron: "30 10 * * 1-5"
     - cron: "30 12 * * 1-5"
   workflow_dispatch:
     inputs:
@@ -74,10 +77,13 @@ jobs:
           if [ "${{ github.event_name }}" = "schedule" ]; then
             case "${{ github.event.schedule }}" in
               "30 22 * * 1-5") profile=us-fast ;;
-              "30 0 * * 2-6") profile=us-fast ;;
+              "0 0 * * 2-6") profile=us-fast ;;
               "0 3 * * 2-6") profile=us-fast ;;
+              "30 0 * * 2-6") profile=us-market ;;
               "30 1 * * 2-6") profile=us-market ;;
+              "30 5 * * 2-6") profile=us-market ;;
               "0 5 * * 2-6") profile=us-slow ;;
+              "30 10 * * 1-5") profile=asia ;;
               "30 12 * * 1-5") profile=asia ;;
               *) profile=full ;;
             esac
