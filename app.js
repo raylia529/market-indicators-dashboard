@@ -466,7 +466,6 @@ const indicatorChangeFormatOverrides = {
 const indicatorGrid = document.getElementById("indicator-grid");
 const chartElement = document.getElementById("indicator-chart");
 const chartTitle = document.getElementById("chart-title");
-const compareNote = document.getElementById("compare-note");
 const selectionNotice = document.getElementById("selection-notice");
 const selectionNoticeText = document.getElementById("selection-notice-text");
 const selectionNoticeClose = document.getElementById("selection-notice-close");
@@ -2266,7 +2265,6 @@ function renderChart() {
 
   const title = selected.map((id) => getIndicator(id).name).join(" vs ");
   chartTitle.textContent = title || "Select up to two indicators";
-  compareNote.hidden = selected.length !== 2;
 
   const xBounds = getMacroXBounds();
   const firstRows = selected[0] ? getFilteredRows(selected[0]) : [];
@@ -2626,7 +2624,6 @@ function createComparisonSection(config) {
     grid: document.getElementById(`${config.key}-indicator-grid`),
     chart: document.getElementById(`${config.key}-chart`),
     title: document.getElementById(`${config.key}-chart-title`),
-    compareNote: document.getElementById(`${config.key}-compare-note`),
     notice: document.getElementById(`${config.key}-selection-notice`),
     noticeText: document.getElementById(`${config.key}-selection-notice-text`),
     noticeClose: document.getElementById(`${config.key}-selection-notice-close`),
@@ -2880,7 +2877,6 @@ function createComparisonSection(config) {
 
     const title = selected.map((id) => getLocalIndicator(id).name).join(" vs ");
     elements.title.textContent = title || "Select up to two indicators";
-    elements.compareNote.hidden = selected.length !== 2;
 
     const xBounds = getXBounds();
     const firstRows = selected[0] ? getFilteredRows(selected[0]) : [];
@@ -3100,6 +3096,24 @@ function resizeVisibleCharts() {
   });
 }
 
+function centerMobileChartPane(track) {
+  if (!usesTouchChartMode()) {
+    return;
+  }
+
+  const chartPane = track.querySelector('[data-mobile-pane="charts"]');
+
+  if (!chartPane) {
+    return;
+  }
+
+  chartPane.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+    inline: "nearest",
+  });
+}
+
 function setMobileView(group, view) {
   const track = document.querySelector(`[data-mobile-track="${group}"]`);
 
@@ -3122,6 +3136,9 @@ function setMobileView(group, view) {
   if (view === "charts") {
     requestAnimationFrame(() => {
       resizeVisibleCharts();
+      requestAnimationFrame(() => {
+        centerMobileChartPane(track);
+      });
     });
   }
 }

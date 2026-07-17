@@ -614,11 +614,32 @@ h2 {
   flex-wrap: wrap;
 }
 
-.compare-note {
-  margin: 12px 0 0;
-  color: var(--muted);
-  font-size: 0.88rem;
-  font-weight: 700;
+.js-plotly-plot .plotly .modebar {
+  right: 8px;
+  top: 8px;
+  padding: 2px 4px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.js-plotly-plot .plotly .modebar-btn {
+  opacity: 0.62;
+}
+
+.js-plotly-plot .plotly .modebar-btn path {
+  fill: #94a3b8 !important;
+}
+
+.js-plotly-plot .plotly .modebar-btn:hover,
+.js-plotly-plot .plotly .modebar-btn.active {
+  opacity: 1;
+}
+
+.js-plotly-plot .plotly .modebar-btn:hover path,
+.js-plotly-plot .plotly .modebar-btn.active path {
+  fill: #475569 !important;
 }
 
 .data-status-table-wrap {
