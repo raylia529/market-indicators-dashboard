@@ -5,15 +5,11 @@ on:
     branches:
       - main
   schedule:
-    # US fast checks, FRED/rates only: 07:30, 09:00, 12:00 JST Tue-Sat.
+    # US daily checks: 07:30, 09:00, 10:30, 12:00, 14:00 JST Tue-Sat.
     - cron: "30 22 * * 1-5"
     - cron: "0 0 * * 2-6"
-    - cron: "0 3 * * 2-6"
-    # US market checks, Yahoo/Cboe/breadth: 09:30, 10:30, 14:30 JST Tue-Sat.
-    - cron: "30 0 * * 2-6"
     - cron: "30 1 * * 2-6"
-    - cron: "30 5 * * 2-6"
-    # US slow checks, weekly/monthly/quarterly only once: 14:00 JST Tue-Sat.
+    - cron: "0 3 * * 2-6"
     - cron: "0 5 * * 2-6"
     # Japan/Taiwan daily checks after local markets and official updates: 19:30, 21:30 JST.
     - cron: "30 10 * * 1-5"
@@ -76,15 +72,13 @@ jobs:
 
           if [ "${{ github.event_name }}" = "schedule" ]; then
             case "${{ github.event.schedule }}" in
-              "30 22 * * 1-5") profile=us-fast ;;
-              "0 0 * * 2-6") profile=us-fast ;;
-              "0 3 * * 2-6") profile=us-fast ;;
-              "30 0 * * 2-6") profile=us-market ;;
-              "30 1 * * 2-6") profile=us-market ;;
-              "30 5 * * 2-6") profile=us-market ;;
-              "0 5 * * 2-6") profile=us-slow ;;
+              "30 22 * * 1-5") profile=us ;;
+              "0 0 * * 2-6") profile=us ;;
+              "30 1 * * 2-6") profile=us ;;
+              "0 3 * * 2-6") profile=us ;;
+              "0 5 * * 2-6") profile=us-with-slow ;;
               "30 10 * * 1-5") profile=asia ;;
-              "30 12 * * 1-5") profile=asia ;;
+              "30 12 * * 1-5") profile=asia-retry ;;
               *) profile=full ;;
             esac
           fi
@@ -159,9 +153,22 @@ jobs:
             exit_code=$?
             echo "${output}"
             if [ "${exit_code}" -ne 0 ]; then
-              echo "::warning::${name} failed; keeping existing committed data where available."
-              record_update_result "${keys}" "failed" "${output}"
-              failures=1
+              first_output="${output}"
+              echo "::warning::${name} failed; retrying the command once in 15 seconds."
+              sleep 15
+              retry_output="$(bash -lc "${command}" 2>&1)"
+              exit_code=$?
+              echo "${retry_output}"
+
+              if [ "${exit_code}" -ne 0 ]; then
+                printf -v output 'First attempt:\n%s\nRetry attempt:\n%s' "${first_output}" "${retry_output}"
+                echo "::warning::${name} failed twice; keeping existing committed data where available."
+                record_update_result "${keys}" "failed" "${output}"
+                failures=1
+              else
+                echo "::notice::${name} succeeded on the command retry."
+                record_update_result "${keys}" "success" ""
+              fi
             else
               record_update_result "${keys}" "success" ""
             fi
@@ -187,10 +194,11 @@ jobs:
           }
 
           run_us_slow() {
-            run_update "Fed balance sheet" "node scripts/update-fred-series.mjs --series=WALCL" "WALCL" "once" "us"
-            run_update "NFCI" "node scripts/update-fred-series.mjs --series=NFCI" "NFCI" "once" "us"
-            run_update "AI CapEx" "node scripts/update-extra-indicators.mjs --only=ai-capex" "AI_CAPEX" "once" "us"
-            run_update "FINRA Margin Debt YoY" "python scripts/update-finra-margin-debt-yoy.py" "FINRA_MARGIN_DEBT_YOY" "once" "us"
+            slow_mode="${1:-once}"
+            run_update "Fed balance sheet" "node scripts/update-fred-series.mjs --series=WALCL" "WALCL" "${slow_mode}" "us"
+            run_update "NFCI" "node scripts/update-fred-series.mjs --series=NFCI" "NFCI" "${slow_mode}" "us"
+            run_update "AI CapEx" "node scripts/update-extra-indicators.mjs --only=ai-capex" "AI_CAPEX" "${slow_mode}" "us"
+            run_update "FINRA Margin Debt YoY" "python scripts/update-finra-margin-debt-yoy.py" "FINRA_MARGIN_DEBT_YOY" "${slow_mode}" "us"
           }
 
           run_asia_daily() {
@@ -202,9 +210,13 @@ jobs:
             run_update "Taiwan margin financing YoY" "python scripts/update-regional-official.py --only=taiwan-margin" "TAIWAN_MARGIN_FINANCING_BALANCE_YOY" "daily" "asia"
             run_update "TAIEX" "node scripts/update-regional-markets.mjs --only=taiex" "TAIEX" "daily" "asia"
             run_update "USD/TWD" "node scripts/update-regional-markets.mjs --only=usdtwd" "USDTWD" "daily" "asia"
-            run_update "TSMC Revenue YoY" "node scripts/update-extra-indicators.mjs --only=tsmc" "TSMC_REVENUE_YOY" "once" "asia"
-            run_update "Japan foreign net buying" "python scripts/update-regional-official.py --only=japan-foreign" "JAPAN_FOREIGN_NET_BUYING" "once" "asia"
-            run_update "Taiwan electronics exports YoY" "python scripts/update-regional-official.py --only=taiwan-exports" "TAIWAN_ELECTRONICS_EXPORTS_YOY" "once" "asia"
+          }
+
+          run_asia_slow() {
+            slow_mode="${1:-once}"
+            run_update "TSMC Revenue YoY" "node scripts/update-extra-indicators.mjs --only=tsmc" "TSMC_REVENUE_YOY" "${slow_mode}" "asia"
+            run_update "Japan foreign net buying" "python scripts/update-regional-official.py --only=japan-foreign" "JAPAN_FOREIGN_NET_BUYING" "${slow_mode}" "asia"
+            run_update "Taiwan electronics exports YoY" "python scripts/update-regional-official.py --only=taiwan-exports" "TAIWAN_ELECTRONICS_EXPORTS_YOY" "${slow_mode}" "asia"
           }
 
           if [ "${UPDATE_PROFILE}" = "us-fast" ]; then
@@ -212,13 +224,21 @@ jobs:
           elif [ "${UPDATE_PROFILE}" = "us-market" ]; then
             run_us_market
           elif [ "${UPDATE_PROFILE}" = "us-slow" ]; then
-            run_us_slow
+            run_us_slow slow-baseline
           elif [ "${UPDATE_PROFILE}" = "us" ]; then
             run_us_fast
             run_us_market
-            run_us_slow
+            run_us_slow slow-overdue
+          elif [ "${UPDATE_PROFILE}" = "us-with-slow" ]; then
+            run_us_fast
+            run_us_market
+            run_us_slow slow-baseline
           elif [ "${UPDATE_PROFILE}" = "asia" ]; then
             run_asia_daily
+            run_asia_slow slow-baseline
+          elif [ "${UPDATE_PROFILE}" = "asia-retry" ]; then
+            run_asia_daily
+            run_asia_slow slow-overdue
           else
             run_update "S&P 500" "node scripts/update-sp500.mjs" "SP500" "force" "full"
             run_update "HY OAS" "node scripts/update-hy-oas.mjs" "BAMLH0A0HYM2" "force" "full"

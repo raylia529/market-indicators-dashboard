@@ -466,13 +466,10 @@ const indicatorChangeFormatOverrides = {
 const indicatorGrid = document.getElementById("indicator-grid");
 const chartElement = document.getElementById("indicator-chart");
 const chartTitle = document.getElementById("chart-title");
-const chartMeta = document.getElementById("chart-meta");
 const compareNote = document.getElementById("compare-note");
 const selectionNotice = document.getElementById("selection-notice");
 const selectionNoticeText = document.getElementById("selection-notice-text");
 const selectionNoticeClose = document.getElementById("selection-notice-close");
-const clearButton = document.getElementById("clear-selection");
-const swapButton = document.getElementById("swap-axes");
 const macroLogScaleInput = document.getElementById("macro-log-scale");
 const rangeButtons = Array.from(document.querySelectorAll("[data-range]:not([data-comparison-range])"));
 const tabButtons = Array.from(document.querySelectorAll("[data-tab]"));
@@ -515,6 +512,7 @@ let fxColors = loadStoredColors(
 
 const clampingCharts = new WeakSet();
 const longPressTimers = new WeakMap();
+const mobileYAxisGestureStates = new WeakMap();
 const longPressMoveLimit = 12;
 const longPressDelayMs = 700;
 const turningPointLookbackDays = 365;
@@ -522,6 +520,49 @@ const turningPointLookaheadDays = 365;
 const marginDebtExtremeThresholds = {
   high: 55,
   low: -25,
+};
+const thresholdZoneColors = {
+  favorable: "rgba(16, 185, 129, 0.14)",
+  unfavorable: "rgba(239, 68, 68, 0.14)",
+};
+const indicatorThresholdZones = {
+  "margin-debt-yoy": [
+    { to: marginDebtExtremeThresholds.low, tone: "favorable" },
+    { from: marginDebtExtremeThresholds.high, tone: "unfavorable" },
+  ],
+  vix: [
+    { to: 15, tone: "favorable" },
+    { from: 30, tone: "unfavorable" },
+  ],
+  "high-yield-oas": [
+    { to: 4, tone: "favorable" },
+    { from: 6, tone: "unfavorable" },
+  ],
+  nfci: [
+    { to: -0.5, tone: "favorable" },
+    { from: 0.5, tone: "unfavorable" },
+  ],
+  "sp500-above-200dma": [
+    { to: 30, tone: "unfavorable" },
+    { from: 50, to: 70, tone: "favorable" },
+    { from: 80, tone: "unfavorable" },
+  ],
+  skew: [
+    { to: 120, tone: "favorable" },
+    { from: 140, tone: "unfavorable" },
+  ],
+  move: [
+    { to: 100, tone: "favorable" },
+    { from: 140, tone: "unfavorable" },
+  ],
+  "us-rates-move": [
+    { to: 100, tone: "favorable" },
+    { from: 140, tone: "unfavorable" },
+  ],
+  "taiwan-margin-financing-balance-yoy": [
+    { to: -20, tone: "favorable" },
+    { from: 20, tone: "unfavorable" },
+  ],
 };
 const glossaryLinkAliasMaxLength = 24;
 
@@ -596,7 +637,6 @@ function renderColorPaletteContent({ activeColor, targetId, targetType }) {
         : `data-${targetType}-color-panel-for="${targetId}"`;
 
   return `
-    <span>Line color</span>
     <div class="color-picker">
       <button
         class="current-color"
@@ -722,10 +762,6 @@ function formatFullDate(dateText) {
   return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
 }
 
-function formatYearMonth(dateText) {
-  return formatDate(dateText);
-}
-
 function toDate(dateText) {
   return new Date(`${dateText}T00:00:00`);
 }
@@ -826,14 +862,54 @@ function getIndicatorChange(latest, previous, indicator) {
   };
 }
 
-function renderIndicatorChange(rows, indicator) {
-  const change = getIndicatorChange(rows.at(-1), rows.at(-2), indicator);
+function findActualObservationAtOrBefore(rows, dateText) {
+  for (let index = rows.length - 1; index >= 0; index -= 1) {
+    const row = rows[index];
 
-  if (!change) {
+    if (row.date <= dateText && Number.isFinite(row.value)) {
+      return row;
+    }
+  }
+
+  return null;
+}
+
+function renderIndicatorChange(rows, indicator) {
+  const latest = rows.at(-1);
+
+  if (!latest) {
     return "";
   }
 
-  return `<small class="indicator-change ${change.direction}">${change.text}</small>`;
+  const changes = [
+    {
+      label: "1D",
+      change: getIndicatorChange(
+        latest,
+        findActualObservationAtOrBefore(rows, addDays(latest.date, -1)),
+        indicator,
+      ),
+    },
+    {
+      label: "20D",
+      change: getIndicatorChange(
+        latest,
+        findActualObservationAtOrBefore(rows, addDays(latest.date, -20)),
+        indicator,
+      ),
+    },
+  ].filter((item) => item.change);
+
+  if (changes.length === 0) {
+    return "";
+  }
+
+  return `<small class="indicator-change">${changes
+    .map(
+      ({ label, change }) =>
+        `<span class="change-period ${change.direction}"><b>${label}</b> ${change.text}</span>`,
+    )
+    .join("")}</small>`;
 }
 
 function escapeHtml(value) {
@@ -1728,6 +1804,202 @@ function setupBoundedXAxis(chartNode, getBounds) {
   });
 }
 
+function getMobileYAxisAtPoint(chartNode, clientX) {
+  const fullLayout = chartNode?._fullLayout;
+  const plotSize = fullLayout?._size;
+
+  if (!fullLayout || !plotSize) {
+    return null;
+  }
+
+  const localX = clientX - chartNode.getBoundingClientRect().left;
+  const axisPadding = 18;
+
+  if (fullLayout.yaxis && fullLayout.yaxis.visible !== false && localX <= plotSize.l + axisPadding) {
+    return "yaxis";
+  }
+
+  const rightPlotEdge = plotSize.l + plotSize.w;
+
+  if (fullLayout.yaxis2 && fullLayout.yaxis2.visible !== false && localX >= rightPlotEdge - axisPadding) {
+    return "yaxis2";
+  }
+
+  return null;
+}
+
+function setupMobileYAxisGestures(chartNode) {
+  if (!chartNode || chartNode.dataset.mobileYAxisGesturesReady === "true") {
+    return;
+  }
+
+  chartNode.dataset.mobileYAxisGesturesReady = "true";
+
+  function getTouchCenter(touches) {
+    const points = Array.from(touches);
+
+    return {
+      x: points.reduce((sum, touch) => sum + touch.clientX, 0) / points.length,
+      y: points.reduce((sum, touch) => sum + touch.clientY, 0) / points.length,
+    };
+  }
+
+  function beginGesture(touches) {
+    if (!usesTouchChartMode() || touches.length < 1 || touches.length > 2) {
+      return false;
+    }
+
+    const center = getTouchCenter(touches);
+    const axisName = getMobileYAxisAtPoint(chartNode, center.x);
+    const range = chartNode._fullLayout?.[axisName]?.range?.map(Number);
+
+    if (!axisName || range?.length !== 2 || range.some((value) => !Number.isFinite(value))) {
+      return false;
+    }
+
+    const distance =
+      touches.length === 2 ? Math.max(Math.abs(touches[0].clientY - touches[1].clientY), 24) : null;
+
+    mobileYAxisGestureStates.set(chartNode, {
+      axisName,
+      startY: center.y,
+      startDistance: distance,
+      startRange: range,
+      touchCount: touches.length,
+      pendingRange: null,
+      animationFrame: null,
+    });
+    chartNode.dataset.mobileYAxisActive = axisName;
+    return true;
+  }
+
+  function scheduleRange(state, range) {
+    state.pendingRange = range;
+
+    if (state.animationFrame) {
+      return;
+    }
+
+    state.animationFrame = window.requestAnimationFrame(() => {
+      state.animationFrame = null;
+      const nextRange = state.pendingRange;
+      state.pendingRange = null;
+
+      if (nextRange && window.Plotly) {
+        Plotly.relayout(chartNode, {
+          [`${state.axisName}.autorange`]: false,
+          [`${state.axisName}.range`]: nextRange,
+        });
+      }
+    });
+  }
+
+  function clearGesture() {
+    const state = mobileYAxisGestureStates.get(chartNode);
+
+    if (state?.animationFrame) {
+      window.cancelAnimationFrame(state.animationFrame);
+    }
+
+    if (state?.pendingRange && window.Plotly) {
+      Plotly.relayout(chartNode, {
+        [`${state.axisName}.autorange`]: false,
+        [`${state.axisName}.range`]: state.pendingRange,
+      });
+    }
+
+    mobileYAxisGestureStates.delete(chartNode);
+    delete chartNode.dataset.mobileYAxisActive;
+  }
+
+  chartNode.addEventListener(
+    "pointerdown",
+    (event) => {
+      if (!usesTouchChartMode() || event.pointerType === "mouse") {
+        return;
+      }
+
+      const axisName = getMobileYAxisAtPoint(chartNode, event.clientX);
+
+      if (axisName) {
+        chartNode.dataset.mobileYAxisActive = axisName;
+        event.stopImmediatePropagation();
+      }
+    },
+    { capture: true },
+  );
+
+  chartNode.addEventListener(
+    "touchstart",
+    (event) => {
+      if (!beginGesture(event.touches)) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    },
+    { capture: true, passive: false },
+  );
+
+  chartNode.addEventListener(
+    "touchmove",
+    (event) => {
+      const state = mobileYAxisGestureStates.get(chartNode);
+
+      if (!state || event.touches.length !== state.touchCount) {
+        return;
+      }
+
+      const center = getTouchCenter(event.touches);
+      let scale;
+
+      if (state.touchCount === 2) {
+        const distance = Math.max(Math.abs(event.touches[0].clientY - event.touches[1].clientY), 24);
+        scale = state.startDistance / distance;
+      } else {
+        scale = Math.exp((center.y - state.startY) / 180);
+      }
+
+      scale = Math.min(Math.max(scale, 0.15), 6);
+      const midpoint = (state.startRange[0] + state.startRange[1]) / 2;
+      const halfSpan = ((state.startRange[1] - state.startRange[0]) / 2) * scale;
+      scheduleRange(state, [midpoint - halfSpan, midpoint + halfSpan]);
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    },
+    { capture: true, passive: false },
+  );
+
+  ["touchend", "touchcancel"].forEach((eventName) => {
+    chartNode.addEventListener(
+      eventName,
+      (event) => {
+        if (!mobileYAxisGestureStates.has(chartNode)) {
+          return;
+        }
+
+        clearGesture();
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      },
+      { capture: true, passive: false },
+    );
+  });
+
+  ["pointerup", "pointercancel"].forEach((eventName) => {
+    chartNode.addEventListener(
+      eventName,
+      () => {
+        if (!mobileYAxisGestureStates.has(chartNode)) {
+          delete chartNode.dataset.mobileYAxisActive;
+        }
+      },
+      { capture: true },
+    );
+  });
+}
+
 function canUseLog(rows) {
   return rows.length > 0 && rows.every((row) => row.value > 0);
 }
@@ -1874,55 +2146,46 @@ function getLinearAxisRange(axis) {
   return [Math.min(first, second), Math.max(first, second)];
 }
 
-function getMarginDebtThresholdShapes(selected, layout) {
-  const marginDebtIndex = selected.indexOf("margin-debt-yoy");
+function getThresholdZoneShapes(selected, layout) {
+  return selected.flatMap((indicatorId, index) => {
+    const zones = indicatorThresholdZones[indicatorId];
 
-  if (marginDebtIndex === -1) {
-    return [];
-  }
+    if (!zones) {
+      return [];
+    }
 
-  const axisName = marginDebtIndex === 0 ? "yaxis" : "yaxis2";
-  const yref = marginDebtIndex === 0 ? "y" : "y2";
-  const range = getLinearAxisRange(layout[axisName]);
+    const axisName = index === 0 ? "yaxis" : "yaxis2";
+    const yref = index === 0 ? "y" : "y2";
+    const range = getLinearAxisRange(layout[axisName]);
 
-  if (!range) {
-    return [];
-  }
+    if (!range) {
+      return [];
+    }
 
-  const [min, max] = range;
-  const shapes = [];
+    const [min, max] = range;
 
-  if (max > marginDebtExtremeThresholds.high) {
-    shapes.push({
-      type: "rect",
-      xref: "paper",
-      yref,
-      x0: 0,
-      x1: 1,
-      y0: Math.max(marginDebtExtremeThresholds.high, min),
-      y1: max,
-      fillcolor: "rgba(239, 68, 68, 0.14)",
-      line: { width: 0 },
-      layer: "below",
+    return zones.flatMap((zone) => {
+      const y0 = Math.max(zone.from ?? min, min);
+      const y1 = Math.min(zone.to ?? max, max);
+
+      if (!Number.isFinite(y0) || !Number.isFinite(y1) || y1 <= y0) {
+        return [];
+      }
+
+      return {
+        type: "rect",
+        xref: "paper",
+        yref,
+        x0: 0,
+        x1: 1,
+        y0,
+        y1,
+        fillcolor: thresholdZoneColors[zone.tone],
+        line: { width: 0 },
+        layer: "below",
+      };
     });
-  }
-
-  if (min < marginDebtExtremeThresholds.low) {
-    shapes.push({
-      type: "rect",
-      xref: "paper",
-      yref,
-      x0: 0,
-      x1: 1,
-      y0: min,
-      y1: Math.min(marginDebtExtremeThresholds.low, max),
-      fillcolor: "rgba(16, 185, 129, 0.14)",
-      line: { width: 0 },
-      layer: "below",
-    });
-  }
-
-  return shapes;
+  });
 }
 
 function renderChart() {
@@ -1951,9 +2214,7 @@ function renderChart() {
 
   const title = selected.map((id) => getIndicator(id).name).join(" vs ");
   chartTitle.textContent = title || "Select up to two indicators";
-  chartMeta.textContent = `${activeRange} range · Max starts ${formatYearMonth(maxStartDate)}`;
   compareNote.hidden = selected.length !== 2;
-  swapButton.disabled = selected.length !== 2;
 
   const xBounds = getMacroXBounds();
   const firstRows = selected[0] ? getFilteredRows(selected[0]) : [];
@@ -1996,7 +2257,7 @@ function renderChart() {
     layout.yaxis2 = getYAxisLayout("right", secondIndicator, secondRows);
   }
 
-  layout.shapes = getMarginDebtThresholdShapes(selected, layout);
+  layout.shapes = getThresholdZoneShapes(selected, layout);
 
   if (chartElement && window.Plotly) {
     Plotly.react(chartElement, traces, layout, getPlotlyConfig()).then(() => {
@@ -2006,6 +2267,7 @@ function renderChart() {
       }
 
       setupBoundedXAxis(chartElement, getMacroXBounds);
+      setupMobileYAxisGestures(chartElement);
       setupPromptCopy(chartElement, buildMacroPrompt);
     });
   }
@@ -2276,6 +2538,7 @@ function renderFxChart() {
     }
 
     setupBoundedXAxis(fxChartElement, getFxXBounds);
+    setupMobileYAxisGestures(fxChartElement);
     setupPromptCopy(fxChartElement, buildFxPrompt);
   });
 }
@@ -2311,13 +2574,10 @@ function createComparisonSection(config) {
     grid: document.getElementById(`${config.key}-indicator-grid`),
     chart: document.getElementById(`${config.key}-chart`),
     title: document.getElementById(`${config.key}-chart-title`),
-    meta: document.getElementById(`${config.key}-chart-meta`),
     compareNote: document.getElementById(`${config.key}-compare-note`),
     notice: document.getElementById(`${config.key}-selection-notice`),
     noticeText: document.getElementById(`${config.key}-selection-notice-text`),
     noticeClose: document.getElementById(`${config.key}-selection-notice-close`),
-    clearButton: document.getElementById(`${config.key}-clear-selection`),
-    swapButton: document.getElementById(`${config.key}-swap-axes`),
     logScaleInput: document.getElementById(`${config.key}-log-scale`),
     rangeButtons: Array.from(document.querySelectorAll(`[data-comparison-range="${config.key}"]`)),
   };
@@ -2568,9 +2828,7 @@ function createComparisonSection(config) {
 
     const title = selected.map((id) => getLocalIndicator(id).name).join(" vs ");
     elements.title.textContent = title || "Select up to two indicators";
-    elements.meta.textContent = `${state.activeRange} range · Max starts ${formatYearMonth(maxStartDate)}`;
     elements.compareNote.hidden = selected.length !== 2;
-    elements.swapButton.disabled = selected.length !== 2;
 
     const xBounds = getXBounds();
     const firstRows = selected[0] ? getFilteredRows(selected[0]) : [];
@@ -2608,6 +2866,8 @@ function createComparisonSection(config) {
       layout.yaxis2 = getLocalYAxisLayout("right", secondIndicator, secondRows);
     }
 
+    layout.shapes = getThresholdZoneShapes(selected, layout);
+
     if (elements.chart && window.Plotly) {
       Plotly.react(elements.chart, traces, layout, getPlotlyConfig()).then(() => {
         if (xBounds) {
@@ -2616,6 +2876,7 @@ function createComparisonSection(config) {
         }
 
         setupBoundedXAxis(elements.chart, getXBounds);
+        setupMobileYAxisGestures(elements.chart);
         setupPromptCopy(elements.chart, (dateText) => buildComparisonPrompt(config.label, state, config.indicators, dateText));
       });
     }
@@ -2651,23 +2912,6 @@ function createComparisonSection(config) {
   });
 
   elements.noticeClose.addEventListener("click", clearLocalNotice);
-
-  elements.clearButton.addEventListener("click", () => {
-    state.selectedIds = [];
-    state.axisOrder = [];
-    state.manualAxisOrder = false;
-    clearLocalNotice();
-    renderLocalAll();
-  });
-
-  elements.swapButton.addEventListener("click", () => {
-    if (state.axisOrder.length === 2) {
-      state.axisOrder = [state.axisOrder[1], state.axisOrder[0]];
-      state.selectedIds = [...state.axisOrder];
-      state.manualAxisOrder = true;
-      renderLocalAll();
-    }
-  });
 
   return {
     key: config.key,
@@ -3444,23 +3688,6 @@ if (glossarySearchInput) {
     renderGlossary({ indicators: glossaryEntries });
   });
 }
-
-clearButton.addEventListener("click", () => {
-  selectedIndicatorIds = [];
-  axisOrder = [];
-  manualAxisOrder = false;
-  clearNotice();
-  renderAll();
-});
-
-swapButton.addEventListener("click", () => {
-  if (axisOrder.length === 2) {
-    axisOrder = [axisOrder[1], axisOrder[0]];
-    selectedIndicatorIds = [...axisOrder];
-    manualAxisOrder = true;
-    renderAll();
-  }
-});
 
 loadIndicatorData()
   .then(() => {

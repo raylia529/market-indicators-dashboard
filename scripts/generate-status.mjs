@@ -80,6 +80,7 @@ const indicatorDefinitions = [
       },
     ],
     frequency: "Monthly",
+    expectedReleaseDelayDays: 24,
     releaseNote: "Usually published during the third week of the following month.",
     file: "data/finra-margin-debt-yoy.csv",
     type: "single",
@@ -128,6 +129,7 @@ const indicatorDefinitions = [
     sourceUrl: "https://fred.stlouisfed.org/series/WALCL",
     sourceUrls: [{ label: "FRED WALCL", url: "https://fred.stlouisfed.org/series/WALCL" }],
     frequency: "Weekly, Wednesday level",
+    expectedReleaseDelayDays: 9,
     file: "data/fed-balance-sheet.csv",
     type: "single",
     dailyLagDays: 10,
@@ -140,6 +142,7 @@ const indicatorDefinitions = [
     sourceUrl: "https://fred.stlouisfed.org/series/NFCI",
     sourceUrls: [{ label: "FRED NFCI", url: "https://fred.stlouisfed.org/series/NFCI" }],
     frequency: "Weekly, ending Friday",
+    expectedReleaseDelayDays: 12,
     file: "data/nfci.csv",
     type: "single",
     dailyLagDays: 12,
@@ -223,6 +226,7 @@ const indicatorDefinitions = [
       { label: "MOPSOV monthly revenue endpoint", url: "https://mopsov.twse.com.tw/mops/web/t05st10_ifrs" },
     ],
     frequency: "Monthly",
+    expectedReleaseDelayDays: 41,
     releaseNote:
       "Historical archive is parsed from MOPSOV single-company monthly operating revenue for TSMC 2330. The updater merges newly available months and keeps existing history if a source request fails.",
     file: "data/tsmc-revenue-yoy.csv",
@@ -240,6 +244,7 @@ const indicatorDefinitions = [
     ],
     formula: "Microsoft CapEx + Amazon CapEx + Alphabet CapEx + Meta CapEx",
     frequency: "Quarterly",
+    expectedReleaseDelayDays: 130,
     file: "data/ai-capex.csv",
     type: "single",
     dailyLagDays: 120,
@@ -390,6 +395,7 @@ const indicatorDefinitions = [
       { label: "JPX Trading by Type of Investors", url: "https://www.jpx.co.jp/english/markets/statistics-equities/investor-type/" },
     ],
     frequency: "Weekly",
+    expectedReleaseDelayDays: 13,
     unit: "JPY Billions",
     releaseNote: "Weekly purchases minus sales for Foreigners in the JPX Tokyo & Nagoya value workbook.",
     file: "data/japan-foreign-investor-net-buying.csv",
@@ -437,6 +443,7 @@ const indicatorDefinitions = [
       { label: "Taiwan Ministry of Finance trade statistics", url: "https://web02.mof.gov.tw/njswww/" },
     ],
     frequency: "Monthly",
+    expectedReleaseDelayDays: 38,
     unit: "Percent YoY",
     releaseNote: "Calculated from the Ministry of Finance monthly electronic-components export value in USD.",
     file: "data/taiwan-electronics-exports-yoy.csv",
@@ -615,6 +622,10 @@ function endOfMonth(year, month) {
 function calculateNextExpectedUpdate(definition, latestAvailableDate) {
   if (!latestAvailableDate || definition.statusOverride) {
     return null;
+  }
+
+  if (Number.isInteger(definition.expectedReleaseDelayDays)) {
+    return addDays(latestAvailableDate, definition.expectedReleaseDelayDays);
   }
 
   const normalizedFrequency = definition.frequency.toLowerCase();

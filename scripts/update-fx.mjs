@@ -2,6 +2,10 @@ import fs from "node:fs";
 import https from "node:https";
 import path from "node:path";
 
+const downloadTimeoutMs = 30_000;
+const defaultRetryBackoffMs = [2_500, 5_000];
+const fredRetryBackoffMs = [15_000, 30_000, 60_000, 180_000, 300_000];
+
 const sources = {
   usdJpy: "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DEXJPUS",
   usdJpyYahoo:
@@ -48,20 +52,21 @@ function isValidUsdJpyValue(value) {
   return Number.isFinite(value) && value > 50 && value < 300;
 }
 
-function download(url, headers = {}) {
+function download(url, headers = {}, timeoutMs = downloadTimeoutMs) {
   return new Promise((resolve, reject) => {
-    https
-      .get(url, { headers }, (response) => {
+    const request = https.get(url, { headers }, (response) => {
         if (
           response.statusCode >= 300 &&
           response.statusCode < 400 &&
           response.headers.location
         ) {
-          download(response.headers.location, headers).then(resolve, reject);
+          response.resume();
+          download(response.headers.location, headers, timeoutMs).then(resolve, reject);
           return;
         }
 
         if (response.statusCode !== 200) {
+          response.resume();
           reject(new Error(`Download failed: ${url} (${response.statusCode})`));
           return;
         }
@@ -72,8 +77,12 @@ function download(url, headers = {}) {
           body += chunk;
         });
         response.on("end", () => resolve(body));
-      })
-      .on("error", reject);
+      });
+
+    request.setTimeout(timeoutMs, () => {
+      request.destroy(new Error(`Download timed out after ${timeoutMs / 1000}s: ${url}`));
+    });
+    request.on("error", reject);
   });
 }
 
@@ -83,15 +92,19 @@ function wait(ms) {
   });
 }
 
-async function downloadWithRetry(url, headers = {}, attempts = 3) {
+async function downloadWithRetry(url, headers = {}, backoffMs = defaultRetryBackoffMs) {
   let lastError;
-  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+  for (let attempt = 0; attempt <= backoffMs.length; attempt += 1) {
     try {
       return await download(url, headers);
     } catch (error) {
       lastError = error;
-      if (attempt < attempts) {
-        await wait(2500 * attempt);
+      if (attempt < backoffMs.length) {
+        const delayMs = backoffMs[attempt];
+        console.warn(
+          `Download failed (${error.message}); retry ${attempt + 1}/${backoffMs.length} in ${delayMs / 1000}s.`,
+        );
+        await wait(delayMs);
       }
     }
   }
@@ -366,7 +379,10 @@ async function main() {
 
   if (requestedSources.has("usdjpy")) {
     try {
-      usdJpyRows = parseFred(await downloadWithRetry(sources.usdJpy), "DEXJPUS");
+      usdJpyRows = parseFred(
+        await downloadWithRetry(sources.usdJpy, {}, fredRetryBackoffMs),
+        "DEXJPUS",
+      );
       usdJpySourceSucceeded = true;
     } catch (error) {
       warnings.push(`WARNING: USDJPY download/parse failed. ${error.message}`);
@@ -385,7 +401,10 @@ async function main() {
 
   if (requestedSources.has("us2y")) {
     try {
-      us2yRows = parseFred(await downloadWithRetry(sources.us2y), "DGS2");
+      us2yRows = parseFred(
+        await downloadWithRetry(sources.us2y, {}, fredRetryBackoffMs),
+        "DGS2",
+      );
       us2ySourceSucceeded = true;
     } catch (error) {
       warnings.push(`WARNING: US 2Y download/parse failed. ${error.message}`);

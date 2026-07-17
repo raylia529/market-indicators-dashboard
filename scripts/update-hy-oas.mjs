@@ -2,26 +2,31 @@ import fs from "node:fs";
 import https from "node:https";
 import path from "node:path";
 
+const downloadTimeoutMs = 30_000;
+const defaultRetryBackoffMs = [2_500, 5_000];
+const fredRetryBackoffMs = [15_000, 30_000, 60_000, 180_000, 300_000];
+
 const archiveUrl =
   "https://raw.githubusercontent.com/csaladenes/eco-archive/refs/heads/main/BAMLH0A0HYM2.csv";
 const fredUrl = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2";
 const outputFile = path.join("data", "hy_oas.csv");
 const seriesColumn = "BAMLH0A0HYM2";
 
-function download(url) {
+function download(url, timeoutMs = downloadTimeoutMs) {
   return new Promise((resolve, reject) => {
-    https
-      .get(url, (response) => {
+    const request = https.get(url, (response) => {
         if (
           response.statusCode >= 300 &&
           response.statusCode < 400 &&
           response.headers.location
         ) {
-          download(response.headers.location).then(resolve, reject);
+          response.resume();
+          download(response.headers.location, timeoutMs).then(resolve, reject);
           return;
         }
 
         if (response.statusCode !== 200) {
+          response.resume();
           reject(new Error(`Download failed: ${url} (${response.statusCode})`));
           return;
         }
@@ -32,8 +37,12 @@ function download(url) {
           body += chunk;
         });
         response.on("end", () => resolve(body));
-      })
-      .on("error", reject);
+      });
+
+    request.setTimeout(timeoutMs, () => {
+      request.destroy(new Error(`Download timed out after ${timeoutMs / 1000}s: ${url}`));
+    });
+    request.on("error", reject);
   });
 }
 
@@ -43,15 +52,19 @@ function wait(ms) {
   });
 }
 
-async function downloadWithRetry(url, attempts = 3) {
+async function downloadWithRetry(url, backoffMs = defaultRetryBackoffMs) {
   let lastError;
-  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+  for (let attempt = 0; attempt <= backoffMs.length; attempt += 1) {
     try {
       return await download(url);
     } catch (error) {
       lastError = error;
-      if (attempt < attempts) {
-        await wait(2500 * attempt);
+      if (attempt < backoffMs.length) {
+        const delayMs = backoffMs[attempt];
+        console.warn(
+          `Download failed (${error.message}); retry ${attempt + 1}/${backoffMs.length} in ${delayMs / 1000}s.`,
+        );
+        await wait(delayMs);
       }
     }
   }
@@ -203,7 +216,7 @@ async function main() {
   }
 
   try {
-    const fredText = await downloadWithRetry(fredUrl);
+    const fredText = await downloadWithRetry(fredUrl, fredRetryBackoffMs);
     fredRows = parseCsv(fredText, ["observation_date", "DATE"]);
   } catch (error) {
     console.warn(`WARNING: FRED rolling download/parse failed. ${error.message}`);

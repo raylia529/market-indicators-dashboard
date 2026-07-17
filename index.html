@@ -10,18 +10,12 @@
     <title>Market Indicators Dashboard</title>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2" />
-    <link rel="stylesheet" href="style.css?v=desktop-five-cards-v1" />
+    <link rel="stylesheet" href="style.css?v=change-spacing-v1" />
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
-    <script src="app.js?v=desktop-five-cards-v1" defer></script>
+    <script src="app.js?v=change-spacing-v1" defer></script>
   </head>
   <body>
     <main class="dashboard-shell">
-      <header class="page-header">
-        <div>
-          <h1>Market Indicators</h1>
-        </div>
-      </header>
-
       <nav class="tab-bar" aria-label="Dashboard sections">
         <button class="tab-button active" type="button" data-tab="macro">Macro</button>
         <button class="tab-button" type="button" data-tab="breadth">Breadth</button>
@@ -42,7 +36,6 @@
               <p class="eyebrow">Macro</p>
               <h2 id="chart-title">Loading indicators</h2>
             </div>
-            <span id="chart-meta">CSV source</span>
           </div>
           <div class="mobile-swipe-track" data-mobile-track="macro">
             <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="Macro indicator cards">
@@ -56,7 +49,6 @@
               </section>
             </section>
             <section class="mobile-pane chart-pane" data-mobile-pane="charts" aria-label="Macro charts">
-              <p class="swipe-label">Charts</p>
               <div class="chart-toolbar">
                 <div class="range-selector" aria-label="Date range selector">
                   <button class="range-button" type="button" data-range="3M">3M</button>
@@ -72,8 +64,6 @@
                     <input type="checkbox" id="macro-log-scale" />
                     Log scale
                   </label>
-                  <button class="secondary-button" id="clear-selection" type="button">Clear</button>
-                  <button class="secondary-button" id="swap-axes" type="button">Swap axes</button>
                 </div>
               </div>
               <div class="selection-notice" id="selection-notice" hidden>
@@ -124,7 +114,6 @@
             </div>
           </section>
           <section class="mobile-pane chart-pane" data-mobile-pane="charts" aria-label="FX charts">
-            <p class="swipe-label">Charts</p>
             <div class="fx-controls">
               <div class="range-selector" aria-label="FX date range selector">
                 <button class="range-button active" type="button" data-fx-range="3M">3M</button>
@@ -160,7 +149,6 @@
               <p class="eyebrow">Breadth</p>
               <h2 id="breadth-chart-title">Loading indicators</h2>
             </div>
-            <span id="breadth-chart-meta">CSV source</span>
           </div>
           <div class="mobile-swipe-track" data-mobile-track="breadth">
             <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="Breadth indicator cards">
@@ -170,7 +158,6 @@
               </section>
             </section>
             <section class="mobile-pane chart-pane" data-mobile-pane="charts" aria-label="Breadth charts">
-              <p class="swipe-label">Charts</p>
               <div class="chart-toolbar">
                 <div class="range-selector" aria-label="Breadth date range selector">
                   <button class="range-button" type="button" data-comparison-range="breadth" data-range="3M">3M</button>
@@ -186,8 +173,6 @@
                     <input type="checkbox" id="breadth-log-scale" />
                     Log scale
                   </label>
-                  <button class="secondary-button" id="breadth-clear-selection" type="button">Clear</button>
-                  <button class="secondary-button" id="breadth-swap-axes" type="button">Swap axes</button>
                 </div>
               </div>
               <div class="selection-notice" id="breadth-selection-notice" hidden>
@@ -218,7 +203,6 @@
               <p class="eyebrow">Chips &amp; AI</p>
               <h2 id="semiconductor-chart-title">Loading indicators</h2>
             </div>
-            <span id="semiconductor-chart-meta">CSV source</span>
           </div>
           <div class="mobile-swipe-track" data-mobile-track="semiconductor">
             <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="Chips and AI indicator cards">
@@ -228,7 +212,6 @@
               </section>
             </section>
             <section class="mobile-pane chart-pane" data-mobile-pane="charts" aria-label="Chips and AI charts">
-              <p class="swipe-label">Charts</p>
               <div class="chart-toolbar">
                 <div class="range-selector" aria-label="Chips and AI date range selector">
                   <button class="range-button" type="button" data-comparison-range="semiconductor" data-range="3M">3M</button>
@@ -244,8 +227,6 @@
                     <input type="checkbox" id="semiconductor-log-scale" />
                     Log scale
                   </label>
-                  <button class="secondary-button" id="semiconductor-clear-selection" type="button">Clear</button>
-                  <button class="secondary-button" id="semiconductor-swap-axes" type="button">Swap axes</button>
                 </div>
               </div>
               <div class="selection-notice" id="semiconductor-selection-notice" hidden>
@@ -276,7 +257,6 @@
               <p class="eyebrow">US Rates</p>
               <h2 id="us-rates-chart-title">Loading indicators</h2>
             </div>
-            <span id="us-rates-chart-meta">CSV source</span>
           </div>
           <div class="mobile-swipe-track" data-mobile-track="us-rates">
             <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="US Rates indicator cards">
@@ -286,7 +266,6 @@
               </section>
             </section>
             <section class="mobile-pane chart-pane" data-mobile-pane="charts" aria-label="US Rates charts">
-              <p class="swipe-label">Charts</p>
               <div class="chart-toolbar">
                 <div class="range-selector" aria-label="US Rates date range selector">
                   <button class="range-button" type="button" data-comparison-range="us-rates" data-range="3M">3M</button>
@@ -302,8 +281,6 @@
                     <input type="checkbox" id="us-rates-log-scale" />
                     Log scale
                   </label>
-                  <button class="secondary-button" id="us-rates-clear-selection" type="button">Clear</button>
-                  <button class="secondary-button" id="us-rates-swap-axes" type="button">Swap axes</button>
                 </div>
               </div>
               <div class="selection-notice" id="us-rates-selection-notice" hidden>
@@ -330,7 +307,6 @@
               <p class="eyebrow">JP Rates</p>
               <h2 id="jp-rates-chart-title">Loading indicators</h2>
             </div>
-            <span id="jp-rates-chart-meta">CSV source</span>
           </div>
           <div class="mobile-swipe-track" data-mobile-track="jp-rates">
             <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="JP Rates indicator cards">
@@ -340,7 +316,6 @@
               </section>
             </section>
             <section class="mobile-pane chart-pane" data-mobile-pane="charts" aria-label="JP Rates charts">
-              <p class="swipe-label">Charts</p>
               <div class="chart-toolbar">
                 <div class="range-selector" aria-label="JP Rates date range selector">
                   <button class="range-button" type="button" data-comparison-range="jp-rates" data-range="3M">3M</button>
@@ -356,8 +331,6 @@
                     <input type="checkbox" id="jp-rates-log-scale" />
                     Log scale
                   </label>
-                  <button class="secondary-button" id="jp-rates-clear-selection" type="button">Clear</button>
-                  <button class="secondary-button" id="jp-rates-swap-axes" type="button">Swap axes</button>
                 </div>
               </div>
               <div class="selection-notice" id="jp-rates-selection-notice" hidden>
@@ -384,7 +357,6 @@
               <p class="eyebrow">Japan</p>
               <h2 id="japan-chart-title">Loading indicators</h2>
             </div>
-            <span id="japan-chart-meta">CSV source</span>
           </div>
           <div class="mobile-swipe-track" data-mobile-track="japan">
             <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="Japan indicator cards">
@@ -394,7 +366,6 @@
               </section>
             </section>
             <section class="mobile-pane chart-pane" data-mobile-pane="charts" aria-label="Japan charts">
-              <p class="swipe-label">Charts</p>
               <div class="chart-toolbar">
                 <div class="range-selector" aria-label="Japan date range selector">
                   <button class="range-button" type="button" data-comparison-range="japan" data-range="3M">3M</button>
@@ -410,8 +381,6 @@
                     <input type="checkbox" id="japan-log-scale" />
                     Log scale
                   </label>
-                  <button class="secondary-button" id="japan-clear-selection" type="button">Clear</button>
-                  <button class="secondary-button" id="japan-swap-axes" type="button">Swap axes</button>
                 </div>
               </div>
               <div class="selection-notice" id="japan-selection-notice" hidden>
@@ -438,7 +407,6 @@
               <p class="eyebrow">Taiwan</p>
               <h2 id="taiwan-chart-title">Loading indicators</h2>
             </div>
-            <span id="taiwan-chart-meta">CSV source</span>
           </div>
           <div class="mobile-swipe-track" data-mobile-track="taiwan">
             <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="Taiwan indicator cards">
@@ -448,7 +416,6 @@
               </section>
             </section>
             <section class="mobile-pane chart-pane" data-mobile-pane="charts" aria-label="Taiwan charts">
-              <p class="swipe-label">Charts</p>
               <div class="chart-toolbar">
                 <div class="range-selector" aria-label="Taiwan date range selector">
                   <button class="range-button" type="button" data-comparison-range="taiwan" data-range="3M">3M</button>
@@ -464,8 +431,6 @@
                     <input type="checkbox" id="taiwan-log-scale" />
                     Log scale
                   </label>
-                  <button class="secondary-button" id="taiwan-clear-selection" type="button">Clear</button>
-                  <button class="secondary-button" id="taiwan-swap-axes" type="button">Swap axes</button>
                 </div>
               </div>
               <div class="selection-notice" id="taiwan-selection-notice" hidden>
