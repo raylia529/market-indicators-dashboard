@@ -1748,7 +1748,7 @@ function renderCards() {
           <span class="indicator-label">${indicator.name}</span>
           <strong>${latest ? formatValue(latest.value, indicator) : "--"}</strong>
           ${renderIndicatorChange(rows, indicator)}
-          <small class="indicator-date">${latest ? `Updated ${formatFullDate(latest.date)}` : "Loading"}</small>
+          <small class="indicator-date">${latest ? `Latest ${formatFullDate(latest.date)}` : "Loading"}</small>
           ${renderColorPalette({
             activeColor: indicatorColors.get(indicator.id),
             targetId: indicator.id,
@@ -2081,7 +2081,7 @@ function renderFxCards() {
   setFxText("fx-usdjpy-value", latestUsdJpy ? latestUsdJpy.USDJPY.toFixed(2) : "--");
   setFxText(
     "fx-usdjpy-date",
-    latestUsdJpy ? `Updated ${formatFullDate(latestUsdJpy.date)}` : "Unavailable",
+    latestUsdJpy ? `Latest ${formatFullDate(latestUsdJpy.date)}` : "Unavailable",
   );
   setFxText(
     "fx-spread-value",
@@ -2089,7 +2089,7 @@ function renderFxCards() {
   );
   setFxText(
     "fx-spread-date",
-    latestSpread ? `Updated ${formatFullDate(latestSpread.date)}` : "Unavailable",
+    latestSpread ? `Latest ${formatFullDate(latestSpread.date)}` : "Unavailable",
   );
   setFxText(
     "fx-updated",
@@ -2474,7 +2474,7 @@ function createComparisonSection(config) {
             <span class="indicator-label">${indicator.name}</span>
             <strong>${latest ? formatValue(latest.value, indicator) : "--"}</strong>
             ${renderIndicatorChange(rows, indicator)}
-            <small class="indicator-date">${latest ? `Updated ${formatFullDate(latest.date)}` : state.loaded ? "Unavailable" : "Loading"}</small>
+            <small class="indicator-date">${latest ? `Latest ${formatFullDate(latest.date)}` : state.loaded ? "Unavailable" : "Loading"}</small>
             ${renderColorPalette({
               activeColor: state.colors.get(indicator.id),
               targetId: indicator.id,

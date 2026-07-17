@@ -37,6 +37,27 @@ function download(url) {
   });
 }
 
+function wait(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+async function downloadWithRetry(url, attempts = 3) {
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await download(url);
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts) {
+        await wait(2500 * attempt);
+      }
+    }
+  }
+  throw lastError;
+}
+
 function parseCsv(text, dateColumns) {
   const lines = text.trim().split(/\r?\n/);
   const headers = lines[0].split(",").map((header) => header.trim());
@@ -165,7 +186,7 @@ async function main() {
   let fredRows = [];
 
   try {
-    const archiveText = await download(archiveUrl);
+    const archiveText = await downloadWithRetry(archiveUrl);
     const archiveHeaders = archiveText.trim().split(/\r?\n/)[0];
 
     if (archiveHeaders !== "DATE,BAMLH0A0HYM2") {
@@ -182,7 +203,7 @@ async function main() {
   }
 
   try {
-    const fredText = await download(fredUrl);
+    const fredText = await downloadWithRetry(fredUrl);
     fredRows = parseCsv(fredText, ["observation_date", "DATE"]);
   } catch (error) {
     console.warn(`WARNING: FRED rolling download/parse failed. ${error.message}`);

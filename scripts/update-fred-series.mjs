@@ -72,6 +72,27 @@ function download(url) {
   });
 }
 
+function wait(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+async function downloadWithRetry(url, attempts = 3) {
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await download(url);
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts) {
+        await wait(2500 * attempt);
+      }
+    }
+  }
+  throw lastError;
+}
+
 function parseFredCsv(text, seriesId) {
   const lines = text.trim().split(/\r?\n/);
   const headers = lines[0].split(",").map((header) => header.trim());
@@ -119,7 +140,7 @@ function validate(rows, label) {
 
 async function updateSeries(item) {
   const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${item.id}`;
-  const text = await download(url);
+  const text = await downloadWithRetry(url);
   const rows = parseFredCsv(text, item.id);
   const validation = validate(rows, item.label);
   const decimals = item.decimals ?? 2;

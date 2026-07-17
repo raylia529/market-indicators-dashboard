@@ -36,6 +36,27 @@ function download(url) {
   });
 }
 
+function wait(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+async function downloadWithRetry(url, attempts = 3) {
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await download(url);
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts) {
+        await wait(2500 * attempt);
+      }
+    }
+  }
+  throw lastError;
+}
+
 function parseCsvLine(line) {
   const fields = [];
   let value = "";
@@ -175,14 +196,14 @@ async function main() {
   let latestSource = "FRED SP500";
 
   try {
-    const archiveText = await download(archiveUrl);
+    const archiveText = await downloadWithRetry(archiveUrl);
     archiveRows = parseRows(archiveText, "Date", "Close");
   } catch (error) {
     console.warn(`WARNING: S&P 500 archive download/parse failed. ${error.message}`);
   }
 
   try {
-    const latestText = await download(latestUrl);
+    const latestText = await downloadWithRetry(latestUrl);
     latestRows = parseRows(latestText, "observation_date", "SP500");
   } catch (error) {
     latestSource = "not updated; preserved existing/latest archive rows";

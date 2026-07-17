@@ -77,6 +77,27 @@ function download(url, headers = {}) {
   });
 }
 
+function wait(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+async function downloadWithRetry(url, headers = {}, attempts = 3) {
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await download(url, headers);
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts) {
+        await wait(2500 * attempt);
+      }
+    }
+  }
+  throw lastError;
+}
+
 function parseYahooUsdJpy(text) {
   const payload = JSON.parse(text);
   const result = payload?.chart?.result?.[0];
@@ -345,7 +366,7 @@ async function main() {
 
   if (requestedSources.has("usdjpy")) {
     try {
-      usdJpyRows = parseFred(await download(sources.usdJpy), "DEXJPUS");
+      usdJpyRows = parseFred(await downloadWithRetry(sources.usdJpy), "DEXJPUS");
       usdJpySourceSucceeded = true;
     } catch (error) {
       warnings.push(`WARNING: USDJPY download/parse failed. ${error.message}`);
@@ -353,7 +374,7 @@ async function main() {
 
     try {
       yahooUsdJpyRows = parseYahooUsdJpy(
-        await download(sources.usdJpyYahoo, { "User-Agent": "Mozilla/5.0" }),
+        await downloadWithRetry(sources.usdJpyYahoo, { "User-Agent": "Mozilla/5.0" }),
       );
       usdJpySourceSucceeded = true;
     } catch (error) {
@@ -364,7 +385,7 @@ async function main() {
 
   if (requestedSources.has("us2y")) {
     try {
-      us2yRows = parseFred(await download(sources.us2y), "DGS2");
+      us2yRows = parseFred(await downloadWithRetry(sources.us2y), "DGS2");
       us2ySourceSucceeded = true;
     } catch (error) {
       warnings.push(`WARNING: US 2Y download/parse failed. ${error.message}`);
@@ -374,8 +395,8 @@ async function main() {
   if (requestedSources.has("japan2y")) {
     try {
       japan2yRows = mergeSeries([
-        ...parseMofJapan2y(await download(sources.japan2yHistorical)),
-        ...parseMofJapan2y(await download(sources.japan2yCurrent)),
+        ...parseMofJapan2y(await downloadWithRetry(sources.japan2yHistorical)),
+        ...parseMofJapan2y(await downloadWithRetry(sources.japan2yCurrent)),
       ]);
       japan2ySourceSucceeded = true;
     } catch (error) {
