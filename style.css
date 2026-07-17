@@ -191,6 +191,37 @@ h2 {
     transform 160ms ease;
 }
 
+@media (min-width: 761px) {
+  .indicator-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .metric-grid {
+    gap: 7px;
+    margin: 10px 0 16px;
+  }
+
+  .metric-card {
+    min-height: 92px;
+    padding: 10px;
+  }
+
+  .metric-card strong {
+    margin: 5px 0 2px;
+    font-size: clamp(1.05rem, 1.45vw, 1.38rem);
+  }
+
+  .indicator-label,
+  .fx-card span {
+    font-size: 0.74rem;
+  }
+
+  .indicator-change {
+    margin-bottom: 3px;
+    font-size: 0.7rem;
+  }
+}
+
 .secondary-button {
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -738,6 +769,53 @@ h2 {
   gap: 12px;
 }
 
+.glossary-section .data-status-table-wrap {
+  overflow: visible;
+  border: 0;
+  background: transparent;
+}
+
+.glossary-table {
+  display: block;
+  min-width: 0;
+}
+
+.glossary-table colgroup,
+.glossary-table thead {
+  display: none;
+}
+
+.glossary-table tbody {
+  display: grid;
+  gap: 8px;
+}
+
+.glossary-table tr {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.glossary-table td {
+  display: none;
+  border: 0;
+}
+
+.glossary-table td:first-child {
+  display: block;
+  padding: 14px;
+}
+
+.glossary-table td:nth-child(2) {
+  display: none;
+}
+
+.glossary-table td:nth-child(3) {
+  display: block;
+  padding: 0 14px 14px;
+}
+
 .glossary-table tr[data-glossary-row] {
   cursor: pointer;
 }
@@ -785,6 +863,20 @@ h2 {
 
 .glossary-table tr:not(.glossary-row-expanded) .glossary-description-cell {
   display: none;
+}
+
+.glossary-table .glossary-mobile-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.glossary-table .glossary-mobile-meta > span:first-child {
+  white-space: normal;
 }
 
 .glossary-language-controls {
@@ -953,7 +1045,7 @@ h2 {
   overflow-wrap: anywhere;
 }
 
-@media (max-width: 760px), (max-width: 900px) and (orientation: landscape) {
+@media (max-width: 760px) and (pointer: coarse), (max-width: 900px) and (orientation: landscape) and (pointer: coarse) {
   .dashboard-shell {
     width: min(100% - 24px, 560px);
     padding: 20px 0 calc(20px + env(safe-area-inset-bottom));
@@ -1187,7 +1279,7 @@ h2 {
   }
 }
 
-@media (max-width: 900px) and (orientation: landscape) {
+@media (max-width: 900px) and (orientation: landscape) and (pointer: coarse) {
   .dashboard-shell {
     width: min(100% - 20px, 860px);
     padding: 14px 0 calc(14px + env(safe-area-inset-bottom));
