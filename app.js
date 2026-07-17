@@ -513,6 +513,7 @@ let fxColors = loadStoredColors(
 const clampingCharts = new WeakSet();
 const longPressTimers = new WeakMap();
 const mobileYAxisGestureStates = new WeakMap();
+const mobileYAxisTapStates = new WeakMap();
 const longPressMoveLimit = 12;
 const longPressDelayMs = 700;
 const turningPointLookbackDays = 365;
@@ -1834,6 +1835,9 @@ function setupMobileYAxisGestures(chartNode) {
   }
 
   chartNode.dataset.mobileYAxisGesturesReady = "true";
+  const doubleTapWindowMs = 420;
+  const doubleTapDistancePx = 34;
+  const zoomModeHoldMs = 1600;
 
   function getTouchCenter(touches) {
     const points = Array.from(touches);
@@ -1842,6 +1846,43 @@ function setupMobileYAxisGestures(chartNode) {
       x: points.reduce((sum, touch) => sum + touch.clientX, 0) / points.length,
       y: points.reduce((sum, touch) => sum + touch.clientY, 0) / points.length,
     };
+  }
+
+  function getYAxisGestureMode(axisName, center) {
+    const now = Date.now();
+    const previousTap = mobileYAxisTapStates.get(chartNode);
+    const isDoubleTap =
+      previousTap &&
+      previousTap.axisName === axisName &&
+      now - previousTap.time <= doubleTapWindowMs &&
+      Math.hypot(center.x - previousTap.x, center.y - previousTap.y) <= doubleTapDistancePx;
+
+    if (isDoubleTap) {
+      mobileYAxisTapStates.set(chartNode, {
+        axisName,
+        time: now,
+        x: center.x,
+        y: center.y,
+        zoomUntil: now + zoomModeHoldMs,
+      });
+      return "zoom";
+    }
+
+    const zoomStillActive =
+      previousTap &&
+      previousTap.axisName === axisName &&
+      previousTap.zoomUntil &&
+      now <= previousTap.zoomUntil;
+
+    mobileYAxisTapStates.set(chartNode, {
+      axisName,
+      time: now,
+      x: center.x,
+      y: center.y,
+      zoomUntil: zoomStillActive ? previousTap.zoomUntil : 0,
+    });
+
+    return zoomStillActive ? "zoom" : "pan";
   }
 
   function beginGesture(touches) {
@@ -1859,9 +1900,11 @@ function setupMobileYAxisGestures(chartNode) {
 
     const distance =
       touches.length === 2 ? Math.max(Math.abs(touches[0].clientY - touches[1].clientY), 24) : null;
+    const gestureMode = touches.length === 2 ? "zoom" : getYAxisGestureMode(axisName, center);
 
     mobileYAxisGestureStates.set(chartNode, {
       axisName,
+      mode: gestureMode,
       startY: center.y,
       startDistance: distance,
       startRange: range,
@@ -1952,19 +1995,28 @@ function setupMobileYAxisGestures(chartNode) {
       }
 
       const center = getTouchCenter(event.touches);
-      let scale;
 
-      if (state.touchCount === 2) {
-        const distance = Math.max(Math.abs(event.touches[0].clientY - event.touches[1].clientY), 24);
-        scale = state.startDistance / distance;
+      if (state.mode === "pan") {
+        const fullLayout = chartNode._fullLayout;
+        const plotHeight = Math.max(fullLayout?._size?.h || chartNode.clientHeight || 1, 1);
+        const span = state.startRange[1] - state.startRange[0];
+        const shift = ((center.y - state.startY) / plotHeight) * span;
+        scheduleRange(state, [state.startRange[0] + shift, state.startRange[1] + shift]);
       } else {
-        scale = Math.exp((center.y - state.startY) / 180);
-      }
+        let scale;
 
-      scale = Math.min(Math.max(scale, 0.15), 6);
-      const midpoint = (state.startRange[0] + state.startRange[1]) / 2;
-      const halfSpan = ((state.startRange[1] - state.startRange[0]) / 2) * scale;
-      scheduleRange(state, [midpoint - halfSpan, midpoint + halfSpan]);
+        if (state.touchCount === 2) {
+          const distance = Math.max(Math.abs(event.touches[0].clientY - event.touches[1].clientY), 24);
+          scale = state.startDistance / distance;
+        } else {
+          scale = Math.exp((center.y - state.startY) / 180);
+        }
+
+        scale = Math.min(Math.max(scale, 0.15), 6);
+        const midpoint = (state.startRange[0] + state.startRange[1]) / 2;
+        const halfSpan = ((state.startRange[1] - state.startRange[0]) / 2) * scale;
+        scheduleRange(state, [midpoint - halfSpan, midpoint + halfSpan]);
+      }
       event.preventDefault();
       event.stopImmediatePropagation();
     },
