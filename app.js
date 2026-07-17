@@ -595,6 +595,21 @@ function getPlotlyConfig() {
   };
 }
 
+function getCssColor(name, fallback) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+}
+
+function getChartTheme() {
+  return {
+    ink: getCssColor("--ink", "#111827"),
+    muted: getCssColor("--muted", "#64748b"),
+    line: getCssColor("--line", "#e5e7eb"),
+    grid: getCssColor("--chart-grid", "#e5e7eb"),
+    zero: getCssColor("--chart-zero", "#d1d5db"),
+    surface: getCssColor("--surface", "#ffffff"),
+  };
+}
+
 function loadStoredColors(storageKey, fallbackColors) {
   try {
     const stored = JSON.parse(window.localStorage.getItem(storageKey) || "{}");
@@ -2152,7 +2167,7 @@ function renderRangeButtons() {
   });
 }
 
-function getYAxisLayout(side, indicator, rows) {
+function getYAxisLayout(side, indicator, rows, theme = getChartTheme()) {
   const color = indicatorColors.get(indicator.id);
   const scale = macroScale === "log" && canUseLog(rows) ? "log" : "linear";
   const range = getAutoRange(rows, scale);
@@ -2161,9 +2176,9 @@ function getYAxisLayout(side, indicator, rows) {
       text: `${indicator.name}<br>${indicator.unitLabel}`,
       font: { color },
     },
-    gridcolor: side === "left" ? "#e5e7eb" : "rgba(229,231,235,0)",
+    gridcolor: side === "left" ? theme.grid : "rgba(0,0,0,0)",
     zeroline: true,
-    zerolinecolor: "#d1d5db",
+    zerolinecolor: theme.zero,
     tickfont: { color, weight: 700 },
     type: scale,
   };
@@ -2271,6 +2286,7 @@ function renderChart() {
   const secondRows = selected[1] ? getFilteredRows(selected[1]) : [];
   const firstIndicator = selected[0] ? getIndicator(selected[0]) : null;
   const secondIndicator = selected[1] ? getIndicator(selected[1]) : null;
+  const theme = getChartTheme();
 
   const layout = {
     margin: { t: 18, r: selected.length === 2 ? 72 : 22, b: 48, l: 72 },
@@ -2279,7 +2295,7 @@ function renderChart() {
     font: {
       family:
         'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      color: "#111827",
+      color: theme.ink,
     },
     legend: {
       orientation: "h",
@@ -2293,18 +2309,23 @@ function renderChart() {
       showgrid: false,
       tickformat: "%Y/%-m",
       hoverformat: "%Y/%-m/%-d",
-      tickfont: { color: "#64748b", weight: 700 },
+      tickfont: { color: theme.muted, weight: 700 },
+    },
+    hoverlabel: {
+      bgcolor: theme.surface,
+      bordercolor: theme.line,
+      font: { color: theme.ink },
     },
     hovermode: "x unified",
     dragmode: getChartDragMode(),
   };
 
   if (firstIndicator) {
-    layout.yaxis = getYAxisLayout("left", firstIndicator, firstRows);
+    layout.yaxis = getYAxisLayout("left", firstIndicator, firstRows, theme);
   }
 
   if (secondIndicator) {
-    layout.yaxis2 = getYAxisLayout("right", secondIndicator, secondRows);
+    layout.yaxis2 = getYAxisLayout("right", secondIndicator, secondRows, theme);
   }
 
   layout.shapes = getThresholdZoneShapes(selected, layout);
@@ -2517,12 +2538,13 @@ function renderFxChart() {
   const primaryValues = primarySeries ? rows.map((row) => row[primarySeries.field]) : [];
   const secondaryValues = secondarySeries ? rows.map((row) => row[secondarySeries.field]) : [];
   const xBounds = getFxXBounds();
+  const theme = getChartTheme();
   const yaxis = primarySeries
     ? {
         title: { text: primarySeries.axisTitle, font: { color: primarySeries.color } },
         range: fxAxisRange(primaryValues),
         tickfont: { color: primarySeries.color, weight: 700 },
-        gridcolor: "#e5e7eb",
+        gridcolor: theme.grid,
         zeroline: false,
       }
     : {
@@ -2563,7 +2585,7 @@ function renderFxChart() {
       font: {
         family:
           'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-        color: "#111827",
+        color: theme.ink,
       },
       legend: { orientation: "h", x: 0, y: 1.14 },
       xaxis: {
@@ -2573,10 +2595,15 @@ function renderFxChart() {
         showgrid: false,
         tickformat: "%Y/%-m",
         hoverformat: "%Y/%-m/%-d",
-        tickfont: { color: "#64748b", weight: 700 },
+        tickfont: { color: theme.muted, weight: 700 },
       },
       yaxis,
       yaxis2,
+      hoverlabel: {
+        bgcolor: theme.surface,
+        bordercolor: theme.line,
+        font: { color: theme.ink },
+      },
       hovermode: "x unified",
       dragmode: getChartDragMode(),
     },
@@ -2733,7 +2760,7 @@ function createComparisonSection(config) {
     }
   }
 
-  function getLocalYAxisLayout(side, indicator, rows) {
+  function getLocalYAxisLayout(side, indicator, rows, theme = getChartTheme()) {
     const color = state.colors.get(indicator.id);
     const scale = state.scale === "log" && canUseLocalLog(rows) ? "log" : "linear";
     const range = getAutoRange(rows, scale);
@@ -2742,9 +2769,9 @@ function createComparisonSection(config) {
         text: `${indicator.name}<br>${indicator.unitLabel}`,
         font: { color, weight: 700 },
       },
-      gridcolor: side === "left" ? "#e5e7eb" : "rgba(229,231,235,0)",
+      gridcolor: side === "left" ? theme.grid : "rgba(0,0,0,0)",
       zeroline: true,
-      zerolinecolor: "#d1d5db",
+      zerolinecolor: theme.zero,
       tickfont: { color, weight: 700 },
       type: scale,
     };
@@ -2883,6 +2910,7 @@ function createComparisonSection(config) {
     const secondRows = selected[1] ? getFilteredRows(selected[1]) : [];
     const firstIndicator = selected[0] ? getLocalIndicator(selected[0]) : null;
     const secondIndicator = selected[1] ? getLocalIndicator(selected[1]) : null;
+    const theme = getChartTheme();
     const layout = {
       margin: { t: 18, r: selected.length === 2 ? 72 : 22, b: 48, l: 72 },
       paper_bgcolor: "rgba(0,0,0,0)",
@@ -2890,7 +2918,7 @@ function createComparisonSection(config) {
       font: {
         family:
           'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-        color: "#111827",
+        color: theme.ink,
       },
       legend: { orientation: "h", x: 0, y: 1.14 },
       xaxis: {
@@ -2900,18 +2928,23 @@ function createComparisonSection(config) {
         showgrid: false,
         tickformat: "%Y/%-m",
         hoverformat: "%Y/%-m/%-d",
-        tickfont: { color: "#64748b", weight: 700 },
+        tickfont: { color: theme.muted, weight: 700 },
+      },
+      hoverlabel: {
+        bgcolor: theme.surface,
+        bordercolor: theme.line,
+        font: { color: theme.ink },
       },
       hovermode: "x unified",
       dragmode: getChartDragMode(),
     };
 
     if (firstIndicator) {
-      layout.yaxis = getLocalYAxisLayout("left", firstIndicator, firstRows);
+      layout.yaxis = getLocalYAxisLayout("left", firstIndicator, firstRows, theme);
     }
 
     if (secondIndicator) {
-      layout.yaxis2 = getLocalYAxisLayout("right", secondIndicator, secondRows);
+      layout.yaxis2 = getLocalYAxisLayout("right", secondIndicator, secondRows, theme);
     }
 
     layout.shapes = getThresholdZoneShapes(selected, layout);
@@ -2982,6 +3015,9 @@ function createComparisonSection(config) {
       state.data = new Map(datasets);
       state.loaded = true;
       renderLocalAll();
+    },
+    renderChart() {
+      renderLocalChart();
     },
     showError(error) {
       elements.grid.innerHTML = `<p class="error-message">${error.message}</p>`;
@@ -3757,6 +3793,12 @@ if (glossarySearchInput) {
     renderGlossary({ indicators: glossaryEntries });
   });
 }
+
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+  renderChart();
+  renderFxChart();
+  comparisonSections.forEach((section) => section.renderChart());
+});
 
 loadIndicatorData()
   .then(() => {
