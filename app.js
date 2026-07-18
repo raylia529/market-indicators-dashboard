@@ -184,14 +184,13 @@ const usRatesIndicators = [
     id: "fed-funds-rate",
     name: "Fed Funds Rate",
     file: "data/fed-funds-rate.csv",
-    unitLabel: "Percent (Target Range Upper Limit)",
+    unitLabel: "%",
     valueSuffix: "%",
     category: "rate",
     color: "#d77d32",
     decimals: 2,
     cadence: "policy",
     changeFormat: "bps",
-    compressRepeatedValues: true,
     lineShape: "hv",
   },
   {
@@ -2420,15 +2419,148 @@ function renderRangeButtons() {
   });
 }
 
+const compactAxisNameOverrides = {
+  "advance-decline-line": "A/D Line",
+  "sp500-above-200dma": "% Above 200DMA",
+  "us-10y-term-premium": "US 10Y Term Premium",
+  "japan-2y-jgb-yield": "Japan 2Y Yield",
+  "japan-10y-jgb-yield": "Japan 10Y Yield",
+  "japan-tab-10y-jgb-yield": "Japan 10Y Yield",
+  "japan-10y-2y-jgb-spread": "Japan 10Y-2Y Spread",
+  "japan-foreign-investor-net-buying": "Japan Foreign Net Buying",
+  "taiwan-foreign-investor-net-buying": "Taiwan Foreign Net Buying",
+  "taiwan-margin-financing-balance-yoy": "Taiwan Margin Balance YoY",
+  "taiwan-electronics-exports-yoy": "Taiwan Electronics Exports YoY",
+};
+
+function getCompactAxisUnit(unitLabel) {
+  const unitAliases = {
+    "Percentage Points": "pp",
+    Percent: "%",
+    "Percent YoY": "% YoY",
+    "Millions of U.S. Dollars": "USD mn",
+    "TWD Millions": "TWD mn",
+    "JPY Billions": "JPY bn",
+    "Cumulative Net Advances": "Net Advances",
+    "Diffusion Index": "Index",
+    "Adjusted-close ratio": "Ratio",
+  };
+
+  return unitAliases[unitLabel] || unitLabel;
+}
+
+function getVisibleAxisUnit(name, unitLabel) {
+  const unit = getCompactAxisUnit(unitLabel);
+
+  if (unit === "% YoY" && /\bYoY\b/i.test(name)) {
+    return "%";
+  }
+
+  if (unit === "JPY per USD" || unit === "TWD per USD") {
+    return "";
+  }
+
+  return unit;
+}
+
+const axisLabelOverrides = {
+  "japan-10y-jgb-yield": "Japan 10Y<br>Yield",
+  "japan-tab-10y-jgb-yield": "Japan 10Y<br>Yield",
+  "japan-foreign-investor-net-buying": "Japan<br>Foreign<br>Net Buying",
+};
+
+function wrapHorizontalAxisLabel(indicator) {
+  if (axisLabelOverrides[indicator.id]) {
+    return axisLabelOverrides[indicator.id];
+  }
+
+  let label = compactAxisNameOverrides[indicator.id] || indicator.name;
+  const unit = getVisibleAxisUnit(label, indicator.unitLabel);
+
+  if (unit === "Index" && /\sIndex$/i.test(label)) {
+    label = label.replace(/\sIndex$/i, "");
+  }
+
+  if (unit === "%" && label.startsWith("% ")) {
+    label = label.slice(2);
+  }
+
+  if (label.length <= 16) {
+    return label;
+  }
+
+  const words = label.split(/\s+/);
+  const lineCount = label.length > 20 && words.length >= 3 ? 3 : 2;
+  const lines = [];
+  let start = 0;
+
+  for (let lineIndex = 0; lineIndex < lineCount - 1; lineIndex += 1) {
+    const remainingLines = lineCount - lineIndex;
+    const targetLength = words.slice(start).join(" ").length / remainingLines;
+    let end = start + 1;
+
+    while (
+      end < words.length - (remainingLines - 1) &&
+      words.slice(start, end + 1).join(" ").length <= targetLength
+    ) {
+      end += 1;
+    }
+
+    lines.push(words.slice(start, end).join(" "));
+    start = end;
+  }
+
+  lines.push(words.slice(start).join(" "));
+  return lines.join("<br>");
+}
+
+function getHorizontalAxisAnnotations(indicator, side, color) {
+  const compactLayout = usesTouchChartMode();
+  const nameOffset = compactLayout ? 68 : 76;
+  const unit = getVisibleAxisUnit(indicator.name, indicator.unitLabel);
+
+  return [
+    {
+      text: `<b>${wrapHorizontalAxisLabel(indicator)}</b>`,
+      xref: "paper",
+      yref: "paper",
+      x: side === "left" ? 0 : 1,
+      y: 0.5,
+      xanchor: "center",
+      yanchor: "middle",
+      xshift: side === "left" ? -nameOffset : nameOffset,
+      showarrow: false,
+      align: "center",
+      font: { size: compactLayout ? 9 : 10, color },
+    },
+    unit
+      ? {
+          text: `<b>${unit}</b>`,
+          xref: "paper",
+          yref: "paper",
+          x: side === "left" ? 0 : 1,
+          y: 1,
+          xanchor: side === "left" ? "right" : "left",
+          yanchor: "bottom",
+          xshift: side === "left" ? -8 : 8,
+          yshift: 8,
+          showarrow: false,
+          font: { size: compactLayout ? 9 : 10, color },
+        }
+      : null,
+  ].filter(Boolean);
+}
+
+function getHorizontalAxisMargins(hasRightAxis) {
+  const sideMargin = usesTouchChartMode() ? 100 : 110;
+  return { t: 38, r: hasRightAxis ? sideMargin : 22, b: 92, l: sideMargin };
+}
+
 function getYAxisLayout(side, indicator, rows, theme = getChartTheme()) {
   const color = getChartSeriesColor(indicator.id);
   const scale = macroScale === "log" && canUseLog(rows) ? "log" : "linear";
   const range = getAutoRange(rows, scale, indicator.axisBounds);
   const axis = {
-    title: {
-      text: `${indicator.name}<br>${indicator.unitLabel}`,
-      font: { color },
-    },
     gridcolor: side === "left" ? theme.grid : "rgba(0,0,0,0)",
     zeroline: true,
     zerolinecolor: theme.zero,
@@ -2440,8 +2572,6 @@ function getYAxisLayout(side, indicator, rows, theme = getChartTheme()) {
     axis.minallowed = indicator.axisBounds.min;
     axis.maxallowed = indicator.axisBounds.max;
   }
-
-  axis.title.font.weight = 700;
 
   if (range) {
     axis.range = scale === "log" ? range.map((value) => Math.log10(value)) : range;
@@ -2597,9 +2727,19 @@ function renderChart() {
   const firstIndicator = selected[0] ? getIndicator(selected[0]) : null;
   const secondIndicator = selected[1] ? getIndicator(selected[1]) : null;
   const theme = getChartTheme();
+  const axisAnnotations = [firstIndicator, secondIndicator]
+    .flatMap((indicator, index) =>
+      indicator
+        ? getHorizontalAxisAnnotations(
+            indicator,
+            index === 0 ? "left" : "right",
+            getChartSeriesColor(indicator.id),
+          )
+        : [],
+    );
 
   const layout = {
-    margin: { t: 18, r: selected.length === 2 ? 72 : 22, b: 92, l: 72 },
+    margin: getHorizontalAxisMargins(selected.length === 2),
     paper_bgcolor: "rgba(0,0,0,0)",
     plot_bgcolor: "rgba(0,0,0,0)",
     font: {
@@ -2614,6 +2754,7 @@ function renderChart() {
       y: -0.22,
       yanchor: "top",
     },
+    annotations: axisAnnotations,
     xaxis: {
       range: xBounds ? [xBounds.start, xBounds.end] : undefined,
       minallowed: xBounds?.start,
@@ -2837,7 +2978,7 @@ function renderFxChart() {
     {
       id: "USDJPY",
       name: "USD/JPY",
-      axisTitle: "USD/JPY",
+      unitLabel: "JPY per USD",
       field: "USDJPY",
       color: usdJpyColor,
       decimals: 2,
@@ -2846,7 +2987,7 @@ function renderFxChart() {
     {
       id: "US_Japan_2Y_Spread",
       name: "US-Japan 2Y Spread",
-      axisTitle: "US-Japan 2Y Spread<br>Percentage Points",
+      unitLabel: "Percentage Points",
       field: "US_Japan_2Y_Spread",
       color: spreadColor,
       decimals: 2,
@@ -2877,7 +3018,6 @@ function renderFxChart() {
   const theme = getChartTheme();
   const yaxis = primarySeries
     ? {
-        title: { text: primarySeries.axisTitle, font: { color: primarySeries.color } },
         range: fxAxisRange(primaryValues),
         tickfont: { color: primarySeries.color, weight: 700 },
         gridcolor: theme.grid,
@@ -2888,7 +3028,6 @@ function renderFxChart() {
       };
   const yaxis2 = secondarySeries
     ? {
-        title: { text: secondarySeries.axisTitle, font: { color: secondarySeries.color } },
         range: fxAxisRange(secondaryValues),
         tickfont: { color: secondarySeries.color, weight: 700 },
         overlaying: "y",
@@ -2903,19 +3042,26 @@ function renderFxChart() {
         showgrid: false,
       };
 
-  if (yaxis.title) {
-    yaxis.title.font.weight = 700;
-  }
-
-  if (yaxis2.title) {
-    yaxis2.title.font.weight = 700;
-  }
+  const fxAxisAnnotations = [primarySeries, secondarySeries]
+    .flatMap((series, index) =>
+      series
+        ? getHorizontalAxisAnnotations(
+            {
+              id: series.id,
+              name: series.name,
+              unitLabel: series.unitLabel,
+            },
+            index === 0 ? "left" : "right",
+            series.color,
+          )
+        : [],
+    );
 
   Plotly.react(
     fxChartElement,
     traces,
     {
-      margin: { t: 18, r: 74, b: 92, l: 64 },
+      margin: getHorizontalAxisMargins(Boolean(secondarySeries)),
       paper_bgcolor: "rgba(0,0,0,0)",
       plot_bgcolor: "rgba(0,0,0,0)",
       font: {
@@ -2930,6 +3076,7 @@ function renderFxChart() {
         y: -0.22,
         yanchor: "top",
       },
+      annotations: fxAxisAnnotations,
       xaxis: {
         range: xBounds ? [xBounds.start, xBounds.end] : undefined,
         minallowed: xBounds?.start,
@@ -3143,10 +3290,6 @@ function createComparisonSection(config) {
     const scale = state.scale === "log" && canUseLocalLog(rows) ? "log" : "linear";
     const range = getAutoRange(rows, scale, indicator.axisBounds);
     const axis = {
-      title: {
-        text: `${indicator.name}<br>${indicator.unitLabel}`,
-        font: { color, weight: 700 },
-      },
       gridcolor: side === "left" ? theme.grid : "rgba(0,0,0,0)",
       zeroline: true,
       zerolinecolor: theme.zero,
@@ -3300,8 +3443,34 @@ function createComparisonSection(config) {
     const firstIndicator = selected[0] ? getLocalIndicator(selected[0]) : null;
     const secondIndicator = selected[1] ? getLocalIndicator(selected[1]) : null;
     const theme = getChartTheme();
+    const horizontalAxisAnnotations = [firstIndicator, secondIndicator]
+      .flatMap((indicator, index) =>
+        indicator
+          ? getHorizontalAxisAnnotations(
+              indicator,
+              index === 0 ? "left" : "right",
+              getChartSeriesColor(indicator.id),
+            )
+          : [],
+      );
+    const trendAnnotations = includesTrendAnchor
+      ? [
+          {
+            text: "Prior actual observation included for trend",
+            xref: "paper",
+            yref: "paper",
+            x: 0,
+            y: 1,
+            xanchor: "left",
+            yanchor: "bottom",
+            yshift: 6,
+            showarrow: false,
+            font: { size: 10, color: theme.muted },
+          },
+        ]
+      : [];
     const layout = {
-      margin: { t: 18, r: selected.length === 2 ? 72 : 22, b: 92, l: 72 },
+      margin: getHorizontalAxisMargins(selected.length === 2),
       paper_bgcolor: "rgba(0,0,0,0)",
       plot_bgcolor: "rgba(0,0,0,0)",
       font: {
@@ -3316,22 +3485,7 @@ function createComparisonSection(config) {
         y: -0.22,
         yanchor: "top",
       },
-      annotations: includesTrendAnchor
-        ? [
-            {
-              text: "Prior actual observation included for trend",
-              xref: "paper",
-              yref: "paper",
-              x: 0,
-              y: 1,
-              xanchor: "left",
-              yanchor: "bottom",
-              yshift: 6,
-              showarrow: false,
-              font: { size: 10, color: theme.muted },
-            },
-          ]
-        : [],
+      annotations: [...horizontalAxisAnnotations, ...trendAnnotations],
       xaxis: {
         range: xBounds ? [xBounds.start, xBounds.end] : undefined,
         minallowed: xBounds?.start,

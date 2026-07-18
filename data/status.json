@@ -1,9 +1,9 @@
 {
-  "last_dashboard_refresh": "2026-07-18T14:22:09+09:00",
-  "last_dashboard_refresh_display": "2026-07-18 14:22 JST",
+  "last_dashboard_refresh": "2026-07-18T14:44:34+09:00",
+  "last_dashboard_refresh_display": "2026-07-18 14:44 JST",
   "update_duration_seconds": 0,
   "dashboard_version": "1.0.0",
-  "last_git_commit": "e6a3472",
+  "last_git_commit": "139c9bc",
   "python_version": "Python 3.13.3",
   "indicators": {
     "SP500": {
@@ -122,7 +122,7 @@
       "status": "Up to date",
       "error_message": null,
       "formula": null,
-      "release_note": "The chart uses the discontinued DFEDTAR target rate through 2008-12-15 and DFEDTARU thereafter. Repeated daily values are collapsed into a step line in the dashboard. The next expected update follows the scheduled FOMC decision date; unscheduled decisions can occur earlier."
+      "release_note": "The chart uses the discontinued DFEDTAR target rate through 2008-12-15 and DFEDTARU thereafter. Daily as-of observations are drawn as a step line, while card change is measured against the previous distinct policy setting. The next expected update follows the scheduled FOMC decision date; unscheduled decisions can occur earlier."
     },
     "DGS10": {
       "display_name": "US 10-Year Treasury Yield",

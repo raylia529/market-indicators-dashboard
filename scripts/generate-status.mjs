@@ -84,7 +84,7 @@ const indicatorDefinitions = [
     frequency: "Policy decisions, normally eight scheduled FOMC meetings per year",
     unit: "Percent, target range upper limit",
     releaseNote:
-      "The chart uses the discontinued DFEDTAR target rate through 2008-12-15 and DFEDTARU thereafter. Repeated daily values are collapsed into a step line in the dashboard. The next expected update follows the scheduled FOMC decision date; unscheduled decisions can occur earlier.",
+      "The chart uses the discontinued DFEDTAR target rate through 2008-12-15 and DFEDTARU thereafter. Daily as-of observations are drawn as a step line, while card change is measured against the previous distinct policy setting. The next expected update follows the scheduled FOMC decision date; unscheduled decisions can occur earlier.",
     scheduledUpdateDates: [
       "2026-07-29",
       "2026-09-16",

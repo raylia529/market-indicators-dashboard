@@ -225,7 +225,8 @@ h2 {
 }
 
 @media (min-width: 761px) {
-  .indicator-grid {
+  .indicator-grid,
+  .fx-card-grid {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
@@ -1439,12 +1440,6 @@ h2 {
   #fx-chart,
   .comparison-chart {
     height: 300px;
-  }
-}
-
-@media (min-width: 761px) and (max-width: 980px) {
-  .indicator-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
