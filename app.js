@@ -748,6 +748,7 @@ function getPlotlyConfig() {
       "lasso2d",
       "zoomIn2d",
       "zoomOut2d",
+      "autoScale2d",
       "hoverClosestCartesian",
       "hoverCompareCartesian",
       "toggleSpikelines",
@@ -757,50 +758,64 @@ function getPlotlyConfig() {
   };
 }
 
+const chartInitialAxisRanges = new WeakMap();
+
+function resetChartToInitialRanges(chartNode) {
+  const initialRanges = chartInitialAxisRanges.get(chartNode);
+  if (!initialRanges || !window.Plotly) {
+    return;
+  }
+
+  const update = {};
+  Object.entries(initialRanges).forEach(([axisName, range]) => {
+    update[`${axisName}.range`] = [...range];
+    update[`${axisName}.autorange`] = false;
+  });
+
+  Plotly.relayout(chartNode, update);
+}
+
 function setupChartModebar(chartNode, logScaleInput = null) {
   if (!chartNode) {
     return;
   }
 
-  const modebarGroup = Array.from(chartNode.querySelectorAll(".modebar-group")).find((group) =>
-    group.querySelector(".modebar-btn"),
-  );
-
-  if (!modebarGroup) {
+  const modebar = chartNode.querySelector(".modebar");
+  if (!modebar) {
     return;
   }
 
-  const buttonLabels = {
-    Autoscale: "Auto scale",
-    "Reset axes": "Reset axes",
-  };
-
-  modebarGroup.querySelectorAll(".modebar-btn").forEach((button) => {
-    const actionName = button.dataset.title;
-    const labelText = buttonLabels[actionName];
-
-    if (!labelText) {
-      return;
+  const initialRanges = {};
+  ["xaxis", "yaxis", "yaxis2"].forEach((axisName) => {
+    const range = chartNode.layout?.[axisName]?.range || chartNode._fullLayout?.[axisName]?.range;
+    if (Array.isArray(range) && range.length === 2) {
+      initialRanges[axisName] = [...range];
     }
-
-    const label = document.createElement("span");
-    label.className = "modebar-button-label";
-    label.textContent = labelText;
-    button.replaceChildren(label);
-    button.dataset.modebarAction = actionName === "Autoscale" ? "auto-scale" : "reset-axes";
-    button.setAttribute("aria-label", labelText);
-    button.removeAttribute("rel");
-    button.removeAttribute("data-title");
-    button.removeAttribute("data-gravity");
   });
+  chartInitialAxisRanges.set(chartNode, initialRanges);
+
+  const modebarGroup = document.createElement("div");
+  modebarGroup.className = "modebar-group dashboard-modebar-group";
+
+  const resetButton = document.createElement("button");
+  resetButton.type = "button";
+  resetButton.className = "modebar-btn dashboard-reset-control";
+  resetButton.setAttribute("aria-label", "Reset scale");
+
+  const resetLabel = document.createElement("span");
+  resetLabel.className = "modebar-button-label";
+  resetLabel.textContent = "Reset scale";
+  resetButton.append(resetLabel);
+  resetButton.addEventListener("click", () => resetChartToInitialRanges(chartNode));
+  modebarGroup.append(resetButton);
 
   const control = logScaleInput?.closest(".toggle-pill");
-  if (!control) {
-    return;
+  if (control) {
+    control.classList.add("modebar-log-control");
+    modebarGroup.append(control);
   }
 
-  control.classList.add("modebar-log-control");
-  modebarGroup.append(control);
+  modebar.replaceChildren(modebarGroup);
 }
 
 function getCssColor(name, fallback) {
