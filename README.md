@@ -164,6 +164,18 @@ The consolidated FX CSV uses:
 date,USDJPY,US_2Y_Yield,Japan_2Y_Yield,US_Japan_2Y_Spread
 ```
 
+For analysis outside the dashboard, all historical series are also outer-joined by date into:
+
+```text
+data/consolidated.csv
+```
+
+Each indicator has its own column. Missing observations remain blank: the generator does not interpolate or forward-fill daily, weekly, monthly, or quarterly series. The dashboard does not read this file and continues to load the canonical per-indicator CSV files. Regenerate it after local data updates with:
+
+```bash
+node scripts/generate-consolidated.mjs
+```
+
 The Data Status page reads generated metadata from:
 
 ```text
@@ -195,6 +207,7 @@ python3 -m pip install -r requirements.txt
 python3 scripts/update-regional-official.py
 python3 scripts/update-finra-margin-debt-yoy.py
 node scripts/generate-status.mjs
+node scripts/generate-consolidated.mjs
 ```
 
 The scripts use merge-and-validate workflows where applicable and avoid replacing complete history with short rolling datasets.
@@ -303,6 +316,7 @@ There is no package manager or formal build step. Basic validation for this stat
 ```bash
 node --check app.js
 node --check sw.js
+node --check scripts/generate-consolidated.mjs
 node --check scripts/generate-status.mjs
 node --check scripts/update-sp500.mjs
 node --check scripts/update-hy-oas.mjs

@@ -262,10 +262,14 @@ jobs:
         if: github.event_name == 'push' || env.ANY_UPDATE_ATTEMPTED == '1'
         run: node scripts/generate-status.mjs
 
+      - name: Generate consolidated data
+        run: node scripts/generate-consolidated.mjs
+
       - name: Validate scripts
         run: |
           node --check app.js
           node --check sw.js
+          node --check scripts/generate-consolidated.mjs
           node --check scripts/generate-status.mjs
           node --check scripts/update-sp500.mjs
           node --check scripts/update-hy-oas.mjs
