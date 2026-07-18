@@ -1,10 +1,10 @@
 {
-  "last_dashboard_refresh": "2026-07-18T01:43:18+09:00",
-  "last_dashboard_refresh_display": "2026-07-18 01:43 JST",
-  "update_duration_seconds": 23,
+  "last_dashboard_refresh": "2026-07-18T11:07:56+09:00",
+  "last_dashboard_refresh_display": "2026-07-18 11:07 JST",
+  "update_duration_seconds": 0,
   "dashboard_version": "1.0.0",
-  "last_git_commit": "5753869",
-  "python_version": "Python 3.12.13",
+  "last_git_commit": "36b0dc7",
+  "python_version": "Python 3.13.3",
   "indicators": {
     "SP500": {
       "display_name": "S&P 500 Index",
@@ -258,7 +258,7 @@
     },
     "ADVANCE_DECLINE_LINE": {
       "display_name": "S&P 500 Advance / Decline Line",
-      "short_name": "A/D Line",
+      "short_name": "A/D Line (Proxy)",
       "source_name": "Calculated from Yahoo Finance constituent prices",
       "source_url": "https://finance.yahoo.com/",
       "source_urls": [
@@ -280,11 +280,11 @@
       "status": "Up to date",
       "error_message": null,
       "formula": null,
-      "release_note": "Calculated from current S&P 500 constituents; historical membership changes are not reconstructed."
+      "release_note": "Current-constituent proxy. Historical membership changes are not reconstructed, and each refresh preserves the existing cumulative baseline before appending new dates."
     },
     "SP500_ABOVE_200DMA": {
       "display_name": "S&P 500 Percent of Stocks Above 200-Day Moving Average",
-      "short_name": "% Above 200DMA",
+      "short_name": "% Above 200DMA (Proxy)",
       "source_name": "Calculated from Yahoo Finance constituent prices",
       "source_url": "https://finance.yahoo.com/",
       "source_urls": [
@@ -357,8 +357,8 @@
       "release_note": "Historical archive is parsed from MOPSOV single-company monthly operating revenue for TSMC 2330. The updater merges newly available months and keeps existing history if a source request fails."
     },
     "AI_CAPEX": {
-      "display_name": "AI CapEx: Microsoft, Amazon, Alphabet, and Meta",
-      "short_name": "AI CapEx",
+      "display_name": "Hyperscaler CapEx Year-over-Year Growth: Microsoft, Amazon, Alphabet, and Meta",
+      "short_name": "AI CapEx Proxy YoY",
       "source_name": "SEC companyfacts",
       "source_url": "https://www.sec.gov/edgar/sec-api-documentation",
       "source_urls": [
@@ -375,8 +375,8 @@
       "unit": null,
       "status": "Quarterly schedule",
       "error_message": null,
-      "formula": "Microsoft CapEx + Amazon CapEx + Alphabet CapEx + Meta CapEx",
-      "release_note": null
+      "formula": "Year-over-year growth of Microsoft CapEx + Amazon CapEx + Alphabet CapEx + Meta CapEx",
+      "release_note": "Proxy for AI infrastructure investment using total reported CapEx. Single-quarter SEC facts are used where available; otherwise a quarter is derived from consecutive reported fiscal YTD values. No estimates are used."
     },
     "DEXJPUS": {
       "display_name": "USD/JPY Exchange Rate",

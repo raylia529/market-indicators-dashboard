@@ -416,6 +416,18 @@ h2 {
   font-weight: 900;
 }
 
+.change-period.up {
+  color: var(--green);
+}
+
+.change-period.down {
+  color: var(--red);
+}
+
+.change-period.flat {
+  color: var(--muted);
+}
+
 .color-control {
   display: inline-flex;
   position: absolute;
@@ -1107,7 +1119,7 @@ h2 {
   overflow-wrap: anywhere;
 }
 
-@media (max-width: 760px) and (pointer: coarse), (max-width: 900px) and (orientation: landscape) and (pointer: coarse) {
+@media (max-width: 760px), (max-width: 900px) and (orientation: landscape) and (pointer: coarse) {
   .dashboard-shell {
     width: min(100% - 24px, 560px);
     padding: 20px 0 calc(20px + env(safe-area-inset-bottom));
@@ -1277,9 +1289,12 @@ h2 {
 
   .mobile-view-switch {
     display: grid;
+    position: sticky;
+    top: calc(8px + env(safe-area-inset-top));
+    z-index: 12;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px;
-    margin: 12px 0 0;
+    margin: 8px 0 12px;
     border: 1px solid var(--line);
     border-radius: 999px;
     padding: 4px;

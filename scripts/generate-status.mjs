@@ -168,7 +168,7 @@ const indicatorDefinitions = [
   {
     key: "ADVANCE_DECLINE_LINE",
     displayName: "S&P 500 Advance / Decline Line",
-    shortName: "A/D Line",
+    shortName: "A/D Line (Proxy)",
     sourceName: "Calculated from Yahoo Finance constituent prices",
     sourceUrl: "https://finance.yahoo.com/",
     sourceUrls: [
@@ -179,7 +179,7 @@ const indicatorDefinitions = [
       },
     ],
     frequency: "Daily, US trading days",
-    releaseNote: "Calculated from current S&P 500 constituents; historical membership changes are not reconstructed.",
+    releaseNote: "Current-constituent proxy. Historical membership changes are not reconstructed, and each refresh preserves the existing cumulative baseline before appending new dates.",
     file: "data/advance-decline-line.csv",
     type: "single",
     dailyLagDays: 5,
@@ -187,7 +187,7 @@ const indicatorDefinitions = [
   {
     key: "SP500_ABOVE_200DMA",
     displayName: "S&P 500 Percent of Stocks Above 200-Day Moving Average",
-    shortName: "% Above 200DMA",
+    shortName: "% Above 200DMA (Proxy)",
     sourceName: "Calculated from Yahoo Finance constituent prices",
     sourceUrl: "https://finance.yahoo.com/",
     sourceUrls: [
@@ -235,14 +235,15 @@ const indicatorDefinitions = [
   },
   {
     key: "AI_CAPEX",
-    displayName: "AI CapEx: Microsoft, Amazon, Alphabet, and Meta",
-    shortName: "AI CapEx",
+    displayName: "Hyperscaler CapEx Year-over-Year Growth: Microsoft, Amazon, Alphabet, and Meta",
+    shortName: "AI CapEx Proxy YoY",
     sourceName: "SEC companyfacts",
     sourceUrl: "https://www.sec.gov/edgar/sec-api-documentation",
     sourceUrls: [
       { label: "SEC companyfacts API", url: "https://www.sec.gov/edgar/sec-api-documentation" },
     ],
-    formula: "Microsoft CapEx + Amazon CapEx + Alphabet CapEx + Meta CapEx",
+    formula: "Year-over-year growth of Microsoft CapEx + Amazon CapEx + Alphabet CapEx + Meta CapEx",
+    releaseNote: "Proxy for AI infrastructure investment using total reported CapEx. Single-quarter SEC facts are used where available; otherwise a quarter is derived from consecutive reported fiscal YTD values. No estimates are used.",
     frequency: "Quarterly",
     expectedReleaseDelayDays: 130,
     file: "data/ai-capex.csv",

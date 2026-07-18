@@ -40,6 +40,7 @@ const indicators = [
     category: "percentage",
     color: "#10b981",
     decimals: 1,
+    cadence: "monthly",
   },
   {
     id: "treasury-10y",
@@ -80,6 +81,7 @@ const indicators = [
     category: "balance-sheet",
     color: "#64748b",
     decimals: 0,
+    cadence: "weekly",
   },
   {
     id: "nfci",
@@ -90,6 +92,7 @@ const indicators = [
     category: "financial-conditions",
     color: "#b45309",
     decimals: 3,
+    cadence: "weekly",
   },
   {
     id: "skew",
@@ -116,7 +119,7 @@ const breadthIndicators = [
   },
   {
     id: "advance-decline-line",
-    name: "Advance / Decline Line",
+    name: "A/D Line (Proxy)",
     file: "data/advance-decline-line.csv",
     unitLabel: "Cumulative Net Advances",
     valueSuffix: "",
@@ -126,11 +129,12 @@ const breadthIndicators = [
   },
   {
     id: "sp500-above-200dma",
-    name: "% Above 200DMA",
+    name: "% Above 200DMA (Proxy)",
     file: "data/sp500-above-200dma.csv",
     unitLabel: "Percent",
     valueSuffix: "%",
     category: "percentage",
+    axisBounds: { min: 0, max: 100 },
     color: "#f97316",
     decimals: 1,
   },
@@ -156,16 +160,18 @@ const semiconductorIndicators = [
     category: "percentage",
     color: "#14b8a6",
     decimals: 1,
+    cadence: "monthly",
   },
   {
     id: "ai-capex",
-    name: "AI CapEx",
+    name: "AI CapEx Proxy YoY",
     file: "data/ai-capex.csv",
-    unitLabel: "Millions of U.S. Dollars",
-    valueSuffix: "",
-    category: "capex",
+    unitLabel: "Percent YoY",
+    valueSuffix: "%",
+    category: "percentage",
     color: "#8b5cf6",
-    decimals: 0,
+    decimals: 1,
+    cadence: "quarterly",
   },
 ];
 
@@ -317,6 +323,7 @@ const japanIndicators = [
     category: "flow",
     color: "#10b981",
     decimals: 1,
+    cadence: "weekly",
   },
   {
     id: "japan-tab-usdjpy",
@@ -361,6 +368,7 @@ const taiwanIndicators = [
     category: "percentage",
     color: "#14b8a6",
     decimals: 1,
+    cadence: "monthly",
   },
   {
     id: "taiwan-foreign-investor-net-buying",
@@ -401,6 +409,7 @@ const taiwanIndicators = [
     category: "percentage",
     color: "#f97316",
     decimals: 1,
+    cadence: "monthly",
   },
 ];
 
@@ -484,6 +493,14 @@ const glossaryBody = document.getElementById("glossary-body");
 const glossarySearchInput = document.getElementById("glossary-search");
 const glossaryLanguageButtons = Array.from(document.querySelectorAll("[data-glossary-global-language]"));
 
+document.querySelectorAll(".mobile-view-switch").forEach((switchElement) => {
+  const section = switchElement.closest(".dashboard-section");
+  const track = section?.querySelector(".mobile-swipe-track");
+  if (section && track) {
+    section.insertBefore(switchElement, track);
+  }
+});
+
 let indicatorData = new Map();
 let indicatorColors = loadStoredColors(
   "macroIndicatorColors",
@@ -508,6 +525,26 @@ let fxColors = loadStoredColors(
     ["US_Japan_2Y_Spread", "#f97316"],
   ]),
 );
+const localTextRequests = new Map();
+
+function fetchLocalText(file) {
+  if (!localTextRequests.has(file)) {
+    const request = fetch(`${file}?updated=${Date.now()}`, { cache: "no-store" })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Could not load ${file}`);
+        }
+        return response.text();
+      })
+      .catch((error) => {
+        localTextRequests.delete(file);
+        throw error;
+      });
+    localTextRequests.set(file, request);
+  }
+
+  return localTextRequests.get(file);
+}
 
 const clampingCharts = new WeakSet();
 const longPressTimers = new WeakMap();
@@ -522,8 +559,20 @@ const marginDebtExtremeThresholds = {
   low: -25,
 };
 const thresholdZoneColors = {
-  favorable: "rgba(16, 185, 129, 0.14)",
-  unfavorable: "rgba(239, 68, 68, 0.14)",
+  favorable: "rgba(16, 185, 129, 0.07)",
+  unfavorable: "rgba(239, 68, 68, 0.07)",
+};
+const thresholdEdgeColors = {
+  favorable: [
+    "rgba(16, 185, 129, 0.045)",
+    "rgba(16, 185, 129, 0.025)",
+    "rgba(16, 185, 129, 0.010)",
+  ],
+  unfavorable: [
+    "rgba(239, 68, 68, 0.045)",
+    "rgba(239, 68, 68, 0.025)",
+    "rgba(239, 68, 68, 0.010)",
+  ],
 };
 const indicatorThresholdZones = {
   "margin-debt-yoy": [
@@ -580,7 +629,7 @@ const statusClassNames = {
 };
 
 function usesTouchChartMode() {
-  return window.matchMedia("(pointer: coarse), (max-width: 760px)").matches;
+  return window.matchMedia("(pointer: coarse)").matches;
 }
 
 function getChartDragMode() {
@@ -842,8 +891,8 @@ function getIndicatorChange(latest, previous, indicator) {
   }
 
   const rawChange = latest.value - previous.value;
-  const direction = rawChange >= 0 ? "up" : "down";
-  const arrow = rawChange >= 0 ? "▲" : "▼";
+  const direction = rawChange > 0 ? "up" : rawChange < 0 ? "down" : "flat";
+  const arrow = rawChange > 0 ? "▲" : rawChange < 0 ? "▼" : "•";
   const format = getIndicatorChangeFormat(indicator);
 
   if (format === "percent") {
@@ -877,16 +926,9 @@ function getIndicatorChange(latest, previous, indicator) {
   };
 }
 
-function findActualObservationAtOrBefore(rows, dateText) {
-  for (let index = rows.length - 1; index >= 0; index -= 1) {
-    const row = rows[index];
-
-    if (row.date <= dateText && Number.isFinite(row.value)) {
-      return row;
-    }
-  }
-
-  return null;
+function findPreviousActualObservation(rows, observationsBack) {
+  const actualRows = rows.filter((row) => Number.isFinite(row.value));
+  return actualRows.at(-(observationsBack + 1)) || null;
 }
 
 function renderIndicatorChange(rows, indicator) {
@@ -896,24 +938,35 @@ function renderIndicatorChange(rows, indicator) {
     return "";
   }
 
-  const changes = [
-    {
-      label: "1D",
+  const periodsByCadence = {
+    daily: [
+      { label: "1D", observationsBack: 1 },
+      { label: "20D", observationsBack: 20 },
+    ],
+    weekly: [
+      { label: "1W", observationsBack: 1 },
+      { label: "4W", observationsBack: 4 },
+    ],
+    monthly: [
+      { label: "1M", observationsBack: 1 },
+      { label: "3M", observationsBack: 3 },
+    ],
+    quarterly: [
+      { label: "1Q", observationsBack: 1 },
+      { label: "2Q", observationsBack: 2 },
+    ],
+  };
+  const periods = periodsByCadence[indicator.cadence || "daily"];
+  const changes = periods
+    .map(({ label, observationsBack }) => ({
+      label,
       change: getIndicatorChange(
         latest,
-        findActualObservationAtOrBefore(rows, addDays(latest.date, -1)),
+        findPreviousActualObservation(rows, observationsBack),
         indicator,
       ),
-    },
-    {
-      label: "20D",
-      change: getIndicatorChange(
-        latest,
-        findActualObservationAtOrBefore(rows, addDays(latest.date, -20)),
-        indicator,
-      ),
-    },
-  ].filter((item) => item.change);
+    }))
+    .filter((item) => item.change);
 
   if (changes.length === 0) {
     return "";
@@ -1134,7 +1187,7 @@ function percentile(values, p) {
   return sorted[lower] + (sorted[upper] - sorted[lower]) * (index - lower);
 }
 
-function getAutoRange(rows, scale) {
+function getAutoRange(rows, scale, axisBounds = null) {
   const values = rows.map((row) => row.value).filter((value) => Number.isFinite(value));
   const visibleValues = scale === "log" ? values.filter((value) => value > 0) : values;
 
@@ -1157,6 +1210,23 @@ function getAutoRange(rows, scale) {
 
   if (scale === "log") {
     min = Math.max(min, Math.min(...visibleValues) * 0.8, 0.0001);
+  }
+
+  if (axisBounds) {
+    if (Number.isFinite(axisBounds.min)) {
+      min = Math.max(min, axisBounds.min);
+    }
+
+    if (Number.isFinite(axisBounds.max)) {
+      max = Math.min(max, axisBounds.max);
+    }
+
+    if (min >= max) {
+      return [
+        Number.isFinite(axisBounds.min) ? axisBounds.min : min,
+        Number.isFinite(axisBounds.max) ? axisBounds.max : max,
+      ];
+    }
   }
 
   return [min, max];
@@ -1851,7 +1921,8 @@ function setupMobileYAxisGestures(chartNode) {
   chartNode.dataset.mobileYAxisGesturesReady = "true";
   const doubleTapWindowMs = 420;
   const doubleTapDistancePx = 34;
-  const zoomModeHoldMs = 1600;
+  const tapMoveTolerancePx = 10;
+  const tapDurationMs = 320;
 
   function getTouchCenter(touches) {
     const points = Array.from(touches);
@@ -1872,31 +1943,11 @@ function setupMobileYAxisGestures(chartNode) {
       Math.hypot(center.x - previousTap.x, center.y - previousTap.y) <= doubleTapDistancePx;
 
     if (isDoubleTap) {
-      mobileYAxisTapStates.set(chartNode, {
-        axisName,
-        time: now,
-        x: center.x,
-        y: center.y,
-        zoomUntil: now + zoomModeHoldMs,
-      });
+      mobileYAxisTapStates.delete(chartNode);
       return "zoom";
     }
 
-    const zoomStillActive =
-      previousTap &&
-      previousTap.axisName === axisName &&
-      previousTap.zoomUntil &&
-      now <= previousTap.zoomUntil;
-
-    mobileYAxisTapStates.set(chartNode, {
-      axisName,
-      time: now,
-      x: center.x,
-      y: center.y,
-      zoomUntil: zoomStillActive ? previousTap.zoomUntil : 0,
-    });
-
-    return zoomStillActive ? "zoom" : "pan";
+    return "pan";
   }
 
   function beginGesture(touches) {
@@ -1919,7 +1970,10 @@ function setupMobileYAxisGestures(chartNode) {
     mobileYAxisGestureStates.set(chartNode, {
       axisName,
       mode: gestureMode,
+      startX: center.x,
       startY: center.y,
+      startedAt: Date.now(),
+      maxMovement: 0,
       startDistance: distance,
       startRange: range,
       touchCount: touches.length,
@@ -1931,7 +1985,28 @@ function setupMobileYAxisGestures(chartNode) {
   }
 
   function scheduleRange(state, range) {
-    state.pendingRange = range;
+    const axis = chartNode._fullLayout?.[state.axisName];
+    let nextRange = range;
+
+    if (axis && Number.isFinite(axis.minallowed) && Number.isFinite(axis.maxallowed)) {
+      const span = Math.min(nextRange[1] - nextRange[0], axis.maxallowed - axis.minallowed);
+      let start = nextRange[0];
+      let end = nextRange[0] + span;
+
+      if (start < axis.minallowed) {
+        start = axis.minallowed;
+        end = start + span;
+      }
+
+      if (end > axis.maxallowed) {
+        end = axis.maxallowed;
+        start = end - span;
+      }
+
+      nextRange = [start, end];
+    }
+
+    state.pendingRange = nextRange;
 
     if (state.animationFrame) {
       return;
@@ -1951,8 +2026,23 @@ function setupMobileYAxisGestures(chartNode) {
     });
   }
 
-  function clearGesture() {
+  function clearGesture(recordTap = false) {
     const state = mobileYAxisGestureStates.get(chartNode);
+
+    if (
+      recordTap &&
+      state?.mode === "pan" &&
+      state.touchCount === 1 &&
+      state.maxMovement <= tapMoveTolerancePx &&
+      Date.now() - state.startedAt <= tapDurationMs
+    ) {
+      mobileYAxisTapStates.set(chartNode, {
+        axisName: state.axisName,
+        time: Date.now(),
+        x: state.startX,
+        y: state.startY,
+      });
+    }
 
     if (state?.animationFrame) {
       window.cancelAnimationFrame(state.animationFrame);
@@ -2009,6 +2099,10 @@ function setupMobileYAxisGestures(chartNode) {
       }
 
       const center = getTouchCenter(event.touches);
+      state.maxMovement = Math.max(
+        state.maxMovement,
+        Math.hypot(center.x - state.startX, center.y - state.startY),
+      );
 
       if (state.mode === "pan") {
         const fullLayout = chartNode._fullLayout;
@@ -2045,7 +2139,7 @@ function setupMobileYAxisGestures(chartNode) {
           return;
         }
 
-        clearGesture();
+        clearGesture(eventName === "touchend");
         event.preventDefault();
         event.stopImmediatePropagation();
       },
@@ -2080,13 +2174,14 @@ function renderCards() {
       const rows = indicatorData.get(indicator.id) || [];
       const latest = rows.at(-1);
       const isActive = selectedIndicatorIds.includes(indicator.id);
+      const isUnavailable = !latest;
 
       return `
-        <article class="metric-card indicator-card ${isActive ? "active" : ""}" data-indicator="${indicator.id}" tabindex="0">
+        <article class="metric-card indicator-card ${isActive ? "active" : ""} ${isUnavailable ? "unavailable" : ""}" data-indicator="${indicator.id}" tabindex="0" ${isUnavailable ? 'aria-disabled="true"' : ""}>
           <span class="indicator-label">${indicator.name}</span>
           <strong>${latest ? formatValue(latest.value, indicator) : "--"}</strong>
           ${renderIndicatorChange(rows, indicator)}
-          <small class="indicator-date">${latest ? `Latest ${formatFullDate(latest.date)}` : "Loading"}</small>
+          <small class="indicator-date">${latest ? `Latest ${formatFullDate(latest.date)}` : "Unavailable"}</small>
           ${renderColorPalette({
             activeColor: indicatorColors.get(indicator.id),
             targetId: indicator.id,
@@ -2099,6 +2194,11 @@ function renderCards() {
 
   function toggleCard(card) {
       const id = card.dataset.indicator;
+
+      if ((indicatorData.get(id) || []).length === 0) {
+        showNotice(`${getIndicator(id).name} data is currently unavailable.`);
+        return;
+      }
 
       if (selectedIndicatorIds.includes(id)) {
         selectedIndicatorIds = selectedIndicatorIds.filter((selectedId) => selectedId !== id);
@@ -2170,7 +2270,7 @@ function renderRangeButtons() {
 function getYAxisLayout(side, indicator, rows, theme = getChartTheme()) {
   const color = indicatorColors.get(indicator.id);
   const scale = macroScale === "log" && canUseLog(rows) ? "log" : "linear";
-  const range = getAutoRange(rows, scale);
+  const range = getAutoRange(rows, scale, indicator.axisBounds);
   const axis = {
     title: {
       text: `${indicator.name}<br>${indicator.unitLabel}`,
@@ -2182,6 +2282,11 @@ function getYAxisLayout(side, indicator, rows, theme = getChartTheme()) {
     tickfont: { color, weight: 700 },
     type: scale,
   };
+
+  if (indicator.axisBounds) {
+    axis.minallowed = indicator.axisBounds.min;
+    axis.maxallowed = indicator.axisBounds.max;
+  }
 
   axis.title.font.weight = 700;
 
@@ -2212,9 +2317,72 @@ function getLinearAxisRange(axis) {
   return [Math.min(first, second), Math.max(first, second)];
 }
 
+function getChartIndicatorDefinition(id) {
+  return [
+    ...indicators,
+    ...breadthIndicators,
+    ...semiconductorIndicators,
+    ...usRatesIndicators,
+    ...jpRatesIndicators,
+    ...japanIndicators,
+    ...taiwanIndicators,
+  ].find((indicator) => indicator.id === id);
+}
+
+function getThresholdRect(yref, y0, y1, fillcolor) {
+  if (!Number.isFinite(y0) || !Number.isFinite(y1) || y1 <= y0) {
+    return null;
+  }
+
+  return {
+    type: "rect",
+    xref: "paper",
+    yref,
+    x0: 0,
+    x1: 1,
+    y0,
+    y1,
+    fillcolor,
+    line: { width: 0 },
+    layer: "below",
+  };
+}
+
+function getThresholdEdgeShapes(zone, yref, min, max) {
+  const span = Math.max(max - min, 0.000001);
+  const bandSize = span * 0.018;
+  const edgeColors = thresholdEdgeColors[zone.tone] || [];
+  const shapes = [];
+
+  function addBands(anchor, direction) {
+    edgeColors.forEach((color, index) => {
+      const inner = anchor + direction * bandSize * index;
+      const outer = anchor + direction * bandSize * (index + 1);
+      const y0 = Math.max(Math.min(inner, outer), min);
+      const y1 = Math.min(Math.max(inner, outer), max);
+      const shape = getThresholdRect(yref, y0, y1, color);
+
+      if (shape) {
+        shapes.push(shape);
+      }
+    });
+  }
+
+  if (Number.isFinite(zone.to) && zone.to > min && zone.to < max) {
+    addBands(zone.to, 1);
+  }
+
+  if (Number.isFinite(zone.from) && zone.from > min && zone.from < max) {
+    addBands(zone.from, -1);
+  }
+
+  return shapes;
+}
+
 function getThresholdZoneShapes(selected, layout) {
   return selected.flatMap((indicatorId, index) => {
     const zones = indicatorThresholdZones[indicatorId];
+    const indicator = getChartIndicatorDefinition(indicatorId);
 
     if (!zones) {
       return [];
@@ -2229,27 +2397,16 @@ function getThresholdZoneShapes(selected, layout) {
     }
 
     const [min, max] = range;
+    const extension = Math.max((max - min) * 100, 1000000);
+    const lowerLimit = Number.isFinite(indicator?.axisBounds?.min) ? indicator.axisBounds.min : min - extension;
+    const upperLimit = Number.isFinite(indicator?.axisBounds?.max) ? indicator.axisBounds.max : max + extension;
 
     return zones.flatMap((zone) => {
-      const y0 = Math.max(zone.from ?? min, min);
-      const y1 = Math.min(zone.to ?? max, max);
+      const y0 = zone.from ?? lowerLimit;
+      const y1 = zone.to ?? upperLimit;
+      const baseShape = getThresholdRect(yref, y0, y1, thresholdZoneColors[zone.tone]);
 
-      if (!Number.isFinite(y0) || !Number.isFinite(y1) || y1 <= y0) {
-        return [];
-      }
-
-      return {
-        type: "rect",
-        xref: "paper",
-        yref,
-        x0: 0,
-        x1: 1,
-        y0,
-        y1,
-        fillcolor: thresholdZoneColors[zone.tone],
-        line: { width: 0 },
-        layer: "below",
-      };
+      return [baseShape, ...getThresholdEdgeShapes(zone, yref, min, max)].filter(Boolean);
     });
   });
 }
@@ -2636,6 +2793,7 @@ function createComparisonSection(config) {
   const state = {
     data: new Map(),
     loaded: false,
+    loadingPromise: null,
     colors: loadStoredColors(
       config.storageKey,
       new Map(config.indicators.map((indicator) => [indicator.id, indicator.color])),
@@ -2697,17 +2855,56 @@ function createComparisonSection(config) {
   function getFilteredRows(indicatorId) {
     const rows = state.data.get(indicatorId) || [];
     const bounds = getXBounds();
+    const displayRows = getDisplayRows(rows, bounds);
 
+    return displayRows;
+  }
+
+  function getDisplayRows(rows, bounds) {
     if (rows.length === 0) {
       return [];
     }
 
     if (!bounds) {
       const start = state.activeRange === "Max" ? toDate(maxStartDate) : shiftDateByRange(toDate(rows.at(-1).date), state.activeRange);
-      return rows.filter((row) => toDate(row.date) >= start);
+      const visibleRows = rows.filter((row) => toDate(row.date) >= start);
+      const anchorIndex = rows.indexOf(visibleRows[0] || rows.at(-1));
+      return visibleRows.length >= 2 ? visibleRows : rows.slice(Math.max(0, anchorIndex - 1), anchorIndex + 1);
     }
 
-    return rows.filter((row) => row.date >= bounds.start && row.date <= bounds.end);
+    const visibleRows = rows.filter((row) => row.date >= bounds.start && row.date <= bounds.end);
+
+    if (visibleRows.length >= 2 || rows.length < 2) {
+      return visibleRows;
+    }
+
+    const firstAfterEndIndex = rows.findIndex((row) => row.date > bounds.end);
+    const fallbackEnd = visibleRows.length
+      ? rows.indexOf(visibleRows.at(-1)) + 1
+      : firstAfterEndIndex > 0
+        ? firstAfterEndIndex
+        : rows.length;
+    return rows.slice(Math.max(0, fallbackEnd - 2), fallbackEnd);
+  }
+
+  function getDisplayXBounds(selected) {
+    const baseBounds = getXBounds();
+
+    if (!baseBounds) {
+      return null;
+    }
+
+    const displayStart = selected
+      .flatMap((id) => getDisplayRows(state.data.get(id) || [], baseBounds))
+      .map((row) => row.date)
+      .sort((a, b) => a.localeCompare(b))
+      .at(0);
+
+    return {
+      start: displayStart && displayStart < baseBounds.start ? displayStart : baseBounds.start,
+      end: baseBounds.end,
+      minallowed: baseBounds.start,
+    };
   }
 
   function getAutoOrder(ids) {
@@ -2763,7 +2960,7 @@ function createComparisonSection(config) {
   function getLocalYAxisLayout(side, indicator, rows, theme = getChartTheme()) {
     const color = state.colors.get(indicator.id);
     const scale = state.scale === "log" && canUseLocalLog(rows) ? "log" : "linear";
-    const range = getAutoRange(rows, scale);
+    const range = getAutoRange(rows, scale, indicator.axisBounds);
     const axis = {
       title: {
         text: `${indicator.name}<br>${indicator.unitLabel}`,
@@ -2775,6 +2972,11 @@ function createComparisonSection(config) {
       tickfont: { color, weight: 700 },
       type: scale,
     };
+
+    if (indicator.axisBounds) {
+      axis.minallowed = indicator.axisBounds.min;
+      axis.maxallowed = indicator.axisBounds.max;
+    }
 
     if (range) {
       axis.range = scale === "log" ? range.map((value) => Math.log10(value)) : range;
@@ -2905,7 +3107,11 @@ function createComparisonSection(config) {
     const title = selected.map((id) => getLocalIndicator(id).name).join(" vs ");
     elements.title.textContent = title || "Select up to two indicators";
 
-    const xBounds = getXBounds();
+    const xBounds = getDisplayXBounds(selected);
+    const requestedBounds = getXBounds();
+    const includesTrendAnchor = Boolean(
+      xBounds && requestedBounds && xBounds.start < requestedBounds.start,
+    );
     const firstRows = selected[0] ? getFilteredRows(selected[0]) : [];
     const secondRows = selected[1] ? getFilteredRows(selected[1]) : [];
     const firstIndicator = selected[0] ? getLocalIndicator(selected[0]) : null;
@@ -2921,6 +3127,22 @@ function createComparisonSection(config) {
         color: theme.ink,
       },
       legend: { orientation: "h", x: 0, y: 1.14 },
+      annotations: includesTrendAnchor
+        ? [
+            {
+              text: "Prior actual observation included for trend",
+              xref: "paper",
+              yref: "paper",
+              x: 0,
+              y: 0,
+              xanchor: "left",
+              yanchor: "top",
+              yshift: -34,
+              showarrow: false,
+              font: { size: 10, color: theme.muted },
+            },
+          ]
+        : [],
       xaxis: {
         range: xBounds ? [xBounds.start, xBounds.end] : undefined,
         minallowed: xBounds?.start,
@@ -2956,7 +3178,7 @@ function createComparisonSection(config) {
           elements.chart.dataset.promptEnd = xBounds.end;
         }
 
-        setupBoundedXAxis(elements.chart, getXBounds);
+        setupBoundedXAxis(elements.chart, () => getDisplayXBounds(state.axisOrder.slice(0, 2)));
         setupMobileYAxisGestures(elements.chart);
         setupPromptCopy(elements.chart, (dateText) => buildComparisonPrompt(config.label, state, config.indicators, dateText));
       });
@@ -2997,24 +3219,33 @@ function createComparisonSection(config) {
   return {
     key: config.key,
     chartElement: elements.chart,
-    async load() {
-      const datasets = await Promise.all(
+    get loaded() {
+      return state.loaded;
+    },
+    load() {
+      if (state.loaded) {
+        return Promise.resolve();
+      }
+      if (state.loadingPromise) {
+        return state.loadingPromise;
+      }
+
+      state.loadingPromise = Promise.all(
         config.indicators.map(async (indicator) => {
-          const response = await fetch(`${indicator.file}?updated=${Date.now()}`, {
-            cache: "no-store",
-          });
-
-          if (!response.ok) {
-            throw new Error(`Could not load ${indicator.file}`);
+          try {
+            return [indicator.id, parseIndicatorRows(await fetchLocalText(indicator.file), indicator)];
+          } catch (error) {
+            console.warn(`${indicator.name} unavailable:`, error);
+            return [indicator.id, []];
           }
-
-          return [indicator.id, parseIndicatorRows(await response.text(), indicator)];
         }),
-      );
+      ).then((datasets) => {
+        state.data = new Map(datasets);
+        state.loaded = true;
+        renderLocalAll();
+      });
 
-      state.data = new Map(datasets);
-      state.loaded = true;
-      renderLocalAll();
+      return state.loadingPromise;
     },
     renderChart() {
       renderLocalChart();
@@ -3074,7 +3305,7 @@ const comparisonSections = [
     key: "semiconductor",
     label: "Chips & AI",
     indicators: semiconductorIndicators,
-    defaultSelectedIds: ["sox"],
+    defaultSelectedIds: ["sox", "ai-capex"],
     defaultRange: "5Y",
     storageKey: "semiconductorIndicatorColors",
   }),
@@ -3126,7 +3357,7 @@ function resizeVisibleCharts() {
   }
 
   comparisonSections.forEach((section) => {
-    if (section.chartElement) {
+    if (section.loaded && section.chartElement) {
       Plotly.Plots.resize(section.chartElement);
     }
   });
@@ -3192,15 +3423,12 @@ function validateMacroScale() {
 async function loadIndicatorData() {
   const datasets = await Promise.all(
     indicators.map(async (indicator) => {
-      const response = await fetch(`${indicator.file}?updated=${Date.now()}`, {
-        cache: "no-store",
-      });
-
-      if (!response.ok) {
-        throw new Error(`Could not load ${indicator.file}`);
+      try {
+        return [indicator.id, parseIndicatorRows(await fetchLocalText(indicator.file), indicator)];
+      } catch (error) {
+        console.warn(`${indicator.name} unavailable:`, error);
+        return [indicator.id, []];
       }
-
-      return [indicator.id, parseIndicatorRows(await response.text(), indicator)];
     }),
   );
 
@@ -3208,13 +3436,7 @@ async function loadIndicatorData() {
 }
 
 async function loadFxData() {
-  const response = await fetch(`data/fx.csv?updated=${Date.now()}`, { cache: "no-store" });
-
-  if (!response.ok) {
-    throw new Error("Could not load data/fx.csv");
-  }
-
-  fxData = parseFxCsv(await response.text());
+  fxData = parseFxCsv(await fetchLocalText("data/fx.csv"));
 }
 
 async function loadDataStatus() {
@@ -3292,7 +3514,7 @@ function renderStatusDates(indicator) {
   return `
     <div class="status-date-stack">
       <span><strong>Latest</strong> ${escapeHtml(indicator.latest_available_date || "--")}</span>
-      <span><strong>Next observation</strong> ${escapeHtml(indicator.next_expected_update_date || "--")}</span>
+      <span><strong>Next update</strong> ${escapeHtml(indicator.next_expected_update_date || "--")}</span>
     </div>
   `;
 }
@@ -3648,6 +3870,13 @@ tabButtons.forEach((button) => {
       panel.classList.toggle("active", panel.dataset.tabPanel === tab);
     });
 
+    if (tab === "fx" && fxData.length === 0) {
+      loadFxData().then(renderFx).catch((error) => setFxText("fx-updated", error.message));
+    }
+
+    const comparisonSection = comparisonSections.find((section) => section.key === tab);
+    comparisonSection?.load().catch((error) => comparisonSection.showError(error));
+
     requestAnimationFrame(() => {
       resizeVisibleCharts();
     });
@@ -3796,8 +4025,10 @@ if (glossarySearchInput) {
 
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
   renderChart();
-  renderFxChart();
-  comparisonSections.forEach((section) => section.renderChart());
+  if (fxData.length > 0) {
+    renderFxChart();
+  }
+  comparisonSections.filter((section) => section.loaded).forEach((section) => section.renderChart());
 });
 
 loadIndicatorData()
@@ -3807,20 +4038,6 @@ loadIndicatorData()
   .catch((error) => {
     indicatorGrid.innerHTML = `<p class="error-message">${error.message}</p>`;
   });
-
-loadFxData()
-  .then(() => {
-    renderFx();
-  })
-  .catch((error) => {
-    setFxText("fx-updated", error.message);
-  });
-
-comparisonSections.forEach((section) => {
-  section.load().catch((error) => {
-    section.showError(error);
-  });
-});
 
 loadDataStatus().then(renderDataStatus).catch(renderDataStatusError);
 

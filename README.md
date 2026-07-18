@@ -117,11 +117,11 @@ All dashboard data is stored in `data/`.
 | Fed Balance Sheet | `data/fed-balance-sheet.csv` | FRED `WALCL` | 2002-12-18 | Weekly |
 | NFCI | `data/nfci.csv` | FRED `NFCI` | 1971-01-08 | Weekly |
 | SKEW Index | `data/skew.csv` | Cboe SKEW history CSV | 1990-01-02 | Daily/business daily |
-| Advance / Decline Line | `data/advance-decline-line.csv` | Calculated from current S&P 500 constituents using Yahoo Finance daily closes | 10-year rolling history | Daily/business daily |
-| % Above 200DMA | `data/sp500-above-200dma.csv` | Calculated from current S&P 500 constituents using Yahoo Finance daily closes | 10-year rolling history | Daily/business daily |
+| A/D Line (Proxy) | `data/advance-decline-line.csv` | Calculated from current S&P 500 constituents using Yahoo Finance daily closes | Preserved rolling history | Daily/business daily |
+| % Above 200DMA (Proxy) | `data/sp500-above-200dma.csv` | Calculated from current S&P 500 constituents using Yahoo Finance daily closes | Preserved rolling history | Daily/business daily |
 | SOX Index | `data/sox.csv` | Yahoo Finance `^SOX` | 1994-05-04 | Daily/business daily |
 | TSMC Revenue YoY | `data/tsmc-revenue-yoy.csv` | MOPSOV monthly operating revenue for TSMC `2330` | 2013-01-31 | Monthly |
-| AI CapEx | `data/ai-capex.csv` | SEC companyfacts, calculated from MSFT, AMZN, GOOGL, and META CapEx facts | 2014-12-31 currently aligned | Quarterly |
+| AI CapEx Proxy YoY | `data/ai-capex.csv` | SEC companyfacts, calculated as YoY growth of combined reported MSFT, AMZN, GOOGL, and META total CapEx | 2018-09-30 | Quarterly |
 | USD/JPY | `data/fx.csv` | FRED `DEXJPUS`, with Yahoo Finance `JPY=X` filling only recent unpublished dates | 1971-01-04 | Daily/forex trading days |
 | US-JP 2Y Spread | `data/fx.csv` | FRED `DGS2` minus Japan MOF 2Y JGB yield | 1976-06-01 | Daily/business daily with forward-filled published yield observations |
 | Japan 10-Year JGB Yield | `data/japan-10-year-jgb-yield.csv` | Japan Ministry of Finance JGB interest rate CSV | 1986-07-05 | Daily/Japan business days |
@@ -274,7 +274,7 @@ Japan 10-Year JGB Yield - Japan 2-Year JGB Yield
 ### Breadth
 
 - Breadth indicators are calculated from the current S&P 500 constituent list published by the `datasets/s-and-p-500-companies` GitHub dataset and Yahoo Finance daily close data.
-- The Advance / Decline Line uses daily net advances minus declines and accumulates the result over the downloaded window.
+- The Advance / Decline Line uses daily net advances minus declines. Updates preserve its existing cumulative baseline and append only newly available dates, avoiding baseline shifts when the rolling source window changes.
 - `% Above 200DMA` calculates the percentage of downloaded constituents whose close is above their own 200-day moving average.
 - This is a practical free-data approximation based on current constituents. It does not reconstruct historical S&P 500 membership changes.
 
@@ -284,7 +284,7 @@ Japan 10-Year JGB Yield - Japan 2-Year JGB Yield
 - TSMC Revenue YoY is parsed from MOPSOV single-company monthly operating revenue for TSMC `2330`.
 - The current historical archive starts in 2013 because the MOPS IFRS monthly revenue endpoint is available from ROC year 102. The updater merges newly available months and keeps existing history if a MOPSOV request fails.
 - MOPSOV occasionally returns temporary 307 responses while bootstrapping many months. The bootstrap skips failed months instead of shortening the CSV; missing archive months can be filled later by rerunning or by importing a manually downloaded MOPS archive.
-- AI CapEx combines quarterly CapEx from Microsoft, Amazon, Alphabet, and Meta using SEC companyfacts. SEC taxonomy and fiscal-period reporting are not perfectly uniform across companies, so the script uses actual reported 10-Q/10-K facts and only writes quarters where all four companies can be aligned.
+- AI CapEx Proxy YoY is calculated from combined total quarterly CapEx reported by Microsoft, Amazon, Alphabet, and Meta through SEC companyfacts. It is a proxy for AI infrastructure investment because company filings do not isolate all AI-only spending. The updater prefers reported single-quarter facts and, where only fiscal YTD facts exist, subtracts consecutive reported cumulative values to recover the quarter. It uses no estimates and writes only dates aligned across all four companies.
 
 ## Validation
 
