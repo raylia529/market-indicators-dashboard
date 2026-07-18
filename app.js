@@ -739,9 +739,68 @@ function getChartDragMode() {
 function getPlotlyConfig() {
   return {
     displayModeBar: true,
+    displaylogo: false,
+    modeBarButtonsToRemove: [
+      "toImage",
+      "zoom2d",
+      "pan2d",
+      "select2d",
+      "lasso2d",
+      "zoomIn2d",
+      "zoomOut2d",
+      "hoverClosestCartesian",
+      "hoverCompareCartesian",
+      "toggleSpikelines",
+    ],
     responsive: true,
     scrollZoom: !usesTouchChartMode(),
   };
+}
+
+function setupChartModebar(chartNode, logScaleInput = null) {
+  if (!chartNode) {
+    return;
+  }
+
+  const modebarGroup = Array.from(chartNode.querySelectorAll(".modebar-group")).find((group) =>
+    group.querySelector(".modebar-btn"),
+  );
+
+  if (!modebarGroup) {
+    return;
+  }
+
+  const buttonLabels = {
+    Autoscale: "Auto scale",
+    "Reset axes": "Reset axes",
+  };
+
+  modebarGroup.querySelectorAll(".modebar-btn").forEach((button) => {
+    const actionName = button.dataset.title;
+    const labelText = buttonLabels[actionName];
+
+    if (!labelText) {
+      return;
+    }
+
+    const label = document.createElement("span");
+    label.className = "modebar-button-label";
+    label.textContent = labelText;
+    button.replaceChildren(label);
+    button.dataset.modebarAction = actionName === "Autoscale" ? "auto-scale" : "reset-axes";
+    button.setAttribute("aria-label", labelText);
+    button.removeAttribute("rel");
+    button.removeAttribute("data-title");
+    button.removeAttribute("data-gravity");
+  });
+
+  const control = logScaleInput?.closest(".toggle-pill");
+  if (!control) {
+    return;
+  }
+
+  control.classList.add("modebar-log-control");
+  modebarGroup.append(control);
 }
 
 function getCssColor(name, fallback) {
@@ -2786,6 +2845,8 @@ function renderChart() {
 
   if (chartElement && window.Plotly) {
     Plotly.react(chartElement, traces, layout, getPlotlyConfig()).then(() => {
+      setupChartModebar(chartElement, macroLogScaleInput);
+
       if (xBounds) {
         chartElement.dataset.promptStart = xBounds.start;
         chartElement.dataset.promptEnd = xBounds.end;
@@ -3099,6 +3160,8 @@ function renderFxChart() {
     },
     getPlotlyConfig(),
   ).then(() => {
+    setupChartModebar(fxChartElement);
+
     if (xBounds) {
       fxChartElement.dataset.promptStart = xBounds.start;
       fxChartElement.dataset.promptEnd = xBounds.end;
@@ -3517,6 +3580,8 @@ function createComparisonSection(config) {
 
     if (elements.chart && window.Plotly) {
       Plotly.react(elements.chart, traces, layout, getPlotlyConfig()).then(() => {
+        setupChartModebar(elements.chart, elements.logScaleInput);
+
         if (xBounds) {
           elements.chart.dataset.promptStart = xBounds.start;
           elements.chart.dataset.promptEnd = xBounds.end;

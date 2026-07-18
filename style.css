@@ -668,21 +668,102 @@ h2 {
 }
 
 .js-plotly-plot .plotly .modebar-group {
-  margin-left: 4px;
-  border: 1px solid rgba(226, 232, 240, 0.72);
-  border-radius: 999px;
-  padding: 2px 3px;
-  background: var(--modebar-bg) !important;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03);
-}
-
-.js-plotly-plot .plotly .modebar-btn {
-  opacity: 0.72;
+  display: flex !important;
+  align-items: center;
+  gap: 6px !important;
+  float: none !important;
+  margin-left: 0;
+  padding: 0 !important;
   background: transparent !important;
 }
 
-.js-plotly-plot .plotly .modebar-btn path {
-  fill: var(--modebar-icon) !important;
+.js-plotly-plot .plotly .modebar-group:empty {
+  display: none;
+}
+
+.js-plotly-plot .plotly .modebar-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 88px !important;
+  min-width: 88px;
+  height: 24px !important;
+  border: 1px solid rgba(226, 232, 240, 0.86);
+  border-radius: 6px;
+  padding: 0 10px !important;
+  opacity: 1;
+  background: var(--modebar-bg) !important;
+  color: var(--modebar-icon-active) !important;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03);
+}
+
+.js-plotly-plot .plotly .modebar-btn svg {
+  display: none;
+}
+
+.js-plotly-plot .plotly .modebar-btn::before,
+.js-plotly-plot .plotly .modebar-btn::after {
+  display: none !important;
+  content: none !important;
+}
+
+.js-plotly-plot .plotly .modebar-button-label {
+  display: block;
+  color: var(--modebar-icon-active);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.js-plotly-plot .plotly .modebar-log-control {
+  display: inline-flex;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 88px;
+  min-width: 88px;
+  height: 24px;
+  margin: 0;
+  border: 1px solid rgba(226, 232, 240, 0.86);
+  border-radius: 6px;
+  padding: 0 10px;
+  background: var(--modebar-bg);
+  color: var(--modebar-icon-active);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03);
+}
+
+.js-plotly-plot .plotly .modebar-log-control input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.js-plotly-plot .plotly .modebar-log-control::before,
+.js-plotly-plot .plotly .modebar-log-control::after {
+  display: none !important;
+  content: none !important;
+}
+
+.js-plotly-plot .plotly .modebar-log-control:has(input:checked) {
+  border-color: rgba(37, 99, 235, 0.52);
+  background: var(--blue-soft);
+  color: var(--blue-strong);
 }
 
 .js-plotly-plot .plotly .modebar-btn:hover,
@@ -1534,12 +1615,12 @@ h2 {
   }
 
   .js-plotly-plot .plotly .modebar-group {
-    border-color: rgba(148, 163, 184, 0.20);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.20);
+    background: transparent !important;
   }
 
-  .js-plotly-plot .plotly .modebar-btn path {
-    fill: var(--modebar-icon) !important;
+  .js-plotly-plot .plotly .modebar-btn {
+    border-color: rgba(148, 163, 184, 0.24);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.20);
   }
 
   .js-plotly-plot .plotly .modebar-btn:hover path,
