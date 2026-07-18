@@ -22,7 +22,7 @@
   --neutral-soft: #f1f5f9;
   --chart-grid: #e5e7eb;
   --chart-zero: #d1d5db;
-  --modebar-bg: rgba(248, 250, 252, 0.88);
+  --modebar-bg: rgba(255, 255, 255, 0.96);
   --modebar-icon: #94a3b8;
   --modebar-icon-active: #64748b;
   --shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
@@ -631,15 +631,21 @@ h2 {
 .js-plotly-plot .plotly .modebar {
   right: 8px;
   top: 8px;
-  padding: 2px 4px;
-  border: 1px solid rgba(209, 213, 219, 0.32);
+  background: transparent;
+}
+
+.js-plotly-plot .plotly .modebar-group {
+  margin-left: 4px;
+  border: 1px solid rgba(226, 232, 240, 0.72);
   border-radius: 999px;
-  background: var(--modebar-bg);
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.035);
+  padding: 2px 3px;
+  background: var(--modebar-bg) !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03);
 }
 
 .js-plotly-plot .plotly .modebar-btn {
   opacity: 0.72;
+  background: transparent !important;
 }
 
 .js-plotly-plot .plotly .modebar-btn path {
@@ -1375,10 +1381,10 @@ h2 {
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0b1120;
-    --surface: #111827;
-    --surface-soft: #0f172a;
-    --surface-raised: #172033;
+    --bg: #000000;
+    --surface: #0b0b0c;
+    --surface-soft: #111113;
+    --surface-raised: #161618;
     --ink: #e5e7eb;
     --text: #e5e7eb;
     --inverse-ink: #ffffff;
@@ -1397,16 +1403,14 @@ h2 {
     --neutral-soft: rgba(148, 163, 184, 0.16);
     --chart-grid: rgba(148, 163, 184, 0.22);
     --chart-zero: rgba(148, 163, 184, 0.42);
-    --modebar-bg: rgba(15, 23, 42, 0.78);
+    --modebar-bg: rgba(24, 24, 27, 0.92);
     --modebar-icon: #94a3b8;
     --modebar-icon-active: #e5e7eb;
     --shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
   }
 
   body {
-    background:
-      radial-gradient(circle at 20% -10%, rgba(37, 99, 235, 0.18), transparent 34rem),
-      var(--bg);
+    background: var(--bg);
   }
 
   .dashboard-section,
@@ -1463,8 +1467,9 @@ h2 {
       0 4px 10px rgba(0, 0, 0, 0.18);
   }
 
-  .js-plotly-plot .plotly .modebar {
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+  .js-plotly-plot .plotly .modebar-group {
+    border-color: rgba(148, 163, 184, 0.20);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.20);
   }
 
   .js-plotly-plot .plotly .modebar-btn path {
