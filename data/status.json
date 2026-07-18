@@ -1,9 +1,9 @@
 {
-  "last_dashboard_refresh": "2026-07-18T12:19:40+09:00",
-  "last_dashboard_refresh_display": "2026-07-18 12:19 JST",
+  "last_dashboard_refresh": "2026-07-18T14:22:09+09:00",
+  "last_dashboard_refresh_display": "2026-07-18 14:22 JST",
   "update_duration_seconds": 0,
   "dashboard_version": "1.0.0",
-  "last_git_commit": "9953dfe",
+  "last_git_commit": "e6a3472",
   "python_version": "Python 3.13.3",
   "indicators": {
     "SP500": {
@@ -22,7 +22,7 @@
       "last_successful_refresh": "2026-07-18T00:34:58+09:00",
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Daily, US trading days",
-      "unit": null,
+      "unit": "Index",
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -44,7 +44,7 @@
       "last_successful_refresh": "2026-07-18T00:34:58+09:00",
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Daily, US trading days",
-      "unit": null,
+      "unit": "Index",
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -66,11 +66,63 @@
       "last_successful_refresh": "2026-07-18T00:34:58+09:00",
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Daily",
-      "unit": null,
+      "unit": "Percentage Points",
       "status": "Up to date",
       "error_message": null,
       "formula": null,
       "release_note": null
+    },
+    "HYG_IEF": {
+      "display_name": "HYG/IEF Risk Appetite Ratio",
+      "short_name": "HYG/IEF",
+      "source_name": "Yahoo Finance",
+      "source_url": "https://finance.yahoo.com/quote/HYG/history/",
+      "source_urls": [
+        {
+          "label": "Yahoo Finance HYG",
+          "url": "https://finance.yahoo.com/quote/HYG/history/"
+        },
+        {
+          "label": "Yahoo Finance IEF",
+          "url": "https://finance.yahoo.com/quote/IEF/history/"
+        }
+      ],
+      "latest_available_date": "2026-07-17",
+      "next_expected_update_date": "2026-07-20",
+      "last_successful_refresh": "2026-07-18T12:46:09+09:00",
+      "last_successful_refresh_display": "2026-07-18 12:46 JST",
+      "frequency": "Daily, US trading days",
+      "unit": "Adjusted-close ratio",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": "HYG adjusted close / IEF adjusted close on matching trading dates",
+      "release_note": "Uses only matching published observations. No forward fill or estimated values are used."
+    },
+    "DFEDTARU": {
+      "display_name": "Federal Funds Target Rate (Upper Limit)",
+      "short_name": "Fed Funds Rate",
+      "source_name": "Federal Reserve Board via FRED",
+      "source_url": "https://fred.stlouisfed.org/series/DFEDTARU",
+      "source_urls": [
+        {
+          "label": "FRED DFEDTARU",
+          "url": "https://fred.stlouisfed.org/series/DFEDTARU"
+        },
+        {
+          "label": "Federal Reserve FOMC calendar",
+          "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+        }
+      ],
+      "latest_available_date": "2026-07-17",
+      "next_expected_update_date": "2026-07-29",
+      "last_successful_refresh": "2026-07-18T13:44:49+09:00",
+      "last_successful_refresh_display": "2026-07-18 13:44 JST",
+      "frequency": "Policy decisions, normally eight scheduled FOMC meetings per year",
+      "unit": "Percent, target range upper limit",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": "The chart uses the discontinued DFEDTAR target rate through 2008-12-15 and DFEDTARU thereafter. Repeated daily values are collapsed into a step line in the dashboard. The next expected update follows the scheduled FOMC decision date; unscheduled decisions can occur earlier."
     },
     "DGS10": {
       "display_name": "US 10-Year Treasury Yield",
@@ -88,7 +140,7 @@
       "last_successful_refresh": "2026-07-18T00:34:58+09:00",
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Daily",
-      "unit": null,
+      "unit": "Percent",
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -110,7 +162,7 @@
       "last_successful_refresh": "2026-07-18T00:34:58+09:00",
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Daily",
-      "unit": null,
+      "unit": "Percentage Points",
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -132,7 +184,7 @@
       "last_successful_refresh": "2026-07-18T00:34:58+09:00",
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Monthly",
-      "unit": null,
+      "unit": "Percent YoY",
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -154,7 +206,7 @@
       "last_successful_refresh": "2026-07-18T00:34:58+09:00",
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Daily, US trading days",
-      "unit": null,
+      "unit": "Index",
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -202,7 +254,7 @@
       "last_successful_refresh": "2026-07-18T00:34:58+09:00",
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Weekly, Wednesday level",
-      "unit": null,
+      "unit": "Millions of U.S. Dollars",
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -224,11 +276,37 @@
       "last_successful_refresh": "2026-07-18T00:34:58+09:00",
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Weekly, ending Friday",
-      "unit": null,
+      "unit": "Index",
       "status": "Up to date",
       "error_message": null,
       "formula": null,
       "release_note": null
+    },
+    "ISM_MANUFACTURING_PMI": {
+      "display_name": "ISM Manufacturing Purchasing Managers' Index",
+      "short_name": "ISM Manufacturing PMI",
+      "source_name": "Institute for Supply Management via PR Newswire",
+      "source_url": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/",
+      "source_urls": [
+        {
+          "label": "ISM Manufacturing PMI reports",
+          "url": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+        },
+        {
+          "label": "ISM releases on PR Newswire",
+          "url": "https://www.prnewswire.com/news/institute-for-supply-management/"
+        }
+      ],
+      "latest_available_date": "2026-06-30",
+      "next_expected_update_date": "2026-07-31",
+      "last_successful_refresh": "2026-07-18T13:22:16+09:00",
+      "last_successful_refresh_display": "2026-07-18 13:22 JST",
+      "frequency": "Monthly",
+      "unit": "Diffusion Index",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": "Released on the first business day of the month at 10:00 a.m. ET. The updater parses the revised rolling 12-month table in ISM's latest official press release; no proxy or estimated values are used."
     },
     "SKEW": {
       "display_name": "CBOE SKEW Index",
@@ -250,7 +328,7 @@
       "last_successful_refresh": "2026-07-18T00:34:58+09:00",
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Daily, US trading days",
-      "unit": null,
+      "unit": "Index",
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -276,7 +354,7 @@
       "last_successful_refresh": "2026-07-18T00:34:58+09:00",
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Daily, US trading days",
-      "unit": null,
+      "unit": "Cumulative Net Advances",
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -302,7 +380,7 @@
       "last_successful_refresh": "2026-07-18T00:34:58+09:00",
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Daily, US trading days",
-      "unit": null,
+      "unit": "Percent",
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -324,7 +402,7 @@
       "last_successful_refresh": "2026-07-18T00:34:58+09:00",
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Daily, US trading days",
-      "unit": null,
+      "unit": "Index",
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -350,7 +428,7 @@
       "last_successful_refresh": "2026-07-18T00:34:58+09:00",
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Monthly",
-      "unit": null,
+      "unit": "Percent YoY",
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -372,7 +450,7 @@
       "last_successful_refresh": "2026-07-18T00:34:58+09:00",
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Quarterly",
-      "unit": null,
+      "unit": "Percent YoY",
       "status": "Up to date",
       "error_message": null,
       "formula": "Year-over-year growth of Microsoft CapEx + Amazon CapEx + Alphabet CapEx + Meta CapEx",
@@ -398,7 +476,7 @@
       "last_successful_refresh": "2026-07-18T00:34:58+09:00",
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Daily forex trading days",
-      "unit": null,
+      "unit": "JPY per USD",
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -420,7 +498,7 @@
       "last_successful_refresh": "2026-07-18T00:34:58+09:00",
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Daily",
-      "unit": null,
+      "unit": "Percent",
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -442,7 +520,7 @@
       "last_successful_refresh": "2026-07-18T01:43:18+09:00",
       "last_successful_refresh_display": "2026-07-18 01:43 JST",
       "frequency": "Daily, Japan business days",
-      "unit": null,
+      "unit": "Percent",
       "status": "Up to date",
       "error_message": null,
       "formula": null,
@@ -468,7 +546,7 @@
       "last_successful_refresh": "2026-07-18T01:43:18+09:00",
       "last_successful_refresh_display": "2026-07-18 01:43 JST",
       "frequency": "Daily",
-      "unit": null,
+      "unit": "Percentage Points",
       "status": "Up to date",
       "error_message": null,
       "formula": "US 2-Year Treasury Yield - Japan 2-Year JGB Yield",
@@ -638,7 +716,7 @@
       "status": "Up to date",
       "error_message": null,
       "formula": null,
-      "release_note": "FinMind provides the TWSE-derived bulk history; recent dates are overwritten by official TWSE BFI82U values."
+      "release_note": "FinMind provides the TWSE-derived bulk history; recent dates are overwritten by official TWSE BFI82U values. Historical BFI82U responses are accepted only when the response date matches the requested dayDate."
     },
     "TAIWAN_ELECTRONICS_EXPORTS_YOY": {
       "display_name": "Taiwan Electronics Exports YoY",
@@ -669,11 +747,15 @@
     "USDTWD": {
       "display_name": "USD/TWD Exchange Rate",
       "short_name": "USD/TWD",
-      "source_name": "Yahoo Finance",
-      "source_url": "https://finance.yahoo.com/quote/TWD%3DX/",
+      "source_name": "FRED, with Yahoo Finance recent gap fill",
+      "source_url": "https://fred.stlouisfed.org/series/DEXTAUS",
       "source_urls": [
         {
-          "label": "Yahoo Finance TWD=X",
+          "label": "FRED DEXTAUS",
+          "url": "https://fred.stlouisfed.org/series/DEXTAUS"
+        },
+        {
+          "label": "Yahoo Finance TWD=X recent gap fill",
           "url": "https://finance.yahoo.com/quote/TWD%3DX/"
         }
       ],
@@ -686,7 +768,7 @@
       "status": "Up to date",
       "error_message": null,
       "formula": null,
-      "release_note": "Definition: 1 USD = X TWD."
+      "release_note": "Definition: 1 USD = X TWD. FRED H.10 provides the canonical history; Yahoo is used only for dates newer than FRED's latest published observation. Values outside 10–100 are rejected as invalid source observations."
     },
     "TAIWAN_MARGIN_FINANCING_BALANCE_YOY": {
       "display_name": "Taiwan Margin Financing Balance YoY",
@@ -712,7 +794,7 @@
       "status": "Up to date",
       "error_message": null,
       "formula": "(Current margin financing balance / comparable prior-year balance - 1) * 100",
-      "release_note": "FinMind provides TWSE-derived bulk history; recent official TWSE values take priority. YoY uses the latest prior-year trading observation within seven days."
+      "release_note": "FinMind provides TWSE-derived bulk history; recent official TWSE values take priority. Two isolated historical source errors are replaced with values verified in official TWSE daily reports. YoY uses the latest prior-year trading observation within seven days."
     }
   }
 }

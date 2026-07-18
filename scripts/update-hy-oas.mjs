@@ -11,6 +11,18 @@ const archiveUrl =
 const fredUrl = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2";
 const outputFile = path.join("data", "hy_oas.csv");
 const seriesColumn = "BAMLH0A0HYM2";
+const recentOverlapDays = 90;
+
+function recentStartDate(rows) {
+  const latestDate = rows.at(-1)?.date;
+  if (!latestDate) {
+    return null;
+  }
+
+  const date = new Date(`${latestDate}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() - recentOverlapDays);
+  return date.toISOString().slice(0, 10);
+}
 
 function download(url, timeoutMs = downloadTimeoutMs) {
   return new Promise((resolve, reject) => {
@@ -195,30 +207,42 @@ function validate(rows) {
 
 async function main() {
   const existingHyOas = readExisting(outputFile);
+  const existingHistoryIsComplete =
+    existingHyOas[0]?.date === "1996-12-31" &&
+    ["1997", "2008", "2020"].every((year) =>
+      existingHyOas.some((row) => row.date.startsWith(year)),
+    );
   let archiveRows = [];
   let fredRows = [];
   let fredDownloadError = null;
 
-  try {
-    const archiveText = await downloadWithRetry(archiveUrl);
-    const archiveHeaders = archiveText.trim().split(/\r?\n/)[0];
+  if (!existingHistoryIsComplete) {
+    try {
+      const archiveText = await downloadWithRetry(archiveUrl);
+      const archiveHeaders = archiveText.trim().split(/\r?\n/)[0];
 
-    if (archiveHeaders !== "DATE,BAMLH0A0HYM2") {
-      throw new Error(`Archive header mismatch: ${archiveHeaders}`);
+      if (archiveHeaders !== "DATE,BAMLH0A0HYM2") {
+        throw new Error(`Archive header mismatch: ${archiveHeaders}`);
+      }
+
+      archiveRows = parseCsv(archiveText, ["DATE"]);
+
+      if (archiveRows[0]?.date !== "1996-12-31") {
+        throw new Error(`Archive earliest date mismatch: ${archiveRows[0]?.date}`);
+      }
+    } catch (error) {
+      console.warn(`WARNING: archive download/parse failed. ${error.message}`);
     }
-
-    archiveRows = parseCsv(archiveText, ["DATE"]);
-
-    if (archiveRows[0]?.date !== "1996-12-31") {
-      throw new Error(`Archive earliest date mismatch: ${archiveRows[0]?.date}`);
-    }
-  } catch (error) {
-    console.warn(`WARNING: archive download/parse failed. ${error.message}`);
+  } else {
+    console.log("HY OAS archive download skipped; complete local history is already present.");
   }
 
   try {
-    const fredText = await downloadWithRetry(fredUrl, fredRetryBackoffMs);
+    const startDate = recentStartDate(existingHyOas);
+    const incrementalUrl = startDate ? `${fredUrl}&cosd=${startDate}` : fredUrl;
+    const fredText = await downloadWithRetry(incrementalUrl, fredRetryBackoffMs);
     fredRows = parseCsv(fredText, ["observation_date", "DATE"]);
+    console.log(`FRED request: ${startDate ? `incremental window from ${startDate}` : "full bootstrap"}`);
   } catch (error) {
     fredDownloadError = error;
     console.warn(`WARNING: FRED rolling download/parse failed. ${error.message}`);

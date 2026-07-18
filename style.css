@@ -703,18 +703,14 @@ h2 {
 
 .data-status-table {
   width: 100%;
-  min-width: 620px;
+  min-width: 520px;
   table-layout: fixed;
   border-collapse: collapse;
   font-size: 0.86rem;
 }
 
 .status-col-indicator {
-  width: 50%;
-}
-
-.status-col-date {
-  width: 25%;
+  width: 75%;
 }
 
 .status-col-state {
@@ -788,8 +784,17 @@ h2 {
 }
 
 .status-name-short,
-.status-mobile-meta {
+.status-mobile-meta,
+.status-mobile-badge {
   display: none;
+}
+
+.status-summary-meta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 7px;
 }
 
 .status-date-stack {
@@ -1250,6 +1255,7 @@ h2 {
     font-size: 1rem;
   }
 
+  .status-summary-meta,
   .status-mobile-meta {
     display: flex;
     align-items: center;
@@ -1260,12 +1266,12 @@ h2 {
     font-size: 0.78rem;
   }
 
-  .status-mobile-meta .status-date-stack {
+  .status-summary-meta .status-date-stack {
     flex: 1 1 auto;
   }
 
-  .status-mobile-meta > span:first-child {
-    white-space: nowrap;
+  .status-mobile-badge {
+    display: inline;
   }
 
   .glossary-mobile-meta > span:first-child {

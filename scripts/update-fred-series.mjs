@@ -4,6 +4,7 @@ import path from "node:path";
 
 const downloadTimeoutMs = 30_000;
 const fredRetryBackoffMs = [15_000, 30_000, 60_000, 180_000, 300_000];
+const recentOverlapDays = 90;
 
 const series = [
   {
@@ -32,6 +33,12 @@ const series = [
     outputFile: path.join("data", "nfci.csv"),
     label: "Chicago Fed National Financial Conditions Index",
     decimals: 3,
+  },
+  {
+    id: "DFEDTARU",
+    legacyId: "DFEDTAR",
+    outputFile: path.join("data", "fed-funds-rate.csv"),
+    label: "Federal Funds Target Rate",
   },
 ];
 
@@ -131,6 +138,37 @@ function parseFredCsv(text, seriesId) {
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
+function readExisting(item) {
+  if (!fs.existsSync(item.outputFile)) {
+    return [];
+  }
+
+  const text = fs
+    .readFileSync(item.outputFile, "utf8")
+    .replace(/^date,value/m, `observation_date,${item.id}`);
+  return parseFredCsv(text, item.id);
+}
+
+function mergeRows(existingRows, nextRows) {
+  const rowsByDate = new Map(existingRows.map((row) => [row.date, row.value]));
+  for (const row of nextRows) {
+    rowsByDate.set(row.date, row.value);
+  }
+  return Array.from(rowsByDate, ([date, value]) => ({ date, value })).sort((a, b) =>
+    a.date.localeCompare(b.date),
+  );
+}
+
+function recentStartDate(rows) {
+  const latestDate = rows.at(-1)?.date;
+  if (!latestDate) {
+    return null;
+  }
+  const date = new Date(`${latestDate}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() - recentOverlapDays);
+  return date.toISOString().slice(0, 10);
+}
+
 function validate(rows, label) {
   const duplicateDates = rows.length - new Set(rows.map((row) => row.date)).size;
   const sorted = rows.every((row, index) => index === 0 || rows[index - 1].date <= row.date);
@@ -151,9 +189,22 @@ function validate(rows, label) {
 }
 
 async function updateSeries(item) {
-  const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${item.id}`;
+  const existingRows = readExisting(item);
+  const startDate = recentStartDate(existingRows);
+  const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${item.id}${
+    startDate ? `&cosd=${startDate}` : ""
+  }`;
   const text = await downloadWithRetry(url);
-  const rows = parseFredCsv(text, item.id);
+  let downloadedRows = parseFredCsv(text, item.id);
+
+  if (existingRows.length === 0 && item.legacyId) {
+    const legacyUrl = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${item.legacyId}`;
+    const legacyText = await downloadWithRetry(legacyUrl);
+    const legacyRows = parseFredCsv(legacyText, item.legacyId);
+    downloadedRows = mergeRows(legacyRows, downloadedRows);
+  }
+
+  const rows = mergeRows(existingRows, downloadedRows);
   const validation = validate(rows, item.label);
   const decimals = item.decimals ?? 2;
   const output = `date,value\n${rows
@@ -170,6 +221,8 @@ async function updateSeries(item) {
   console.log(`Earliest date: ${rows[0].date}`);
   console.log(`Latest date: ${rows.at(-1).date}`);
   console.log(`Valid observations: ${rows.length}`);
+  console.log(`Downloaded observations: ${downloadedRows.length}`);
+  console.log(`Request mode: ${startDate ? `incremental from ${startDate}` : "full bootstrap"}`);
   console.log(`Duplicate dates: ${validation.duplicateDates}`);
 }
 

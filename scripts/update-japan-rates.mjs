@@ -194,8 +194,14 @@ function buildSpreadRows(twoYearRows, tenYearRows) {
 async function main() {
   const existingTenYear = loadSingleCsv(files.tenYear);
   const existingSpread = loadSingleCsv(files.spread);
+  const historicalRows = existingTenYear.length === 0
+    ? parseMofYield(await download(sources.historical), "10Y")
+    : [];
+  if (existingTenYear.length > 0) {
+    console.log("Japan 10Y historical MOF archive skipped; local history is already present.");
+  }
   const downloadedRows = mergeRows([], [
-    ...parseMofYield(await download(sources.historical), "10Y"),
+    ...historicalRows,
     ...parseMofYield(await download(sources.current), "10Y"),
   ]);
   const tenYearRows = mergeRows(existingTenYear, downloadedRows);

@@ -7,12 +7,14 @@ const oneDayMs = 86400000;
 
 const files = {
   move: path.join("data", "move.csv"),
+  hygIef: path.join("data", "hyg-ief.csv"),
   skew: path.join("data", "skew.csv"),
   sox: path.join("data", "sox.csv"),
   adLine: path.join("data", "advance-decline-line.csv"),
   above200: path.join("data", "sp500-above-200dma.csv"),
   tsmcRevenueYoy: path.join("data", "tsmc-revenue-yoy.csv"),
   aiCapex: path.join("data", "ai-capex.csv"),
+  ismManufacturingPmi: path.join("data", "ism-manufacturing-pmi.csv"),
 };
 
 const tsmcArchiveStartRocYear = 102;
@@ -170,7 +172,7 @@ function shouldSkipRecent(file) {
   return Date.now() - Date.parse(`${latest}T00:00:00Z`) < oneDayMs * 1.5;
 }
 
-function parseYahooChart(text, label) {
+function parseYahooChart(text, label, { adjusted = false } = {}) {
   const payload = JSON.parse(text);
   const result = payload?.chart?.result?.[0];
   const error = payload?.chart?.error;
@@ -181,9 +183,14 @@ function parseYahooChart(text, label) {
 
   const timestamps = result?.timestamp;
   const closes = result?.indicators?.quote?.[0]?.close;
+  const adjustedCloses = result?.indicators?.adjclose?.[0]?.adjclose;
 
   if (!Array.isArray(timestamps) || !Array.isArray(closes)) {
     throw new Error(`Unexpected Yahoo response for ${label}.`);
+  }
+
+  if (adjusted && !Array.isArray(adjustedCloses)) {
+    throw new Error(`Yahoo adjusted-close data is unavailable for ${label}.`);
   }
 
   const timeZone = result.meta?.exchangeTimezoneName || "UTC";
@@ -197,24 +204,208 @@ function parseYahooChart(text, label) {
   return timestamps
     .map((timestamp, index) => ({
       date: formatter.format(new Date(timestamp * 1000)),
-      value: Number(closes[index]),
+      value: Number(adjusted ? adjustedCloses[index] : closes[index]),
     }))
     .filter((row) => row.date && Number.isFinite(row.value) && row.value !== 0)
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
-async function updateYahooIndex({ symbol, label, file, decimals = 2 }) {
+async function downloadYahooChart(symbol, label, period1 = 0) {
   const period2 = Math.floor(Date.now() / 1000) + 86400;
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(
+  const chartPath = `/v8/finance/chart/${encodeURIComponent(
     symbol,
-  )}?period1=0&period2=${period2}&interval=1d&events=history`;
-  const rows = parseYahooChart(await download(url), label);
+  )}?period1=${period1}&period2=${period2}&interval=1d&events=history`;
+  const headers = {
+    Accept: "application/json",
+    "User-Agent":
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/126 Safari/537.36",
+  };
+  const errors = [];
+
+  for (const host of ["query2.finance.yahoo.com", "query1.finance.yahoo.com"]) {
+    try {
+      return await downloadWithRetry(`https://${host}${chartPath}`, headers);
+    } catch (error) {
+      errors.push(`${host}: ${error.message}`);
+    }
+  }
+
+  throw new Error(`${label} Yahoo endpoints failed. ${errors.join(" | ")}`);
+}
+
+async function updateYahooIndex({ symbol, label, file, decimals = 2 }) {
+  const existingRows = loadSingleCsv(file);
+  const latestDate = existingRows.at(-1)?.date;
+  const startDate = latestDate ? new Date(`${latestDate}T00:00:00Z`) : null;
+  if (startDate) {
+    startDate.setUTCDate(startDate.getUTCDate() - 90);
+  }
+  const period1 = startDate ? Math.floor(startDate.getTime() / 1000) : 0;
+  const downloadedRows = parseYahooChart(
+    await downloadYahooChart(symbol, label, period1),
+    label,
+  );
+  const rows = mergeRowsByDate(existingRows, downloadedRows);
   atomicWriteCsv(file, rows, label, decimals);
   console.log(`${label} validation`);
   console.log(`Source: Yahoo Finance ${symbol}`);
   console.log(`Earliest date: ${rows[0].date}`);
   console.log(`Latest date: ${rows.at(-1).date}`);
   console.log(`Valid observations: ${rows.length}`);
+  console.log(`Downloaded observations: ${downloadedRows.length}`);
+  console.log(`Request mode: ${startDate ? `incremental from ${toIsoDate(startDate)}` : "full bootstrap"}`);
+}
+
+async function updateHygIef() {
+  const existingRows = loadSingleCsv(files.hygIef);
+  const latestExistingDate = existingRows.at(-1)?.date;
+  const period1Date = latestExistingDate
+    ? new Date(`${latestExistingDate}T00:00:00Z`)
+    : null;
+  if (period1Date) {
+    period1Date.setUTCDate(period1Date.getUTCDate() - 90);
+  }
+  const period1 = period1Date ? Math.floor(period1Date.getTime() / 1000) : 0;
+  const hygText = await downloadYahooChart("HYG", "HYG", period1);
+  await wait(2500);
+  const iefText = await downloadYahooChart("IEF", "IEF", period1);
+  const hygRows = parseYahooChart(hygText, "HYG", { adjusted: true });
+  const iefRows = parseYahooChart(iefText, "IEF", { adjusted: true });
+  const iefByDate = new Map(iefRows.map((row) => [row.date, row.value]));
+  const downloadedRatioRows = hygRows
+    .filter((row) => Number.isFinite(iefByDate.get(row.date)) && iefByDate.get(row.date) > 0)
+    .map((row) => ({ date: row.date, value: row.value / iefByDate.get(row.date) }));
+  const ratioRows = mergeRowsByDate(existingRows, downloadedRatioRows);
+
+  if (ratioRows[0]?.date > "2007-04-12") {
+    throw new Error(`HYG/IEF history starts unexpectedly late at ${ratioRows[0]?.date}.`);
+  }
+
+  if (existingRows.length > 0 && ratioRows.length < existingRows.length) {
+    throw new Error("Refusing to shorten existing HYG/IEF history.");
+  }
+
+  atomicWriteCsv(files.hygIef, ratioRows, "HYG/IEF adjusted-close ratio", 6);
+  console.log("HYG/IEF validation");
+  console.log("Source: Yahoo Finance HYG and IEF adjusted close");
+  console.log(`Earliest date: ${ratioRows[0].date}`);
+  console.log(`Latest date: ${ratioRows.at(-1).date}`);
+  console.log(`Valid observations: ${ratioRows.length}`);
+  console.log(`Downloaded matching observations: ${downloadedRatioRows.length}`);
+}
+
+const prNewswireUserAgent =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/126 Safari/537.36";
+const ismPublisherUrl = "https://www.prnewswire.com/news/institute-for-supply-management/";
+
+function decodeHtmlText(text) {
+  return String(text || "")
+    .replace(/<br\b[^>]*>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;|&#160;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&reg;|&#174;/gi, "")
+    .replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)))
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function findLatestIsmManufacturingReleaseUrl(publisherHtml) {
+  const links = Array.from(
+    publisherHtml.matchAll(/href=["']([^"']+\.html)["']/gi),
+    (match) => match[1],
+  );
+  const path = links.find((link) =>
+    /\/news-releases\/manufacturing-pmi-at-[^"']+-ism-manufacturing-pmi-report-[^"']+\.html$/i.test(
+      link,
+    ),
+  );
+
+  if (!path) {
+    throw new Error("Could not find the latest ISM Manufacturing PMI press release.");
+  }
+
+  return new URL(path, "https://www.prnewswire.com").toString();
+}
+
+function parseIsmRollingHistory(releaseHtml) {
+  const sectionStart = releaseHtml.search(/THE LAST 12 MONTHS/i);
+  const sectionEnd = releaseHtml.search(/Average for 12 months/i);
+
+  if (sectionStart < 0 || sectionEnd <= sectionStart) {
+    throw new Error("The ISM release does not contain the expected rolling 12-month table.");
+  }
+
+  const tokens = Array.from(
+    releaseHtml.slice(sectionStart, sectionEnd).matchAll(/<span\b[^>]*>([\s\S]*?)<\/span>/gi),
+    (match) => decodeHtmlText(match[1]),
+  ).filter(Boolean);
+  const monthIndexes = {
+    Jan: 0,
+    Feb: 1,
+    Mar: 2,
+    Apr: 3,
+    May: 4,
+    Jun: 5,
+    Jul: 6,
+    Aug: 7,
+    Sep: 8,
+    Oct: 9,
+    Nov: 10,
+    Dec: 11,
+  };
+  const rows = [];
+
+  for (let index = 0; index < tokens.length - 1; index += 1) {
+    const match = tokens[index].match(/^([A-Z][a-z]{2})\s+(\d{4})$/);
+    const value = Number(tokens[index + 1]);
+
+    if (!match || !Number.isFinite(value) || value < 0 || value > 100) {
+      continue;
+    }
+
+    const monthIndex = monthIndexes[match[1]];
+    const year = Number(match[2]);
+    if (!Number.isInteger(monthIndex) || !Number.isInteger(year)) {
+      continue;
+    }
+
+    rows.push({
+      date: toIsoDate(new Date(Date.UTC(year, monthIndex + 1, 0))),
+      value,
+    });
+  }
+
+  const uniqueRows = mergeRowsByDate([], rows);
+  if (uniqueRows.length !== 12) {
+    throw new Error(`Expected 12 ISM PMI observations, received ${uniqueRows.length}.`);
+  }
+
+  return uniqueRows;
+}
+
+async function updateIsmManufacturingPmi() {
+  const headers = { "User-Agent": prNewswireUserAgent };
+  const publisherHtml = await downloadWithRetry(ismPublisherUrl, headers, 3);
+  const releaseUrl = findLatestIsmManufacturingReleaseUrl(publisherHtml);
+  const downloadedRows = parseIsmRollingHistory(
+    await downloadWithRetry(releaseUrl, headers, 3),
+  );
+  const existingRows = loadSingleCsv(files.ismManufacturingPmi);
+  const rows = mergeRowsByDate(existingRows, downloadedRows);
+
+  if (existingRows.length > 0 && rows.length < existingRows.length) {
+    throw new Error("Refusing to shorten existing ISM Manufacturing PMI history.");
+  }
+
+  atomicWriteCsv(files.ismManufacturingPmi, rows, "ISM Manufacturing PMI", 1);
+  console.log("ISM Manufacturing PMI validation");
+  console.log("Source: Institute for Supply Management official release via PR Newswire");
+  console.log(`Release URL: ${releaseUrl}`);
+  console.log(`Earliest date: ${rows[0].date}`);
+  console.log(`Latest date: ${rows.at(-1).date}`);
+  console.log(`Valid observations: ${rows.length}`);
+  console.log(`Downloaded observations: ${downloadedRows.length}`);
 }
 
 async function updateSkew() {
@@ -568,13 +759,16 @@ async function updateBreadth() {
   const aboveByDate = new Map();
   const totalByDate = new Map();
   let successCount = 0;
+  const breadthStart = new Date();
+  breadthStart.setUTCDate(breadthStart.getUTCDate() - 420);
+  const breadthPeriod1 = Math.floor(breadthStart.getTime() / 1000);
 
   await withConcurrency(symbols, 8, async (symbol) => {
     try {
-      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(
+      const rows = parseYahooChart(
+        await downloadYahooChart(symbol, symbol, breadthPeriod1),
         symbol,
-      )}?range=10y&interval=1d&events=history`;
-      const rows = parseYahooChart(await download(url), symbol);
+      );
       const closes = rows.map((row) => row.value);
 
       for (let index = 1; index < rows.length; index += 1) {
@@ -656,6 +850,7 @@ async function updateBreadth() {
   atomicWriteCsv(files.above200, finalAbove200Rows, "% Stocks Above 200-Day Moving Average (current-constituent proxy)", 1);
   console.log("Breadth validation");
   console.log(`S&P 500 constituents downloaded: ${successCount}/${symbols.length}`);
+  console.log(`Constituent request window starts: ${toIsoDate(breadthStart)} (supports 200DMA plus overlap)`);
   console.log("Method: current S&P 500 constituent proxy; existing history is preserved and only new dates are appended");
   console.log(`Advance/Decline latest date: ${finalAdLineRows.at(-1).date}`);
   console.log(`Above 200DMA latest date: ${finalAbove200Rows.at(-1).date}`);
@@ -678,6 +873,7 @@ async function main() {
       label: "MOVE Index",
       update: () => updateYahooIndex({ symbol: "^MOVE", label: "MOVE Index", file: files.move }),
     },
+    { key: "hyg-ief", label: "HYG/IEF", update: updateHygIef },
     { key: "skew", label: "CBOE SKEW Index", update: updateSkew },
     {
       key: "sox",
@@ -686,6 +882,11 @@ async function main() {
     },
     { key: "tsmc", label: "TSMC Revenue YoY", update: updateTsmcRevenueYoy },
     { key: "ai-capex", label: "AI CapEx Proxy YoY", update: updateAiCapex },
+    {
+      key: "ism-pmi",
+      label: "ISM Manufacturing PMI",
+      update: updateIsmManufacturingPmi,
+    },
     { key: "breadth", label: "Breadth indicators", update: updateBreadth },
   ];
   const selectedSteps = requestedUpdates

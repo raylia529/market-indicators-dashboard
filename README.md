@@ -40,7 +40,9 @@ The repository includes `.github/workflows/pages.yml`, which:
 - can be run manually from the GitHub Actions tab for `full`, `us`, `us-fast`, `us-market`, `us-slow`, or `asia` with `workflow_dispatch`;
 - deploys `index.html`, `style.css`, `app.js`, PWA assets, icons, and `data/` to Pages.
 
-GitHub Actions cron expressions use UTC. The comments and times above are the intended fixed Japan Standard Time schedule. Every scheduled U.S. run evaluates freshness indicator by indicator before downloading anything. Exchange holidays can keep a daily series pending until a later retry slot, while already complete indicators are skipped. FRED requests use a 30-second timeout and five delayed retries; existing committed data is retained if a source remains unavailable.
+GitHub Actions cron expressions use UTC. The comments and times above are the intended fixed Japan Standard Time schedule. Every scheduled run evaluates freshness indicator by indicator before downloading anything. Exchange holidays can keep a daily series pending until a later retry slot, while already complete indicators are skipped. FRED requests use a 30-second timeout and five delayed retries; existing committed data is retained if a source remains unavailable.
+
+Network updates are incremental. Each updater reads the complete local CSV first, requests only a recent overlap window, and merges newer observations by date. FRED, Yahoo Finance, FinMind, TWSE, MOPS, JPX, and Japan MOF updates therefore do not bootstrap full history again when a valid local archive exists. The overlap is normally 90 days; Breadth downloads about 420 days per current constituent because a genuine 200-day moving average needs that lookback. Full-file downloads remain unavoidable for source endpoints that expose only one complete artifact: FINRA margin statistics, the New York Fed ACM workbook, Cboe SKEW history, Taiwan MOF exports, and SEC Company Facts. Freshness gates prevent those files from being requested again after the indicator is current.
 
 In GitHub, set `Settings -> Pages -> Build and deployment -> Source` to `GitHub Actions`.
 
@@ -49,7 +51,7 @@ If the daily data commit step fails with a permission error, set `Settings -> Ac
 ## Current Features
 
 - Macro, Breadth, Chips & AI, US Rates, JP Rates, Japan, Taiwan, FX, Data Status, and Glossary tabs with matching responsive layouts where applicable.
-- Data Status tab with latest observation dates and three clear statuses: `Up to date`, `Source lag`, or `Failed`; source, frequency, next-update, formula, and error information stays available under each row's `Details` control.
+- Data Status tab with latest and next expected observation dates beneath each indicator plus three clear statuses: `Up to date`, `Source lag`, or `Failed`; source, frequency, formula, and error information stays available under each row's `Details` control.
 - Observation dates retain each source's local market or publication date; dashboard refresh timestamps are displayed in Japan Standard Time (`JST`).
 - Glossary tab with search plus collapsible indicator explanations in English, Japanese, and Chinese.
 - Mobile card-to-chart swipe layout for portrait and landscape phone screens.
@@ -110,13 +112,16 @@ All dashboard data is stored in `data/`.
 | S&P 500 | `data/sp500.csv` | Full-history CSV archive plus FRED `SP500` latest data | 1950-01-03 | Daily |
 | VIX | `data/vix.csv` | FRED `VIXCLS` | 1990-01-02 | Daily |
 | HY OAS | `data/hy_oas.csv` | Archived FRED `BAMLH0A0HYM2` plus current FRED rolling data | 1996-12-31 | Daily/business daily |
+| HYG/IEF | `data/hyg-ief.csv` | Yahoo Finance `HYG` adjusted close divided by `IEF` adjusted close on matching dates | 2007-04-11 | Daily/US trading days |
 | 10Y-2Y Spread | `data/us-10y-minus-2y-spread.csv` | FRED `T10Y2Y` | 1976-06-01 | Daily/business daily |
 | Margin Debt YoY | `data/finra-margin-debt-yoy.csv` | FINRA Margin Statistics Excel, calculated YoY from debit balances | 1998-01-31 | Monthly |
 | US 10Y Yield | `data/us-10-year-treasury-yield.csv` | FRED `DGS10` | 1962-01-02 | Daily/business daily |
+| Fed Funds Rate | `data/fed-funds-rate.csv` | FRED `DFEDTAR` through 2008-12-15, then `DFEDTARU` | 1982-09-27 | Daily as-of values; changed by FOMC decisions |
 | MOVE Index | `data/move.csv` | Yahoo Finance `^MOVE` | 2002-11-12 | Daily/business daily |
 | US 10-Year Treasury Term Premium | `data/us-10y-term-premium.csv` | New York Fed ACM Term Premium, `ACM Daily` sheet, `ACMTP10` column | 1961-06-14 | Daily/business daily |
 | Fed Balance Sheet | `data/fed-balance-sheet.csv` | FRED `WALCL` | 2002-12-18 | Weekly |
 | NFCI | `data/nfci.csv` | FRED `NFCI` | 1971-01-08 | Weekly |
+| ISM Manufacturing PMI | `data/ism-manufacturing-pmi.csv` | Institute for Supply Management official release via PR Newswire | 2025-07-31 | Monthly |
 | SKEW Index | `data/skew.csv` | Cboe SKEW history CSV | 1990-01-02 | Daily/business daily |
 | A/D Line (Proxy) | `data/advance-decline-line.csv` | Calculated from current S&P 500 constituents using Yahoo Finance daily closes | Preserved rolling history | Daily/business daily |
 | % Above 200DMA (Proxy) | `data/sp500-above-200dma.csv` | Calculated from current S&P 500 constituents using Yahoo Finance daily closes | Preserved rolling history | Daily/business daily |
@@ -133,7 +138,7 @@ All dashboard data is stored in `data/`.
 | TAIEX | `data/taiex.csv` | Yahoo Finance `^TWII` | 1997-07-02 | Daily/Taiwan trading days |
 | Foreign Investors Net Buying of Taiwan Equities | `data/taiwan-foreign-investor-net-buying.csv` | FinMind TWSE-derived bulk history, with recent official TWSE BFI82U values taking priority | 2004-04-07 | Daily/Taiwan trading days |
 | Taiwan Electronics Exports YoY | `data/taiwan-electronics-exports-yoy.csv` | Taiwan Ministry of Finance exports by main commodity, electronic components in USD | 2002-01-31 | Monthly |
-| USD/TWD | `data/usdtwd.csv` | Yahoo Finance `TWD=X` | 2004-03-24 | Daily/forex trading days |
+| USD/TWD | `data/usdtwd.csv` | FRED `DEXTAUS`, with Yahoo Finance `TWD=X` filling only recent unpublished dates | 1983-10-03 | Daily/forex trading days |
 | Taiwan Margin Financing Balance YoY | `data/taiwan-margin-financing-balance-yoy.csv` | FinMind TWSE-derived total-market history, recent TWSE MI_MARGN overwrite, then calculated YoY | 2002-01-03 | Daily/Taiwan trading days |
 
 ## Source and Terms Notes
@@ -142,7 +147,9 @@ This is a personal dashboard built from publicly accessible sources. The reposit
 
 - Official or public-agency sources used here include FRED, SEC EDGAR companyfacts, FINRA, Japan Ministry of Finance, JPX, TWSE/MOPS, and Taiwan Ministry of Finance.
 - Free market-data endpoints used here include Yahoo Finance, Yahoo Japan, and Cboe public CSV downloads where available.
-- Some sources may still be subject to provider terms, third-party data rights, rate limits, or redistribution restrictions. This is especially relevant for ICE-linked HY OAS data available through FRED, Yahoo Finance data, Cboe data, and New York Fed term premium data.
+- HYG/IEF uses Yahoo Finance adjusted closes because FRED does not provide matching daily HYG and IEF ETF price series. Adjusted closes reduce distribution-related price jumps; the ratio uses only dates published for both ETFs, with no forward fill or estimates.
+- ISM Manufacturing PMI is parsed from the revised rolling 12-month table in ISM's official monthly press release distributed by PR Newswire. FRED removed ISM series from its services in 2016, so this repository does not label a proxy or an unverified third-party reconstruction as official history. The committed series begins in July 2025 and grows by monthly merge. ISM content and PMI trademarks remain subject to ISM's terms; review those terms before redistribution or commercial use.
+- Some sources may still be subject to provider terms, third-party data rights, rate limits, or redistribution restrictions. This is especially relevant for ICE-linked HY OAS data available through FRED, ISM PMI content, Yahoo Finance data, Cboe data, and New York Fed term premium data.
 - For personal, low-traffic use, the current setup is intended to be practical and transparent. Before commercial use, broad redistribution, or presenting this as a data service, review the relevant provider terms and replace any source whose terms are not suitable.
 
 Each single-series CSV uses:
@@ -163,7 +170,7 @@ The Data Status page reads generated metadata from:
 data/status.json
 ```
 
-The Data Status table links each indicator name to its primary source and shows its latest available observation and current update status. Source links, update frequency, next expected update, formulas, release notes, and errors are grouped under `Details`. `Up to date` means a successful refresh confirmed that the dashboard holds the source's newest published observation; `Source lag` means no successful source check has confirmed the expected update; `Failed` means the latest refresh attempt failed or no valid data is available.
+The Data Status table links each indicator name to its primary source and shows the latest observation, next expected update, and current status directly beneath the indicator name. Source links, update frequency, formulas, release notes, and errors are grouped under `Details`. `Up to date` means a successful refresh confirmed that the dashboard holds the source's newest published observation; `Source lag` means no successful source check has confirmed the expected update; `Failed` means the latest refresh attempt failed or no valid data is available.
 
 The Glossary page reads static reference text from:
 
@@ -191,7 +198,9 @@ node scripts/generate-status.mjs
 ```
 
 The scripts use merge-and-validate workflows where applicable and avoid replacing complete history with short rolling datasets.
-The scheduled workflow can target individual groups with options such as `--series=DGS10`, `--only=taiex`, and `--profile=asia`; the FX updater can also isolate `usdjpy`, `us2y`, or `japan2y`. A manual full refresh still runs every available source. `scripts/should-update.mjs` reads `data/status.json` before each scheduled download and skips indicators that are already complete for that market cycle. Data Status preserves the prior successful refresh timestamp for indicators that were not run.
+The scheduled workflow can target individual groups with options such as `--series=DGS10`, `--only=taiex`, and `--profile=asia`; the FX updater can also isolate `usdjpy`, `us2y`, or `japan2y`. A manual full refresh runs every updater group, but each updater still performs an incremental merge rather than replacing complete history with a full download. `scripts/should-update.mjs` reads `data/status.json` before each scheduled download and skips indicators that are already complete for that market cycle. Data Status preserves the prior successful refresh timestamp for indicators that were not run.
+
+The Fed Funds Rate card uses the official target-rate series rather than the effective overnight rate. Its chart collapses repeated daily as-of values into a step line, while retaining the latest as-of point so the current policy setting extends to the present. Card change is measured against the previous distinct policy setting and labeled `Last change`; this avoids implying that an unchanged FOMC decision was itself a rate move. Data Status uses the published FOMC decision calendar for the next expected update; unscheduled policy decisions may occur before that date.
 
 ## Data Notes
 
@@ -259,10 +268,10 @@ Japan 10-Year JGB Yield - Japan 2-Year JGB Yield
 
 - TAIEX uses Yahoo Finance `^TWII` and is clearly labelled as a market-data source, not TWSE official historical archive.
 - TSMC Revenue YoY reuses the Chips & AI canonical MOPSOV dataset.
-- USD/TWD uses Yahoo Finance `TWD=X`; definition is `1 USD = X TWD`.
-- Foreign Investors Net Buying of Taiwan Equities uses FinMind's TWSE-derived `TaiwanStockTotalInstitutionalInvestors` bulk history from 2004 and filters `Foreign_Investor`. Recent dates are checked against the official [TWSE BFI82U report](https://www.twse.com.tw/en/trading/foreign/bfi82u.html), whose values take priority when available.
+- USD/TWD uses FRED `DEXTAUS` as the canonical history and Yahoo Finance `TWD=X` only for dates newer than FRED's latest observation; definition is `1 USD = X TWD`. Values outside 10–100 are rejected.
+- Foreign Investors Net Buying of Taiwan Equities uses FinMind's TWSE-derived `TaiwanStockTotalInstitutionalInvestors` bulk history from 2004 and filters `Foreign_Investor`. Recent dates are checked against the official [TWSE BFI82U report](https://www.twse.com.tw/en/trading/foreign/bfi82u.html), whose values take priority when available. The historical request uses TWSE's `dayDate` parameter and rejects a response whose reported date does not match the requested date.
 - Taiwan Electronics Exports YoY is calculated from the Taiwan Ministry of Finance [Exports by main commodity](https://data.gov.tw/en/datasets/8380) monthly CSV, using the USD electronic-components column. The resulting history begins in 2002.
-- Taiwan Margin Financing Balance uses FinMind's TWSE-derived `TaiwanStockTotalMarginPurchaseShortSale` bulk history from 2001 and filters `MarginPurchaseMoney`. Recent official [TWSE MI_MARGN](https://www.twse.com.tw/en/trading/margin/mi-margn.html) balances take priority when available.
+- Taiwan Margin Financing Balance uses FinMind's TWSE-derived `TaiwanStockTotalMarginPurchaseShortSale` bulk history from 2001 and filters `MarginPurchaseMoney`. Recent official [TWSE MI_MARGN](https://www.twse.com.tw/en/trading/margin/mi-margn.html) balances take priority when available. Two isolated bulk-history errors (`2008-09-01` and `2020-03-24`) are replaced with values verified in the corresponding official TWSE daily reports before YoY is calculated.
 - Taiwan Margin Financing Balance YoY formula:
 
 ```text

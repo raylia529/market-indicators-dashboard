@@ -10,6 +10,18 @@ const archiveUrl =
   "https://raw.githubusercontent.com/vijinho/sp500/refs/heads/master/csv/sp500.csv";
 const latestUrl = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500";
 const outputFile = path.join("data", "sp500.csv");
+const recentOverlapDays = 90;
+
+function recentStartDate(rows) {
+  const latestDate = rows.at(-1)?.date;
+  if (!latestDate) {
+    return null;
+  }
+
+  const date = new Date(`${latestDate}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() - recentOverlapDays);
+  return date.toISOString().slice(0, 10);
+}
 
 function download(url, timeoutMs = downloadTimeoutMs) {
   return new Promise((resolve, reject) => {
@@ -204,21 +216,31 @@ function monthSamples(rows, yearMonth) {
 
 async function main() {
   const existingRows = readExisting();
+  const existingHistoryIsComplete =
+    existingRows[0]?.date <= "1997-01-02" &&
+    [2000, 2008, 2020].every((year) => yearCount(existingRows, year) > 0);
   let archiveRows = [];
   let latestRows = [];
   let latestSource = "FRED SP500";
   let latestDownloadError = null;
 
-  try {
-    const archiveText = await downloadWithRetry(archiveUrl);
-    archiveRows = parseRows(archiveText, "Date", "Close");
-  } catch (error) {
-    console.warn(`WARNING: S&P 500 archive download/parse failed. ${error.message}`);
+  if (!existingHistoryIsComplete) {
+    try {
+      const archiveText = await downloadWithRetry(archiveUrl);
+      archiveRows = parseRows(archiveText, "Date", "Close");
+    } catch (error) {
+      console.warn(`WARNING: S&P 500 archive download/parse failed. ${error.message}`);
+    }
+  } else {
+    console.log("S&P 500 archive download skipped; complete local history is already present.");
   }
 
   try {
-    const latestText = await downloadWithRetry(latestUrl, fredRetryBackoffMs);
+    const startDate = recentStartDate(existingRows);
+    const incrementalUrl = startDate ? `${latestUrl}&cosd=${startDate}` : latestUrl;
+    const latestText = await downloadWithRetry(incrementalUrl, fredRetryBackoffMs);
     latestRows = parseRows(latestText, "observation_date", "SP500");
+    latestSource = startDate ? `FRED SP500 incremental window from ${startDate}` : "FRED SP500 full bootstrap";
   } catch (error) {
     latestDownloadError = error;
     latestSource = "not updated; preserved existing/latest archive rows";
@@ -237,8 +259,8 @@ async function main() {
   fs.renameSync(tempFile, outputFile);
 
   console.log("S&P 500 validation");
-  console.log(`Archive earliest date: ${archiveRows[0]?.date || "unavailable"}`);
-  console.log(`Archive latest date: ${archiveRows.at(-1)?.date || "unavailable"}`);
+  console.log(`Archive earliest date: ${archiveRows[0]?.date || existingRows[0]?.date || "unavailable"}`);
+  console.log(`Archive latest date: ${archiveRows.at(-1)?.date || "skipped (local history retained)"}`);
   console.log(`Final earliest date: ${mergedRows[0].date}`);
   console.log(`Final latest date: ${mergedRows.at(-1).date}`);
   console.log(`Valid observations: ${mergedRows.length}`);

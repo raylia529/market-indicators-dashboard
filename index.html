@@ -11,9 +11,9 @@
     <title>Market Indicators Dashboard</title>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2" />
-    <link rel="stylesheet" href="style.css?v=status-details-v1" />
+    <link rel="stylesheet" href="style.css?v=indicator-audit-v1" />
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
-    <script src="app.js?v=status-details-v1" defer></script>
+    <script src="app.js?v=indicator-audit-v1" defer></script>
   </head>
   <body>
     <main class="dashboard-shell">
@@ -98,11 +98,13 @@
               <article class="metric-card fx-card active" data-fx-card="USDJPY" tabindex="0">
                 <span>USD/JPY</span>
                 <strong id="fx-usdjpy-value">--</strong>
+                <div id="fx-usdjpy-change"></div>
                 <div class="color-control" data-fx-color-control="USDJPY"></div>
               </article>
               <article class="metric-card fx-card active" data-fx-card="US_Japan_2Y_Spread" tabindex="0">
                 <span>US-JP 2Y Spread</span>
                 <strong id="fx-spread-value">--</strong>
+                <div id="fx-spread-change"></div>
                 <div class="color-control" data-fx-color-control="US_Japan_2Y_Spread"></div>
               </article>
             </div>
@@ -434,26 +436,24 @@
             <table class="data-status-table">
               <colgroup>
                 <col class="status-col-indicator" />
-                <col class="status-col-date" />
                 <col class="status-col-state" />
               </colgroup>
               <thead>
                 <tr>
                   <th scope="col">Indicator</th>
-                  <th scope="col">Latest Observation</th>
                   <th scope="col">Status</th>
                 </tr>
               </thead>
               <tbody id="data-status-body">
                 <tr>
-                  <td colspan="3">Loading data status...</td>
+                  <td colspan="2">Loading data status...</td>
                 </tr>
               </tbody>
             </table>
           </div>
           <div class="terms-note" aria-label="Data source terms note">
             <strong>Terms note:</strong>
-            This personal dashboard uses publicly accessible data sources. Some series may remain subject to provider terms, third-party data rights, or redistribution limits, including ICE-linked FRED series, Yahoo Finance, Cboe data, and New York Fed term premium data. Keep source attribution visible and review provider terms before commercial use or broad redistribution.
+            This personal dashboard uses publicly accessible data sources. Some series may remain subject to provider terms, third-party data rights, or redistribution limits, including ICE-linked FRED series, ISM PMI content, Yahoo Finance, Cboe data, and New York Fed term premium data. Keep source attribution visible and review provider terms before commercial use or broad redistribution.
           </div>
         </section>
       </section>

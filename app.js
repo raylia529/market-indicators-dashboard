@@ -12,6 +12,27 @@ const indicators = [
     decimals: 2,
   },
   {
+    id: "high-yield-oas",
+    name: "HY OAS",
+    file: "data/hy_oas.csv",
+    unitLabel: "Percentage Points",
+    valueSuffix: " pp",
+    category: "spread",
+    color: "#f97316",
+    decimals: 2,
+  },
+  {
+    id: "hyg-ief",
+    name: "HYG/IEF",
+    file: "data/hyg-ief.csv",
+    unitLabel: "Ratio",
+    valueSuffix: "",
+    category: "ratio",
+    color: "#06b6d4",
+    decimals: 4,
+    changeFormat: "percent",
+  },
+  {
     id: "vix",
     name: "VIX",
     file: "data/vix.csv",
@@ -22,13 +43,23 @@ const indicators = [
     decimals: 2,
   },
   {
-    id: "high-yield-oas",
-    name: "HY OAS",
-    file: "data/hy_oas.csv",
-    unitLabel: "Percentage Points",
-    valueSuffix: " pp",
-    category: "spread",
-    color: "#f97316",
+    id: "move",
+    name: "MOVE Index",
+    file: "data/move.csv",
+    unitLabel: "Index",
+    valueSuffix: "",
+    category: "volatility",
+    color: "#ec4899",
+    decimals: 2,
+  },
+  {
+    id: "skew",
+    name: "SKEW Index",
+    file: "data/skew.csv",
+    unitLabel: "Index",
+    valueSuffix: "",
+    category: "volatility",
+    color: "#111827",
     decimals: 2,
   },
   {
@@ -41,36 +72,6 @@ const indicators = [
     color: "#10b981",
     decimals: 1,
     cadence: "monthly",
-  },
-  {
-    id: "treasury-10y",
-    name: "US 10Y Yield",
-    file: "data/us-10-year-treasury-yield.csv",
-    unitLabel: "Percent",
-    valueSuffix: "%",
-    category: "rate",
-    color: "#14b8a6",
-    decimals: 2,
-  },
-  {
-    id: "10y-2y-spread",
-    name: "10Y-2Y Spread",
-    file: "data/us-10y-minus-2y-spread.csv",
-    unitLabel: "Percentage Points",
-    valueSuffix: " pp",
-    category: "spread",
-    color: "#8b5cf6",
-    decimals: 2,
-  },
-  {
-    id: "move",
-    name: "MOVE Index",
-    file: "data/move.csv",
-    unitLabel: "Index",
-    valueSuffix: "",
-    category: "volatility",
-    color: "#ec4899",
-    decimals: 2,
   },
   {
     id: "fed-balance-sheet",
@@ -95,14 +96,17 @@ const indicators = [
     cadence: "weekly",
   },
   {
-    id: "skew",
-    name: "SKEW Index",
-    file: "data/skew.csv",
-    unitLabel: "Index",
+    id: "ism-manufacturing-pmi",
+    name: "ISM Manufacturing PMI",
+    file: "data/ism-manufacturing-pmi.csv",
+    unitLabel: "Diffusion Index",
     valueSuffix: "",
-    category: "volatility",
-    color: "#111827",
-    decimals: 2,
+    category: "index",
+    axisBounds: { min: 0, max: 100 },
+    color: "#4f46e5",
+    decimals: 1,
+    cadence: "monthly",
+    changeFormat: "points",
   },
 ];
 
@@ -176,6 +180,20 @@ const semiconductorIndicators = [
 ];
 
 const usRatesIndicators = [
+  {
+    id: "fed-funds-rate",
+    name: "Fed Funds Rate",
+    file: "data/fed-funds-rate.csv",
+    unitLabel: "Percent (Target Range Upper Limit)",
+    valueSuffix: "%",
+    category: "rate",
+    color: "#d77d32",
+    decimals: 2,
+    cadence: "policy",
+    changeFormat: "bps",
+    compressRepeatedValues: true,
+    lineShape: "hv",
+  },
   {
     id: "us-2y-yield",
     name: "US 2Y Yield",
@@ -413,23 +431,109 @@ const taiwanIndicators = [
   },
 ];
 
+const indicatorColorAliases = {
+  "breadth-sp500": "sp500",
+  "us-rates-sp500": "sp500",
+  "us-rates-move": "move",
+  "jp-rates-topix": "topix",
+  "jp-rates-nikkei-225": "nikkei-225",
+  "japan-tab-usdjpy": "USDJPY",
+  "japan-tab-10y-jgb-yield": "japan-10y-jgb-yield",
+  "taiwan-tsmc-revenue-yoy": "tsmc-revenue-yoy",
+};
+
+const defaultIndicatorColors = {
+  sp500: "#111111",
+  "high-yield-oas": "#d85f3f",
+  "hyg-ief": "#218c83",
+  vix: "#d44d5c",
+  move: "#6559bd",
+  skew: "#b7952f",
+  "margin-debt-yoy": "#339267",
+  "fed-balance-sheet": "#3f6fcb",
+  nfci: "#2b83ae",
+  "ism-manufacturing-pmi": "#9254aa",
+  "fed-funds-rate": "#d77d32",
+  USDJPY: "#d77d32",
+  US_Japan_2Y_Spread: "#3f6fcb",
+  topix: "#2b83ae",
+  "nikkei-225": "#6559bd",
+  "japan-10y-jgb-yield": "#218c83",
+  "tsmc-revenue-yoy": "#d44d5c",
+};
+
+function getIndicatorColorKey(id) {
+  return indicatorColorAliases[id] || id;
+}
+
+[
+  ...indicators,
+  ...breadthIndicators,
+  ...semiconductorIndicators,
+  ...usRatesIndicators,
+  ...jpRatesIndicators,
+  ...japanIndicators,
+  ...taiwanIndicators,
+].forEach((indicator) => {
+  indicator.color = defaultIndicatorColors[getIndicatorColorKey(indicator.id)] || indicator.color;
+});
+
 const colorPalette = [
-  "#111827",
-  "#2563eb",
-  "#06b6d4",
-  "#14b8a6",
-  "#10b981",
-  "#84cc16",
-  "#facc15",
-  "#f97316",
-  "#ef4444",
-  "#ec4899",
-  "#8b5cf6",
-  "#64748b",
-  "#39ff14",
-  "#00f5ff",
-  "#ff2bd6",
+  "#111111",
+  "#d44d5c",
+  "#d85f3f",
+  "#d77d32",
+  "#b7952f",
+  "#789d3e",
+  "#39ff88",
+  "#339267",
+  "#218c83",
+  "#00d9ff",
+  "#2b83ae",
+  "#3f6fcb",
+  "#6559bd",
+  "#9254aa",
+  "#ff3cac",
 ];
+
+const glossaryDisplayOrder = [
+  "SP500",
+  "BAMLH0A0HYM2",
+  "HYG_IEF",
+  "VIXCLS",
+  "MOVE",
+  "SKEW",
+  "FINRA_MARGIN_DEBT_YOY",
+  "WALCL",
+  "NFCI",
+  "ISM_MANUFACTURING_PMI",
+  "ADVANCE_DECLINE_LINE",
+  "SP500_ABOVE_200DMA",
+  "SOX",
+  "TSMC_REVENUE_YOY",
+  "AI_CAPEX",
+  "DFEDTARU",
+  "DGS2",
+  "DGS10",
+  "T10Y2Y",
+  "ACMTP10",
+  "JAPAN_2Y_JGB",
+  "JAPAN_10Y_JGB",
+  "JAPAN_10Y_2Y_SPREAD",
+  "TOPIX",
+  "NIKKEI_225",
+  "JAPAN_FOREIGN_NET_BUYING",
+  "DEXJPUS",
+  "TAIEX",
+  "TAIWAN_FOREIGN_NET_BUYING",
+  "USDTWD",
+  "TAIWAN_MARGIN_FINANCING_BALANCE_YOY",
+  "TAIWAN_ELECTRONICS_EXPORTS_YOY",
+  "US_JAPAN_2Y_SPREAD",
+];
+const glossaryDisplayRank = new Map(
+  glossaryDisplayOrder.map((id, index) => [id, index]),
+);
 
 const ranges = {
   "1Y": 1,
@@ -502,10 +606,21 @@ document.querySelectorAll(".mobile-view-switch").forEach((switchElement) => {
 });
 
 let indicatorData = new Map();
-let indicatorColors = loadStoredColors(
-  "macroIndicatorColors",
-  new Map(indicators.map((indicator) => [indicator.id, indicator.color])),
-);
+const sharedIndicatorColorStorageKey = "marketIndicatorColorsV3";
+const sharedIndicatorColorDefaults = new Map([
+  ...[
+    ...indicators,
+    ...breadthIndicators,
+    ...semiconductorIndicators,
+    ...usRatesIndicators,
+    ...jpRatesIndicators,
+    ...japanIndicators,
+    ...taiwanIndicators,
+  ].map((indicator) => [getIndicatorColorKey(indicator.id), indicator.color]),
+  ["USDJPY", defaultIndicatorColors.USDJPY],
+  ["US_Japan_2Y_Spread", defaultIndicatorColors.US_Japan_2Y_Spread],
+]);
+let sharedIndicatorColors = loadSharedIndicatorColors(sharedIndicatorColorDefaults);
 let selectedIndicatorIds = ["sp500"];
 let axisOrder = ["sp500"];
 let manualAxisOrder = false;
@@ -518,13 +633,6 @@ let glossaryEntries = [];
 let glossarySearchText = "";
 let activeGlossaryLanguage = "zh";
 let expandedGlossaryId = null;
-let fxColors = loadStoredColors(
-  "fxIndicatorColors",
-  new Map([
-    ["USDJPY", "#2563eb"],
-    ["US_Japan_2Y_Spread", "#f97316"],
-  ]),
-);
 const localTextRequests = new Map();
 
 function fetchLocalText(file) {
@@ -652,26 +760,54 @@ function getChartTheme() {
   };
 }
 
-function loadStoredColors(storageKey, fallbackColors) {
+function parseStoredColors(storageKey) {
   try {
-    const stored = JSON.parse(window.localStorage.getItem(storageKey) || "{}");
-    const merged = new Map(fallbackColors);
-
-    Object.entries(stored).forEach(([id, color]) => {
-      if (typeof color === "string" && /^#[0-9a-f]{6}$/i.test(color)) {
-        merged.set(id, color.toLowerCase());
-      }
-    });
-
-    return merged;
+    return JSON.parse(window.localStorage.getItem(storageKey) || "{}");
   } catch {
-    return new Map(fallbackColors);
+    return {};
   }
 }
 
-function storeColors(storageKey, colors) {
+function loadSharedIndicatorColors(fallbackColors) {
+  const colors = new Map(fallbackColors);
+  const stored = parseStoredColors(sharedIndicatorColorStorageKey);
+  Object.entries(stored).forEach(([id, color]) => {
+    const key = getIndicatorColorKey(id);
+    if (typeof color === "string" && /^#[0-9a-f]{6}$/i.test(color)) {
+      colors.set(key, color.toLowerCase());
+    }
+  });
+
+  return colors;
+}
+
+function getIndicatorColor(id) {
+  const key = getIndicatorColorKey(id);
+  return sharedIndicatorColors.get(key) || defaultIndicatorColors[key] || "#2563eb";
+}
+
+function getChartSeriesColor(id) {
+  const color = getIndicatorColor(id);
+  if (color === "#111111" && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    return "#f8fafc";
+  }
+  return color;
+}
+
+function setIndicatorColor(id, color) {
+  if (typeof color !== "string" || !/^#[0-9a-f]{6}$/i.test(color)) {
+    return;
+  }
+  sharedIndicatorColors.set(getIndicatorColorKey(id), color.toLowerCase());
+  storeSharedIndicatorColors();
+}
+
+function storeSharedIndicatorColors() {
   try {
-    window.localStorage.setItem(storageKey, JSON.stringify(Object.fromEntries(colors)));
+    window.localStorage.setItem(
+      sharedIndicatorColorStorageKey,
+      JSON.stringify(Object.fromEntries(sharedIndicatorColors)),
+    );
   } catch {
     // Some privacy modes disable localStorage; color changes still work for the current page.
   }
@@ -792,17 +928,30 @@ function parseFxCsv(csvText) {
 }
 
 function parseIndicatorRows(csvText, indicator) {
-  if (!indicator.column) {
-    return parseCsv(csvText);
+  const rows = !indicator.column
+    ? parseCsv(csvText)
+    : parseFxCsv(csvText)
+        .map((row) => ({
+          date: row.date,
+          value: row[indicator.column],
+        }))
+        .filter((row) => row.date && Number.isFinite(row.value))
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+  if (!indicator.compressRepeatedValues || rows.length < 2) {
+    return rows;
   }
 
-  return parseFxCsv(csvText)
-    .map((row) => ({
-      date: row.date,
-      value: row[indicator.column],
-    }))
-    .filter((row) => row.date && Number.isFinite(row.value))
-    .sort((a, b) => a.date.localeCompare(b.date));
+  const policyRows = rows.filter(
+    (row, index) => index === 0 || row.value !== rows[index - 1].value,
+  );
+  const latest = rows.at(-1);
+
+  if (policyRows.at(-1)?.date !== latest.date) {
+    policyRows.push(latest);
+  }
+
+  return policyRows;
 }
 
 function getIndicator(id) {
@@ -924,6 +1073,15 @@ function findPreviousActualObservation(rows, observationsBack) {
   return actualRows.at(-(observationsBack + 1)) || null;
 }
 
+function findPreviousDistinctObservation(rows) {
+  const latest = rows.at(-1);
+  if (!latest) {
+    return null;
+  }
+
+  return rows.findLast((row) => Number.isFinite(row.value) && row.value !== latest.value) || null;
+}
+
 function renderIndicatorChange(rows, indicator) {
   const latest = rows.at(-1);
 
@@ -948,14 +1106,17 @@ function renderIndicatorChange(rows, indicator) {
       { label: "1Q", observationsBack: 1 },
       { label: "2Q", observationsBack: 2 },
     ],
+    policy: [{ label: "Last change", distinctValue: true }],
   };
   const periods = periodsByCadence[indicator.cadence || "daily"];
   const changes = periods
-    .map(({ label, observationsBack }) => ({
+    .map(({ label, observationsBack, distinctValue }) => ({
       label,
       change: getIndicatorChange(
         latest,
-        findPreviousActualObservation(rows, observationsBack),
+        distinctValue
+          ? findPreviousDistinctObservation(rows)
+          : findPreviousActualObservation(rows, observationsBack),
         indicator,
       ),
     }))
@@ -2176,7 +2337,7 @@ function renderCards() {
           ${renderIndicatorChange(rows, indicator)}
           ${latest ? "" : '<small class="indicator-date">Unavailable</small>'}
           ${renderColorPalette({
-            activeColor: indicatorColors.get(indicator.id),
+            activeColor: getIndicatorColor(indicator.id),
             targetId: indicator.id,
             targetType: "macro",
           })}
@@ -2243,8 +2404,7 @@ function renderCards() {
     });
     swatch.addEventListener("click", (event) => {
       event.stopPropagation();
-      indicatorColors.set(swatch.dataset.colorIndicator, swatch.dataset.colorValue);
-      storeColors("macroIndicatorColors", indicatorColors);
+      setIndicatorColor(swatch.dataset.colorIndicator, swatch.dataset.colorValue);
       closeColorPanels();
       renderCards();
       renderChart();
@@ -2261,7 +2421,7 @@ function renderRangeButtons() {
 }
 
 function getYAxisLayout(side, indicator, rows, theme = getChartTheme()) {
-  const color = indicatorColors.get(indicator.id);
+  const color = getChartSeriesColor(indicator.id);
   const scale = macroScale === "log" && canUseLog(rows) ? "log" : "linear";
   const range = getAutoRange(rows, scale, indicator.axisBounds);
   const axis = {
@@ -2419,9 +2579,10 @@ function renderChart() {
       name: indicator.name,
       yaxis: index === 0 ? "y" : "y2",
       line: {
-        color: indicatorColors.get(indicator.id),
+        color: getChartSeriesColor(indicator.id),
         width: 1.5,
         dash: "solid",
+        shape: indicator.lineShape || "linear",
       },
       hovertemplate: `<b>${indicator.name}</b><br>%{y:.${indicator.decimals}f} ${indicator.unitLabel}<extra></extra>`,
     };
@@ -2557,6 +2718,13 @@ function setFxText(id, text) {
   }
 }
 
+function setFxHtml(id, html) {
+  const element = document.getElementById(id);
+  if (element) {
+    element.innerHTML = html;
+  }
+}
+
 function renderFxCards() {
   const latestUsdJpy = latestWith("USDJPY");
   const latestSpread = latestWith("US_Japan_2Y_Spread");
@@ -2570,6 +2738,24 @@ function renderFxCards() {
   setFxText(
     "fx-spread-value",
     latestSpread ? `${latestSpread.US_Japan_2Y_Spread.toFixed(2)} pp` : "--",
+  );
+  setFxHtml(
+    "fx-usdjpy-change",
+    renderIndicatorChange(
+      fxData
+        .filter((row) => Number.isFinite(row.USDJPY))
+        .map((row) => ({ date: row.date, value: row.USDJPY })),
+      { id: "japan-tab-usdjpy", category: "currency", decimals: 2 },
+    ),
+  );
+  setFxHtml(
+    "fx-spread-change",
+    renderIndicatorChange(
+      fxData
+        .filter((row) => Number.isFinite(row.US_Japan_2Y_Spread))
+        .map((row) => ({ date: row.date, value: row.US_Japan_2Y_Spread })),
+      { id: "us-japan-2y-spread", category: "spread", decimals: 2 },
+    ),
   );
   setFxText(
     "fx-spread-date",
@@ -2589,7 +2775,7 @@ function renderFxCards() {
   document.querySelectorAll("[data-fx-color-control]").forEach((control) => {
     const id = control.dataset.fxColorControl;
     control.innerHTML = renderColorPaletteContent({
-      activeColor: fxColors.get(id),
+      activeColor: getIndicatorColor(id),
       targetId: id,
       targetType: "fx",
     });
@@ -2597,8 +2783,7 @@ function renderFxCards() {
     control.querySelectorAll("[data-fx-color]").forEach((swatch) => {
       swatch.addEventListener("click", (event) => {
         event.stopPropagation();
-        fxColors.set(swatch.dataset.fxColor, swatch.dataset.colorValue);
-        storeColors("fxIndicatorColors", fxColors);
+        setIndicatorColor(swatch.dataset.fxColor, swatch.dataset.colorValue);
         closeColorPanels();
         renderFxCards();
         renderFxChart();
@@ -2646,8 +2831,8 @@ function renderFxChart() {
   }
 
   const rows = getFilteredFxRows();
-  const usdJpyColor = fxColors.get("USDJPY");
-  const spreadColor = fxColors.get("US_Japan_2Y_Spread");
+  const usdJpyColor = getChartSeriesColor("USDJPY");
+  const spreadColor = getChartSeriesColor("US_Japan_2Y_Spread");
   const fxSeries = [
     {
       id: "USDJPY",
@@ -2794,10 +2979,6 @@ function createComparisonSection(config) {
     data: new Map(),
     loaded: false,
     loadingPromise: null,
-    colors: loadStoredColors(
-      config.storageKey,
-      new Map(config.indicators.map((indicator) => [indicator.id, indicator.color])),
-    ),
     selectedIds: [...config.defaultSelectedIds],
     axisOrder: [...config.defaultSelectedIds],
     manualAxisOrder: false,
@@ -2958,7 +3139,7 @@ function createComparisonSection(config) {
   }
 
   function getLocalYAxisLayout(side, indicator, rows, theme = getChartTheme()) {
-    const color = state.colors.get(indicator.id);
+    const color = getChartSeriesColor(indicator.id);
     const scale = state.scale === "log" && canUseLocalLog(rows) ? "log" : "linear";
     const range = getAutoRange(rows, scale, indicator.axisBounds);
     const axis = {
@@ -3014,7 +3195,7 @@ function createComparisonSection(config) {
             ${renderIndicatorChange(rows, indicator)}
             ${latest ? "" : `<small class="indicator-date">${state.loaded ? "Unavailable" : "Loading"}</small>`}
             ${renderColorPalette({
-              activeColor: state.colors.get(indicator.id),
+              activeColor: getIndicatorColor(indicator.id),
               targetId: indicator.id,
               targetType: config.key,
             })}
@@ -3024,7 +3205,7 @@ function createComparisonSection(config) {
       .join("");
 
     function toggleCard(card) {
-      const id = card.dataset[`${config.key}Indicator`];
+      const id = card.getAttribute(`data-${config.key}-indicator`);
 
       if (state.loaded && (state.data.get(id) || []).length === 0) {
         showLocalNotice(`${getLocalIndicator(id).name} data is currently unavailable.`);
@@ -3071,8 +3252,10 @@ function createComparisonSection(config) {
       swatch.addEventListener("keydown", (event) => event.stopPropagation());
       swatch.addEventListener("click", (event) => {
         event.stopPropagation();
-        state.colors.set(swatch.dataset[`${config.key}Color`], swatch.dataset.colorValue);
-        storeColors(config.storageKey, state.colors);
+        setIndicatorColor(
+          swatch.getAttribute(`data-${config.key}-color`),
+          swatch.dataset.colorValue,
+        );
         closeColorPanels();
         renderLocalCards();
         renderLocalChart();
@@ -3095,9 +3278,10 @@ function createComparisonSection(config) {
         name: indicator.name,
         yaxis: index === 0 ? "y" : "y2",
         line: {
-          color: state.colors.get(indicator.id),
+          color: getChartSeriesColor(indicator.id),
           width: 1.5,
           dash: "solid",
+          shape: indicator.lineShape || "linear",
         },
         hovertemplate: `<b>${indicator.name}</b><br>%{y:.${indicator.decimals}f} ${indicator.unitLabel}<extra></extra>`,
       };
@@ -3514,7 +3698,8 @@ function renderStatusBadge(status) {
 function renderStatusDates(indicator) {
   return `
     <div class="status-date-stack">
-      <span>${escapeHtml(indicator.latest_available_date || "--")}</span>
+      <span><strong>Latest observation</strong> ${escapeHtml(indicator.latest_available_date || "--")}</span>
+      <span><strong>Next expected update</strong> ${escapeHtml(indicator.next_expected_update_date || "--")}</span>
     </div>
   `;
 }
@@ -3549,7 +3734,6 @@ function renderDataStatus(metadata) {
             <div class="status-details-content">
               ${renderStatusSourceNote(indicator)}
               <p class="status-detail-line"><strong>Update frequency:</strong> ${escapeHtml(indicator.frequency || "--")}</p>
-              <p class="status-detail-line"><strong>Next expected update:</strong> ${escapeHtml(indicator.next_expected_update_date || "--")}</p>
               ${formula}${releaseNote}${errorDetails}
             </div>
           </details>
@@ -3559,13 +3743,12 @@ function renderDataStatus(metadata) {
           <tr>
             <td>
               <div class="indicator-source-links">${renderIndicatorLinks(indicator)}</div>
-              <div class="status-mobile-meta">
+              <div class="status-summary-meta">
                 ${renderStatusDates(indicator)}
-                ${renderStatusBadge(indicator.status)}
+                <span class="status-mobile-badge">${renderStatusBadge(indicator.status)}</span>
               </div>
               ${details}
             </td>
-            <td>${renderStatusDates(indicator)}</td>
             <td>${renderStatusBadge(indicator.status)}</td>
           </tr>
         `;
@@ -3582,7 +3765,7 @@ function renderDataStatusError(error) {
   if (dataStatusBody) {
     dataStatusBody.innerHTML = `
       <tr>
-        <td colspan="3">
+        <td colspan="2">
           <details class="error-details" open>
             <summary>Could not load data status metadata</summary>
             <p>${escapeHtml(error.message)}</p>
@@ -3738,6 +3921,17 @@ function filterGlossaryEntries(entries) {
   return entries.filter((entry) => glossarySearchHaystack(entry).includes(query));
 }
 
+function sortGlossaryEntries(entries) {
+  return entries
+    .map((entry, sourceIndex) => ({ entry, sourceIndex }))
+    .sort((left, right) => {
+      const leftRank = glossaryDisplayRank.get(left.entry.id) ?? Number.MAX_SAFE_INTEGER;
+      const rightRank = glossaryDisplayRank.get(right.entry.id) ?? Number.MAX_SAFE_INTEGER;
+      return leftRank - rightRank || left.sourceIndex - right.sourceIndex;
+    })
+    .map(({ entry }) => entry);
+}
+
 function syncGlossaryLanguageButtons() {
   glossaryLanguageButtons.forEach((button) => {
     const active = button.dataset.glossaryGlobalLanguage === activeGlossaryLanguage;
@@ -3760,7 +3954,9 @@ function scrollGlossaryEntryIntoView(id) {
 }
 
 function renderGlossary(glossary) {
-  glossaryEntries = Array.isArray(glossary?.indicators) ? glossary.indicators : [];
+  glossaryEntries = sortGlossaryEntries(
+    Array.isArray(glossary?.indicators) ? glossary.indicators : [],
+  );
   const visibleEntries = filterGlossaryEntries(glossaryEntries);
 
   if (glossaryMeta) {

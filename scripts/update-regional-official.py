@@ -46,6 +46,13 @@ TAIWAN_EXPORTS = (
 )
 FINMIND_API = "https://api.finmindtrade.com/api/v4/data"
 
+# FinMind's bulk history contains two isolated TWSE balance errors. These values
+# are verified against the official MI_MARGN daily reports.
+TAIWAN_MARGIN_OFFICIAL_CORRECTIONS = {
+    "2008-09-01": 258.059480,
+    "2020-03-24": 91.572304,
+}
+
 
 def fetch(url: str, *, binary: bool = False, retries: int = 3) -> bytes | str:
     last_error: Exception | None = None
@@ -194,7 +201,13 @@ def update_topix() -> None:
     for page_name in page_names:
         links.extend(extract_jpx_topix_pdf_links(str(fetch(f"{JPX_MONTHLY}{page_name}"))))
     links = list(dict.fromkeys(links))
-    if not links:
+    if existing:
+        overlap_start = date.fromisoformat(str(existing[-1]["date"])) - timedelta(days=45)
+        links = [
+            item for item in links
+            if date(item[1], item[2], 1) >= overlap_start.replace(day=1)
+        ]
+    if not links and not existing:
         raise ValueError("JPX monthly archive contained no TOPIX index PDFs")
 
     official_rows: list[dict[str, float | str]] = []
@@ -276,7 +289,7 @@ def update_japan_foreign() -> None:
         links.extend(extract_jpx_xls_links(str(fetch(f"{JPX_ARCHIVE}{page_name}"))))
     links = list(dict.fromkeys(links))
     if existing:
-        links = links[:12]
+        links = links[:2]
     if not links:
         raise ValueError("JPX archive contained no investor-value workbooks")
 
@@ -345,10 +358,15 @@ def fetch_finmind(dataset: str, start: date) -> list[dict]:
 
 
 def parse_twse_foreign(value_date: date) -> dict[str, float | str] | None:
-    url = f"{TWSE_FOREIGN}?{urlencode({'date': value_date.strftime('%Y%m%d'), 'response': 'json'})}"
+    url = f"{TWSE_FOREIGN}?{urlencode({'dayDate': value_date.strftime('%Y%m%d'), 'response': 'json'})}"
     payload = json.loads(str(fetch(url)))
     if payload.get("stat") != "OK":
         return None
+    response_date = str(payload.get("date", ""))
+    if response_date != value_date.strftime("%Y%m%d"):
+        raise ValueError(
+            f"TWSE foreign response date mismatch: requested {value_date:%Y%m%d}, got {response_date or 'missing'}"
+        )
     fields = payload.get("fields", [])
     difference_index = next(
         (index for index, value in enumerate(fields) if str(value).strip().lower() == "difference"), None
@@ -506,6 +524,13 @@ def update_taiwan_margin() -> None:
         trading_dates(official_start), parse_twse_margin, "Taiwan margin financing", max_workers=2
     )
     merged = merge_rows(existing, bulk_rows, official_rows)
+    merged = merge_rows(
+        merged,
+        [
+            {"date": value_date, "value": value}
+            for value_date, value in TAIWAN_MARGIN_OFFICIAL_CORRECTIONS.items()
+        ],
+    )
     atomic_write(TAIWAN_MARGIN_FILE, merged, "Taiwan margin financing balance", 3)
     yoy_rows = calculate_yoy(merged)
     atomic_write(TAIWAN_MARGIN_YOY_FILE, yoy_rows, "Taiwan margin financing balance YoY", 3)

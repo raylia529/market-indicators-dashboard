@@ -16,6 +16,7 @@ const sources = {
   japan2yCurrent:
     "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/jgbcme.csv",
 };
+const recentOverlapDays = 90;
 
 const outputFile = path.join("data", "fx.csv");
 const profileArg = process.argv.find((argument) => argument.startsWith("--profile="));
@@ -49,7 +50,8 @@ if (requestedSources.size === 0 || unsupportedSources.length > 0) {
 }
 
 function isValidUsdJpyValue(value) {
-  return Number.isFinite(value) && value > 50 && value < 300;
+  // The pre-1973 fixed-rate era includes observations near JPY 360 per USD.
+  return Number.isFinite(value) && value > 40 && value < 500;
 }
 
 function download(url, headers = {}, timeoutMs = downloadTimeoutMs) {
@@ -247,6 +249,20 @@ function mergeSeries(rows) {
   );
 }
 
+function incrementalFredUrl(baseUrl, existingRows, requiredEarliestDate = null) {
+  const latestDate = existingRows.at(-1)?.date;
+  if (
+    !latestDate ||
+    (requiredEarliestDate && existingRows[0]?.date > requiredEarliestDate)
+  ) {
+    return baseUrl;
+  }
+
+  const startDate = new Date(`${latestDate}T00:00:00Z`);
+  startDate.setUTCDate(startDate.getUTCDate() - recentOverlapDays);
+  return `${baseUrl}&cosd=${startDate.toISOString().slice(0, 10)}`;
+}
+
 function loadExisting() {
   if (!fs.existsSync(outputFile)) {
     return [];
@@ -367,6 +383,15 @@ function loadRowsFromFile(file) {
 
 async function main() {
   const existingRows = loadExisting();
+  const existingUsdJpy = existingRows
+    .filter((row) => isValidUsdJpyValue(row.USDJPY))
+    .map((row) => ({ date: row.date, value: row.USDJPY }));
+  const existingUs2y = existingRows
+    .filter((row) => Number.isFinite(row.US_2Y_Yield))
+    .map((row) => ({ date: row.date, value: row.US_2Y_Yield }));
+  const existingJapan2y = existingRows
+    .filter((row) => Number.isFinite(row.Japan_2Y_Yield))
+    .map((row) => ({ date: row.date, value: row.Japan_2Y_Yield }));
   let usdJpyRows = [];
   let yahooUsdJpyRows = [];
   let us2yRows = [];
@@ -380,7 +405,11 @@ async function main() {
   if (requestedSources.has("usdjpy")) {
     try {
       usdJpyRows = parseFred(
-        await downloadWithRetry(sources.usdJpy, {}, fredRetryBackoffMs),
+        await downloadWithRetry(
+          incrementalFredUrl(sources.usdJpy, existingUsdJpy, "1971-01-04"),
+          {},
+          fredRetryBackoffMs,
+        ),
         "DEXJPUS",
       );
       usdJpySourceSucceeded = true;
@@ -402,7 +431,11 @@ async function main() {
   if (requestedSources.has("us2y")) {
     try {
       us2yRows = parseFred(
-        await downloadWithRetry(sources.us2y, {}, fredRetryBackoffMs),
+        await downloadWithRetry(
+          incrementalFredUrl(sources.us2y, existingUs2y),
+          {},
+          fredRetryBackoffMs,
+        ),
         "DGS2",
       );
       us2ySourceSucceeded = true;
@@ -413,10 +446,14 @@ async function main() {
 
   if (requestedSources.has("japan2y")) {
     try {
-      japan2yRows = mergeSeries([
-        ...parseMofJapan2y(await downloadWithRetry(sources.japan2yHistorical)),
-        ...parseMofJapan2y(await downloadWithRetry(sources.japan2yCurrent)),
-      ]);
+      const currentRows = parseMofJapan2y(await downloadWithRetry(sources.japan2yCurrent));
+      const historicalRows = existingJapan2y.length === 0
+        ? parseMofJapan2y(await downloadWithRetry(sources.japan2yHistorical))
+        : [];
+      japan2yRows = mergeSeries([...historicalRows, ...currentRows]);
+      if (existingJapan2y.length > 0) {
+        console.log("Japan 2Y historical MOF archive skipped; local history is already present.");
+      }
       japan2ySourceSucceeded = true;
     } catch (error) {
       warnings.push(`WARNING: Japan 2Y download/parse failed. ${error.message}`);
@@ -426,16 +463,6 @@ async function main() {
   for (const warning of warnings) {
     console.warn(warning);
   }
-
-  const existingUsdJpy = existingRows
-    .filter((row) => isValidUsdJpyValue(row.USDJPY))
-    .map((row) => ({ date: row.date, value: row.USDJPY }));
-  const existingUs2y = existingRows
-    .filter((row) => Number.isFinite(row.US_2Y_Yield))
-    .map((row) => ({ date: row.date, value: row.US_2Y_Yield }));
-  const existingJapan2y = existingRows
-    .filter((row) => Number.isFinite(row.Japan_2Y_Yield))
-    .map((row) => ({ date: row.date, value: row.Japan_2Y_Yield }));
 
   // Existing values survive download failures. Yahoo fills recent gaps, while FRED
   // is merged last so its official observations always take precedence by date.
