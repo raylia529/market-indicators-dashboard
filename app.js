@@ -2431,6 +2431,7 @@ const compactAxisNameOverrides = {
   "taiwan-foreign-investor-net-buying": "Taiwan Foreign Net Buying",
   "taiwan-margin-financing-balance-yoy": "Taiwan Margin Balance YoY",
   "taiwan-electronics-exports-yoy": "Taiwan Electronics Exports YoY",
+  "ism-manufacturing-pmi": "ISM PMI",
 };
 
 function getCompactAxisUnit(unitLabel) {
@@ -2485,12 +2486,12 @@ function wrapHorizontalAxisLabel(indicator) {
     label = label.slice(2);
   }
 
-  if (label.length <= 16) {
+  if (label.length <= 12) {
     return label;
   }
 
   const words = label.split(/\s+/);
-  const lineCount = label.length > 20 && words.length >= 3 ? 3 : 2;
+  const lineCount = label.length > 16 && words.length >= 3 ? 3 : 2;
   const lines = [];
   let start = 0;
 
@@ -2517,6 +2518,7 @@ function wrapHorizontalAxisLabel(indicator) {
 function getHorizontalAxisAnnotations(indicator, side, color) {
   const compactLayout = usesTouchChartMode();
   const nameOffset = compactLayout ? 68 : 76;
+  const axisFontSize = compactLayout ? 10 : 11;
   const unit = getVisibleAxisUnit(indicator.name, indicator.unitLabel);
 
   return [
@@ -2531,7 +2533,7 @@ function getHorizontalAxisAnnotations(indicator, side, color) {
       xshift: side === "left" ? -nameOffset : nameOffset,
       showarrow: false,
       align: "center",
-      font: { size: compactLayout ? 9 : 10, color },
+      font: { size: axisFontSize, color },
     },
     unit
       ? {
@@ -2541,11 +2543,10 @@ function getHorizontalAxisAnnotations(indicator, side, color) {
           x: side === "left" ? 0 : 1,
           y: 1,
           xanchor: side === "left" ? "right" : "left",
-          yanchor: "bottom",
-          xshift: side === "left" ? -8 : 8,
-          yshift: 8,
+          yanchor: "middle",
+          xshift: side === "left" ? -48 : 48,
           showarrow: false,
-          font: { size: compactLayout ? 9 : 10, color },
+          font: { size: axisFontSize, color },
         }
       : null,
   ].filter(Boolean);
@@ -2553,7 +2554,7 @@ function getHorizontalAxisAnnotations(indicator, side, color) {
 
 function getHorizontalAxisMargins(hasRightAxis) {
   const sideMargin = usesTouchChartMode() ? 100 : 110;
-  return { t: 38, r: hasRightAxis ? sideMargin : 22, b: 92, l: sideMargin };
+  return { t: 24, r: hasRightAxis ? sideMargin : 22, b: 92, l: sideMargin };
 }
 
 function getYAxisLayout(side, indicator, rows, theme = getChartTheme()) {
@@ -2564,7 +2565,7 @@ function getYAxisLayout(side, indicator, rows, theme = getChartTheme()) {
     gridcolor: side === "left" ? theme.grid : "rgba(0,0,0,0)",
     zeroline: true,
     zerolinecolor: theme.zero,
-    tickfont: { color, weight: 700 },
+    tickfont: { color, size: usesTouchChartMode() ? 10 : 11, weight: 700 },
     type: scale,
   };
 
@@ -3019,7 +3020,7 @@ function renderFxChart() {
   const yaxis = primarySeries
     ? {
         range: fxAxisRange(primaryValues),
-        tickfont: { color: primarySeries.color, weight: 700 },
+        tickfont: { color: primarySeries.color, size: usesTouchChartMode() ? 10 : 11, weight: 700 },
         gridcolor: theme.grid,
         zeroline: false,
       }
@@ -3029,7 +3030,7 @@ function renderFxChart() {
   const yaxis2 = secondarySeries
     ? {
         range: fxAxisRange(secondaryValues),
-        tickfont: { color: secondarySeries.color, weight: 700 },
+        tickfont: { color: secondarySeries.color, size: usesTouchChartMode() ? 10 : 11, weight: 700 },
         overlaying: "y",
         side: "right",
         showgrid: false,
@@ -3293,7 +3294,7 @@ function createComparisonSection(config) {
       gridcolor: side === "left" ? theme.grid : "rgba(0,0,0,0)",
       zeroline: true,
       zerolinecolor: theme.zero,
-      tickfont: { color, weight: 700 },
+      tickfont: { color, size: usesTouchChartMode() ? 10 : 11, weight: 700 },
       type: scale,
     };
 

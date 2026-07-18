@@ -660,8 +660,10 @@ h2 {
 }
 
 .js-plotly-plot .plotly .modebar {
-  right: 8px;
+  right: auto !important;
+  left: 50% !important;
   top: 8px;
+  transform: translateX(-50%);
   background: transparent;
 }
 
