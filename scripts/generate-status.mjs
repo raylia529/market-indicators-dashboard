@@ -648,41 +648,6 @@ function calculateNextExpectedUpdate(definition, latestAvailableDate) {
   return null;
 }
 
-function waitingStatusFor(definition) {
-  const normalizedFrequency = definition.frequency.toLowerCase();
-
-  if (normalizedFrequency.includes("quarterly")) {
-    return "Quarterly schedule";
-  }
-
-  if (normalizedFrequency.includes("monthly")) {
-    return "Monthly schedule";
-  }
-
-  if (normalizedFrequency.includes("weekly")) {
-    return "Weekly schedule";
-  }
-
-  return "Source lag";
-}
-
-function isFinraWaitingForRelease(latestDate, todayText) {
-  const [latestYear, latestMonth] = latestDate.split("-").map(Number);
-  const [todayYear, todayMonth, todayDay] = todayText.split("-").map(Number);
-  const nextMonth = addMonths(latestYear, latestMonth, 1);
-  const followingMonth = addMonths(latestYear, latestMonth, 2);
-
-  if (todayYear === nextMonth.year && todayMonth === nextMonth.month) {
-    return todayDay <= 24;
-  }
-
-  if (todayYear === followingMonth.year && todayMonth === followingMonth.month) {
-    return todayDay <= 7;
-  }
-
-  return false;
-}
-
 function loadUpdateResults() {
   if (!fs.existsSync(updateResultsFile)) {
     return {};
@@ -723,36 +688,41 @@ function readPythonVersion() {
   }
 }
 
-function calculateStatus(definition, latestAvailableDate, updateResult, todayText) {
+function calculateStatus(
+  definition,
+  latestAvailableDate,
+  updateResult,
+  previousSuccessfulRefresh,
+  todayText,
+) {
   if (definition.statusOverride) {
     return definition.statusOverride;
   }
 
   if (updateResult?.status === "failed") {
-    return "Failed to update";
+    return "Failed";
   }
 
   if (!latestAvailableDate) {
-    return "Failed to update";
+    return "Failed";
   }
 
-  if (definition.key === "FINRA_MARGIN_DEBT_YOY") {
-    if (isFinraWaitingForRelease(latestAvailableDate, todayText)) {
-      return "Monthly schedule";
-    }
+  if (updateResult?.status === "success") {
+    return "Up to date";
+  }
 
-    return dateDiffDays(latestAvailableDate, todayText) > 70 ? "Stale data" : "Up to date";
+  const nextExpectedUpdate = calculateNextExpectedUpdate(definition, latestAvailableDate);
+  if (nextExpectedUpdate) {
+    const successfulRefreshDate = previousSuccessfulRefresh?.slice(0, 10) || "";
+    if (successfulRefreshDate >= todayText) {
+      return "Up to date";
+    }
+    return nextExpectedUpdate < todayText ? "Source lag" : "Up to date";
   }
 
   const lagDays = dateDiffDays(latestAvailableDate, todayText);
-
-  const dailyLagDays = definition.dailyLagDays ?? 5;
-
-  if (lagDays <= dailyLagDays) {
-    return lagDays <= 2 ? "Up to date" : waitingStatusFor(definition);
-  }
-
-  return "Stale data";
+  const fallbackLagDays = definition.dailyLagDays ?? definition.expectedReleaseDelayDays ?? 5;
+  return lagDays <= fallbackLagDays ? "Up to date" : "Source lag";
 }
 
 function buildMetadata() {
@@ -780,13 +750,19 @@ function buildMetadata() {
       errorMessage = error.message;
     }
 
-    const status = calculateStatus(definition, latestAvailableDate, updateResult, todayText);
-    const nextExpectedUpdate = calculateNextExpectedUpdate(definition, latestAvailableDate);
     const previousIndicator = previousMetadata.indicators?.[definition.key] || null;
+    const status = calculateStatus(
+      definition,
+      latestAvailableDate,
+      updateResult,
+      previousIndicator?.last_successful_refresh,
+      todayText,
+    );
+    const nextExpectedUpdate = calculateNextExpectedUpdate(definition, latestAvailableDate);
     let lastSuccessfulRefresh = previousIndicator?.last_successful_refresh || null;
     if (updateResult?.status === "success") {
       lastSuccessfulRefresh = finishedAt;
-    } else if (!lastSuccessfulRefresh && status !== "Failed to update") {
+    } else if (!lastSuccessfulRefresh && status !== "Failed") {
       lastSuccessfulRefresh = finishedAt;
     }
 

@@ -617,15 +617,8 @@ const glossaryLinkAliasMaxLength = 24;
 
 const statusClassNames = {
   "Up to date": "up-to-date",
-  "Waiting for next official release": "waiting",
-  Waiting: "waiting",
-  "Source lag": "waiting",
-  "Weekly schedule": "waiting",
-  "Monthly schedule": "waiting",
-  "Quarterly schedule": "waiting",
-  "Failed to update": "failed",
-  "Stale data": "stale",
-  Unavailable: "unavailable",
+  "Source lag": "source-lag",
+  Failed: "failed",
 };
 
 function usesTouchChartMode() {
@@ -2181,7 +2174,7 @@ function renderCards() {
           <span class="indicator-label">${indicator.name}</span>
           <strong>${latest ? formatValue(latest.value, indicator) : "--"}</strong>
           ${renderIndicatorChange(rows, indicator)}
-          <small class="indicator-date">${latest ? `Latest ${formatFullDate(latest.date)}` : "Unavailable"}</small>
+          ${latest ? "" : '<small class="indicator-date">Unavailable</small>'}
           ${renderColorPalette({
             activeColor: indicatorColors.get(indicator.id),
             targetId: indicator.id,
@@ -2415,7 +2408,6 @@ function renderChart() {
   validateMacroScale();
   const selected = axisOrder.slice(0, 2);
   const traces = selected.map((id, index) => {
-    const side = index === 0 ? "left" : "right";
     const indicator = getIndicator(id);
     const rows = getFilteredRows(id);
 
@@ -2424,7 +2416,7 @@ function renderChart() {
       y: rows.map((row) => row.value),
       type: "scatter",
       mode: "lines",
-      name: `${indicator.name} (${side === "left" ? "left" : "right"} axis)`,
+      name: indicator.name,
       yaxis: index === 0 ? "y" : "y2",
       line: {
         color: indicatorColors.get(indicator.id),
@@ -2446,7 +2438,7 @@ function renderChart() {
   const theme = getChartTheme();
 
   const layout = {
-    margin: { t: 18, r: selected.length === 2 ? 72 : 22, b: 48, l: 72 },
+    margin: { t: 18, r: selected.length === 2 ? 72 : 22, b: 92, l: 72 },
     paper_bgcolor: "rgba(0,0,0,0)",
     plot_bgcolor: "rgba(0,0,0,0)",
     font: {
@@ -2456,8 +2448,10 @@ function renderChart() {
     },
     legend: {
       orientation: "h",
-      x: 0,
-      y: 1.14,
+      x: 0.5,
+      xanchor: "center",
+      y: -0.22,
+      yanchor: "top",
     },
     xaxis: {
       range: xBounds ? [xBounds.start, xBounds.end] : undefined,
@@ -2571,7 +2565,7 @@ function renderFxCards() {
   setFxText("fx-usdjpy-value", latestUsdJpy ? latestUsdJpy.USDJPY.toFixed(2) : "--");
   setFxText(
     "fx-usdjpy-date",
-    latestUsdJpy ? `Latest ${formatFullDate(latestUsdJpy.date)}` : "Unavailable",
+    latestUsdJpy ? `Latest observation ${formatFullDate(latestUsdJpy.date)}` : "Unavailable",
   );
   setFxText(
     "fx-spread-value",
@@ -2579,11 +2573,11 @@ function renderFxCards() {
   );
   setFxText(
     "fx-spread-date",
-    latestSpread ? `Latest ${formatFullDate(latestSpread.date)}` : "Unavailable",
+    latestSpread ? `Latest observation ${formatFullDate(latestSpread.date)}` : "Unavailable",
   );
   setFxText(
     "fx-updated",
-    latestAny ? `Dataset through ${formatFullDate(latestAny.date)}` : "FX data unavailable",
+    latestAny ? `Latest observation ${formatFullDate(latestAny.date)}` : "FX data unavailable",
   );
 
   fxCards.forEach((card) => {
@@ -2736,7 +2730,7 @@ function renderFxChart() {
     fxChartElement,
     traces,
     {
-      margin: { t: 18, r: 74, b: 42, l: 64 },
+      margin: { t: 18, r: 74, b: 92, l: 64 },
       paper_bgcolor: "rgba(0,0,0,0)",
       plot_bgcolor: "rgba(0,0,0,0)",
       font: {
@@ -2744,7 +2738,13 @@ function renderFxChart() {
           'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
         color: theme.ink,
       },
-      legend: { orientation: "h", x: 0, y: 1.14 },
+      legend: {
+        orientation: "h",
+        x: 0.5,
+        xanchor: "center",
+        y: -0.22,
+        yanchor: "top",
+      },
       xaxis: {
         range: xBounds ? [xBounds.start, xBounds.end] : undefined,
         minallowed: xBounds?.start,
@@ -3012,7 +3012,7 @@ function createComparisonSection(config) {
             <span class="indicator-label">${indicator.name}</span>
             <strong>${latest ? formatValue(latest.value, indicator) : "--"}</strong>
             ${renderIndicatorChange(rows, indicator)}
-            <small class="indicator-date">${latest ? `Latest ${formatFullDate(latest.date)}` : state.loaded ? "Unavailable" : "Loading"}</small>
+            ${latest ? "" : `<small class="indicator-date">${state.loaded ? "Unavailable" : "Loading"}</small>`}
             ${renderColorPalette({
               activeColor: state.colors.get(indicator.id),
               targetId: indicator.id,
@@ -3084,7 +3084,6 @@ function createComparisonSection(config) {
     validateLocalScale();
     const selected = state.axisOrder.slice(0, 2);
     const traces = selected.map((id, index) => {
-      const side = index === 0 ? "left" : "right";
       const indicator = getLocalIndicator(id);
       const rows = getFilteredRows(id);
 
@@ -3093,7 +3092,7 @@ function createComparisonSection(config) {
         y: rows.map((row) => row.value),
         type: "scatter",
         mode: "lines",
-        name: `${indicator.name} (${side} axis)`,
+        name: indicator.name,
         yaxis: index === 0 ? "y" : "y2",
         line: {
           color: state.colors.get(indicator.id),
@@ -3118,7 +3117,7 @@ function createComparisonSection(config) {
     const secondIndicator = selected[1] ? getLocalIndicator(selected[1]) : null;
     const theme = getChartTheme();
     const layout = {
-      margin: { t: 18, r: selected.length === 2 ? 72 : 22, b: 48, l: 72 },
+      margin: { t: 18, r: selected.length === 2 ? 72 : 22, b: 92, l: 72 },
       paper_bgcolor: "rgba(0,0,0,0)",
       plot_bgcolor: "rgba(0,0,0,0)",
       font: {
@@ -3126,7 +3125,13 @@ function createComparisonSection(config) {
           'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
         color: theme.ink,
       },
-      legend: { orientation: "h", x: 0, y: 1.14 },
+      legend: {
+        orientation: "h",
+        x: 0.5,
+        xanchor: "center",
+        y: -0.22,
+        yanchor: "top",
+      },
       annotations: includesTrendAnchor
         ? [
             {
@@ -3134,10 +3139,10 @@ function createComparisonSection(config) {
               xref: "paper",
               yref: "paper",
               x: 0,
-              y: 0,
+              y: 1,
               xanchor: "left",
-              yanchor: "top",
-              yshift: -34,
+              yanchor: "bottom",
+              yshift: 6,
               showarrow: false,
               font: { size: 10, color: theme.muted },
             },
@@ -3474,35 +3479,31 @@ function renderIndicatorLinks(indicator) {
     </strong>`;
   }
 
-  return validSources
-    .map(
-      (source, index) => `
-        <a class="indicator-source-link" href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">
-          ${
-            index === 0
-              ? `<strong>
-                  <span class="status-name-full">${escapeHtml(indicator.display_name)}</span>
-                  <span class="status-name-short">${escapeHtml(indicator.short_name || indicator.display_name)}</span>
-                </strong>`
-              : escapeHtml(source.label || "Additional source")
-          }
-        </a>
-      `,
-    )
-    .join("");
+  return `
+    <a class="indicator-source-link" href="${escapeHtml(validSources[0].url)}" target="_blank" rel="noopener noreferrer">
+      <strong>
+        <span class="status-name-full">${escapeHtml(indicator.display_name)}</span>
+        <span class="status-name-short">${escapeHtml(indicator.short_name || indicator.display_name)}</span>
+      </strong>
+    </a>
+  `;
 }
 
 function renderStatusSourceNote(indicator) {
-  const sources =
-    Array.isArray(indicator.source_urls) && indicator.source_urls.length > 0
-      ? indicator.source_urls.map((source) => source?.label).filter(Boolean)
-      : [indicator.source_name].filter(Boolean);
+  const sources = Array.isArray(indicator.source_urls)
+    ? indicator.source_urls.filter((source) => source?.url)
+    : [];
 
   if (!sources.length) {
-    return "";
+    return `<p class="status-detail-line"><strong>Source:</strong> ${escapeHtml(indicator.source_name || "--")}</p>`;
   }
 
-  return `<p class="status-source-note">Source: ${escapeHtml(sources.join(" / "))}</p>`;
+  return `<p class="status-detail-line"><strong>Source:</strong> ${sources
+    .map(
+      (source) =>
+        `<a href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(source.label || indicator.source_name || "Source")}</a>`,
+    )
+    .join(" / ")}</p>`;
 }
 
 function renderStatusBadge(status) {
@@ -3513,8 +3514,7 @@ function renderStatusBadge(status) {
 function renderStatusDates(indicator) {
   return `
     <div class="status-date-stack">
-      <span><strong>Latest</strong> ${escapeHtml(indicator.latest_available_date || "--")}</span>
-      <span><strong>Next update</strong> ${escapeHtml(indicator.next_expected_update_date || "--")}</span>
+      <span>${escapeHtml(indicator.latest_available_date || "--")}</span>
     </div>
   `;
 }
@@ -3540,26 +3540,31 @@ function renderDataStatus(metadata) {
         const releaseNote = indicator.release_note
           ? `<p class="formula-text">${escapeHtml(indicator.release_note)}</p>`
           : "";
-        const details = formula || releaseNote
-          ? `<details class="status-details"><summary>Details</summary>${formula}${releaseNote}</details>`
-          : "";
         const errorDetails = indicator.error_message
-          ? `<details class="error-details"><summary>Error details</summary><p>${escapeHtml(indicator.error_message)}</p></details>`
+          ? `<p class="formula-text"><strong>Error:</strong> ${escapeHtml(indicator.error_message)}</p>`
           : "";
+        const details = `
+          <details class="status-details">
+            <summary>Details</summary>
+            <div class="status-details-content">
+              ${renderStatusSourceNote(indicator)}
+              <p class="status-detail-line"><strong>Update frequency:</strong> ${escapeHtml(indicator.frequency || "--")}</p>
+              <p class="status-detail-line"><strong>Next expected update:</strong> ${escapeHtml(indicator.next_expected_update_date || "--")}</p>
+              ${formula}${releaseNote}${errorDetails}
+            </div>
+          </details>
+        `;
 
         return `
           <tr>
             <td>
               <div class="indicator-source-links">${renderIndicatorLinks(indicator)}</div>
-              ${renderStatusSourceNote(indicator)}
               <div class="status-mobile-meta">
                 ${renderStatusDates(indicator)}
                 ${renderStatusBadge(indicator.status)}
               </div>
               ${details}
-              ${errorDetails}
             </td>
-            <td>${escapeHtml(indicator.frequency || "--")}</td>
             <td>${renderStatusDates(indicator)}</td>
             <td>${renderStatusBadge(indicator.status)}</td>
           </tr>
@@ -3577,7 +3582,7 @@ function renderDataStatusError(error) {
   if (dataStatusBody) {
     dataStatusBody.innerHTML = `
       <tr>
-        <td colspan="4">
+        <td colspan="3">
           <details class="error-details" open>
             <summary>Could not load data status metadata</summary>
             <p>${escapeHtml(error.message)}</p>

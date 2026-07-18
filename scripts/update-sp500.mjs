@@ -207,6 +207,7 @@ async function main() {
   let archiveRows = [];
   let latestRows = [];
   let latestSource = "FRED SP500";
+  let latestDownloadError = null;
 
   try {
     const archiveText = await downloadWithRetry(archiveUrl);
@@ -219,6 +220,7 @@ async function main() {
     const latestText = await downloadWithRetry(latestUrl, fredRetryBackoffMs);
     latestRows = parseRows(latestText, "observation_date", "SP500");
   } catch (error) {
+    latestDownloadError = error;
     latestSource = "not updated; preserved existing/latest archive rows";
     console.warn(`WARNING: S&P 500 latest download/parse failed. ${error.message}`);
   }
@@ -249,6 +251,10 @@ async function main() {
   console.log(`2008-10 close samples: ${monthSamples(mergedRows, "2008-10")}`);
   console.log(`2020-03 close samples: ${monthSamples(mergedRows, "2020-03")}`);
   console.log(`2022-10 close samples: ${monthSamples(mergedRows, "2022-10")}`);
+
+  if (latestDownloadError) {
+    throw new Error(`S&P 500 latest source update failed; existing history was preserved. ${latestDownloadError.message}`);
+  }
 }
 
 main().catch((error) => {

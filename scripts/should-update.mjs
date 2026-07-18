@@ -69,9 +69,17 @@ for (const key of keys) {
     continue;
   }
 
+  const lastRefreshDate = indicator.last_successful_refresh
+    ? dateInTimeZone("Asia/Tokyo", new Date(indicator.last_successful_refresh))
+    : null;
+
+  if (indicator.status === "Up to date" && lastRefreshDate === todayJst) {
+    continue;
+  }
+
   if (mode === "slow-overdue" || mode === "slow-baseline") {
     const overdue =
-      indicator.status === "Failed to update" ||
+      indicator.status === "Failed" ||
       !indicator.latest_available_date ||
       (indicator.next_expected_update_date && indicator.next_expected_update_date <= todayJst);
 
@@ -80,9 +88,6 @@ for (const key of keys) {
         `${key} (${indicator.next_expected_update_date || "no expected release date"} due)`,
       );
     } else if (mode === "slow-baseline") {
-      const lastRefreshDate = indicator.last_successful_refresh
-        ? dateInTimeZone("Asia/Tokyo", new Date(indicator.last_successful_refresh))
-        : null;
       if (lastRefreshDate !== todayJst) {
         pending.push(`${key} (not checked today)`);
       }
@@ -91,9 +96,6 @@ for (const key of keys) {
   }
 
   if (mode === "once") {
-    const lastRefreshDate = indicator.last_successful_refresh
-      ? dateInTimeZone("Asia/Tokyo", new Date(indicator.last_successful_refresh))
-      : null;
     if (lastRefreshDate !== todayJst) {
       pending.push(`${key} (not checked today)`);
     }

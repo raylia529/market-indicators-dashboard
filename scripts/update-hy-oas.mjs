@@ -197,6 +197,7 @@ async function main() {
   const existingHyOas = readExisting(outputFile);
   let archiveRows = [];
   let fredRows = [];
+  let fredDownloadError = null;
 
   try {
     const archiveText = await downloadWithRetry(archiveUrl);
@@ -219,6 +220,7 @@ async function main() {
     const fredText = await downloadWithRetry(fredUrl, fredRetryBackoffMs);
     fredRows = parseCsv(fredText, ["observation_date", "DATE"]);
   } catch (error) {
+    fredDownloadError = error;
     console.warn(`WARNING: FRED rolling download/parse failed. ${error.message}`);
   }
 
@@ -248,6 +250,10 @@ async function main() {
   console.log(`2008 maximum date: ${validation.maximum2008.date}`);
   console.log(`2020 maximum: ${validation.maximum2020.value.toFixed(2)}`);
   console.log(`2020 maximum date: ${validation.maximum2020.date}`);
+
+  if (fredDownloadError) {
+    throw new Error(`HY OAS latest source update failed; existing history was preserved. ${fredDownloadError.message}`);
+  }
 }
 
 main().catch((error) => {

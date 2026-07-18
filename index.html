@@ -11,9 +11,9 @@
     <title>Market Indicators Dashboard</title>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2" />
-    <link rel="stylesheet" href="style.css?v=data-reliability-v2" />
+    <link rel="stylesheet" href="style.css?v=status-details-v1" />
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
-    <script src="app.js?v=data-reliability-v2" defer></script>
+    <script src="app.js?v=status-details-v1" defer></script>
   </head>
   <body>
     <main class="dashboard-shell">
@@ -40,7 +40,6 @@
           </div>
           <div class="mobile-swipe-track" data-mobile-track="macro">
             <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="Macro indicator cards">
-              <p class="swipe-label">Cards</p>
               <section
                 class="metric-grid indicator-grid"
                 id="indicator-grid"
@@ -95,18 +94,15 @@
         </div>
         <div class="mobile-swipe-track" data-mobile-track="fx">
           <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="FX indicator cards">
-            <p class="swipe-label">Cards</p>
             <div class="metric-grid fx-card-grid">
               <article class="metric-card fx-card active" data-fx-card="USDJPY" tabindex="0">
                 <span>USD/JPY</span>
                 <strong id="fx-usdjpy-value">--</strong>
-                <small id="fx-usdjpy-date">Loading</small>
                 <div class="color-control" data-fx-color-control="USDJPY"></div>
               </article>
               <article class="metric-card fx-card active" data-fx-card="US_Japan_2Y_Spread" tabindex="0">
                 <span>US-JP 2Y Spread</span>
                 <strong id="fx-spread-value">--</strong>
-                <small id="fx-spread-date">Loading</small>
                 <div class="color-control" data-fx-color-control="US_Japan_2Y_Spread"></div>
               </article>
             </div>
@@ -147,7 +143,6 @@
           </div>
           <div class="mobile-swipe-track" data-mobile-track="breadth">
             <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="Breadth indicator cards">
-              <p class="swipe-label">Cards</p>
               <section class="metric-grid indicator-grid" id="breadth-indicator-grid" aria-label="Breadth indicator cards">
                 <p class="loading-message">Loading CSV data...</p>
               </section>
@@ -198,7 +193,6 @@
           </div>
           <div class="mobile-swipe-track" data-mobile-track="semiconductor">
             <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="Chips and AI indicator cards">
-              <p class="swipe-label">Cards</p>
               <section class="metric-grid indicator-grid" id="semiconductor-indicator-grid" aria-label="Chips and AI indicator cards">
                 <p class="loading-message">Loading CSV data...</p>
               </section>
@@ -249,7 +243,6 @@
           </div>
           <div class="mobile-swipe-track" data-mobile-track="us-rates">
             <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="US Rates indicator cards">
-              <p class="swipe-label">Cards</p>
               <section class="metric-grid indicator-grid" id="us-rates-indicator-grid" aria-label="US Rates indicator cards">
                 <p class="loading-message">Loading CSV data...</p>
               </section>
@@ -296,7 +289,6 @@
           </div>
           <div class="mobile-swipe-track" data-mobile-track="jp-rates">
             <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="JP Rates indicator cards">
-              <p class="swipe-label">Cards</p>
               <section class="metric-grid indicator-grid" id="jp-rates-indicator-grid" aria-label="JP Rates indicator cards">
                 <p class="loading-message">Loading CSV data...</p>
               </section>
@@ -343,7 +335,6 @@
           </div>
           <div class="mobile-swipe-track" data-mobile-track="japan">
             <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="Japan indicator cards">
-              <p class="swipe-label">Cards</p>
               <section class="metric-grid indicator-grid" id="japan-indicator-grid" aria-label="Japan indicator cards">
                 <p class="loading-message">Loading CSV data...</p>
               </section>
@@ -390,7 +381,6 @@
           </div>
           <div class="mobile-swipe-track" data-mobile-track="taiwan">
             <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="Taiwan indicator cards">
-              <p class="swipe-label">Cards</p>
               <section class="metric-grid indicator-grid" id="taiwan-indicator-grid" aria-label="Taiwan indicator cards">
                 <p class="loading-message">Loading CSV data...</p>
               </section>
@@ -433,6 +423,9 @@
             <div>
               <p class="eyebrow">Transparency</p>
               <h2 id="data-status-title">Data Status</h2>
+              <p class="date-convention">
+                Observation dates follow each source's market or release date. Refresh times use JST.
+              </p>
             </div>
             <span id="data-status-updated">Loading metadata</span>
           </div>
@@ -441,21 +434,19 @@
             <table class="data-status-table">
               <colgroup>
                 <col class="status-col-indicator" />
-                <col class="status-col-frequency" />
                 <col class="status-col-date" />
                 <col class="status-col-state" />
               </colgroup>
               <thead>
                 <tr>
                   <th scope="col">Indicator</th>
-                  <th scope="col">Update Frequency</th>
-                  <th scope="col">Latest Available Date</th>
+                  <th scope="col">Latest Observation</th>
                   <th scope="col">Status</th>
                 </tr>
               </thead>
               <tbody id="data-status-body">
                 <tr>
-                  <td colspan="4">Loading data status...</td>
+                  <td colspan="3">Loading data status...</td>
                 </tr>
               </tbody>
             </table>

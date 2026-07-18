@@ -32,6 +32,11 @@
   box-sizing: border-box;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -80,6 +85,19 @@ body {
 
 .panel-header.compact {
   margin-bottom: 14px;
+}
+
+.date-convention {
+  max-width: 560px;
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.tab-panel:not([data-tab-panel="data-status"]):not([data-tab-panel="glossary"])
+  .panel-header {
+  display: none;
 }
 
 .eyebrow {
@@ -685,26 +703,22 @@ h2 {
 
 .data-status-table {
   width: 100%;
-  min-width: 700px;
+  min-width: 620px;
   table-layout: fixed;
   border-collapse: collapse;
   font-size: 0.86rem;
 }
 
 .status-col-indicator {
-  width: 42%;
-}
-
-.status-col-frequency {
-  width: 22%;
+  width: 50%;
 }
 
 .status-col-date {
-  width: 18%;
+  width: 25%;
 }
 
 .status-col-state {
-  width: 18%;
+  width: 25%;
 }
 
 .glossary-col-indicator {
@@ -737,6 +751,7 @@ h2 {
   font-weight: 900;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .data-status-table tbody tr:last-child td {
@@ -784,6 +799,10 @@ h2 {
   font-size: 0.8rem;
   font-weight: 750;
   line-height: 1.35;
+}
+
+.status-date-stack span {
+  white-space: nowrap;
 }
 
 .status-date-stack strong {
@@ -1001,6 +1020,19 @@ h2 {
 
 .glossary-description p {
   margin: 0;
+  text-align: justify;
+  text-align-last: left;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.glossary-description:lang(zh) p,
+.glossary-description:lang(ja) p {
+  text-justify: inter-character;
+}
+
+.glossary-description:lang(en) p {
+  text-justify: inter-word;
 }
 
 .glossary-inline-link {
@@ -1040,7 +1072,7 @@ h2 {
   color: var(--green);
 }
 
-.data-status-badge.waiting {
+.data-status-badge.source-lag {
   background: var(--blue-soft);
   color: var(--blue);
 }
@@ -1048,16 +1080,6 @@ h2 {
 .data-status-badge.failed {
   background: var(--danger-soft);
   color: var(--red);
-}
-
-.data-status-badge.stale {
-  background: var(--warning-soft);
-  color: var(--gold);
-}
-
-.data-status-badge.unavailable {
-  background: var(--neutral-soft);
-  color: var(--muted);
 }
 
 .formula-text {
@@ -1084,6 +1106,32 @@ h2 {
 .status-details summary:focus-visible {
   color: var(--blue);
   outline: 0;
+}
+
+.status-details-content {
+  margin-top: 7px;
+}
+
+.status-detail-line {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.status-detail-line strong {
+  color: var(--ink);
+}
+
+.status-detail-line a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.status-detail-line a:hover,
+.status-detail-line a:focus-visible {
+  text-decoration: underline;
 }
 
 .terms-note {
@@ -1119,7 +1167,7 @@ h2 {
   overflow-wrap: anywhere;
 }
 
-@media (max-width: 760px), (max-width: 900px) and (orientation: landscape) and (pointer: coarse) {
+@media (max-width: 760px), (max-width: 900px) and (orientation: landscape) {
   .dashboard-shell {
     width: min(100% - 24px, 560px);
     padding: 20px 0 calc(20px + env(safe-area-inset-bottom));
@@ -1357,7 +1405,7 @@ h2 {
   }
 }
 
-@media (max-width: 900px) and (orientation: landscape) and (pointer: coarse) {
+@media (max-width: 900px) and (orientation: landscape) {
   .dashboard-shell {
     width: min(100% - 20px, 860px);
     padding: 14px 0 calc(14px + env(safe-area-inset-bottom));

@@ -31,11 +31,11 @@ https://raylia529.github.io/market-indicators-dashboard/
 The repository includes `.github/workflows/pages.yml`, which:
 
 - deploys the current static dashboard when changes are pushed to `main`;
-- checks all U.S. daily sources at 07:30, 09:00, 10:30, 12:00, and 14:00 JST, Tuesday through Saturday;
-- checks slower U.S. weekly, monthly, and quarterly series once at 14:00 JST, then includes only overdue or previously failed slow series in the other U.S. retry slots;
-- checks Japan/Taiwan daily data at 19:30 and 21:30 JST on local weekdays;
-- checks slower Japan/Taiwan series at 19:30 and retries them at 21:30 only when their expected release date has passed or the earlier check failed;
-- skips each daily indicator once its latest observation reaches the current market cycle, so later retry slots do not contact that source again;
+- checks all U.S. daily sources at 07:20, 08:50, 10:20, 11:50, and 13:50 JST, Tuesday through Saturday;
+- checks slower U.S. weekly, monthly, and quarterly series once at 13:50 JST, then includes only overdue or previously failed slow series in the other U.S. retry slots;
+- checks Japan/Taiwan daily data at 19:20 and 21:20 JST on local weekdays;
+- checks slower Japan/Taiwan series at 19:20 and retries them at 21:20 only when their expected release date has passed or the earlier check failed;
+- skips each indicator after a successful source check on that JST date, so later retry slots contact only sources that failed or have not yet been checked;
 - uses source-aware expected release dates for slow data, so a successful download of unchanged official data does not permanently suppress later overdue retries;
 - can be run manually from the GitHub Actions tab for `full`, `us`, `us-fast`, `us-market`, `us-slow`, or `asia` with `workflow_dispatch`;
 - deploys `index.html`, `style.css`, `app.js`, PWA assets, icons, and `data/` to Pages.
@@ -49,7 +49,8 @@ If the daily data commit step fails with a permission error, set `Settings -> Ac
 ## Current Features
 
 - Macro, Breadth, Chips & AI, US Rates, JP Rates, Japan, Taiwan, FX, Data Status, and Glossary tabs with matching responsive layouts where applicable.
-- Data Status tab with source transparency, latest observation dates, next observation dates, refresh timestamps, and granular status badges.
+- Data Status tab with latest observation dates and three clear statuses: `Up to date`, `Source lag`, or `Failed`; source, frequency, next-update, formula, and error information stays available under each row's `Details` control.
+- Observation dates retain each source's local market or publication date; dashboard refresh timestamps are displayed in Japan Standard Time (`JST`).
 - Glossary tab with search plus collapsible indicator explanations in English, Japanese, and Chinese.
 - Mobile card-to-chart swipe layout for portrait and landscape phone screens.
 - Indicator cards loaded from local CSV files.
@@ -162,7 +163,7 @@ The Data Status page reads generated metadata from:
 data/status.json
 ```
 
-The Data Status table links each indicator name to its official source and shows its latest available observation, next observation date, and current update status.
+The Data Status table links each indicator name to its primary source and shows its latest available observation and current update status. Source links, update frequency, next expected update, formulas, release notes, and errors are grouped under `Details`. `Up to date` means a successful refresh confirmed that the dashboard holds the source's newest published observation; `Source lag` means no successful source check has confirmed the expected update; `Failed` means the latest refresh attempt failed or no valid data is available.
 
 The Glossary page reads static reference text from:
 

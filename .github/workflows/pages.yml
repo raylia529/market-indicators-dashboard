@@ -5,15 +5,15 @@ on:
     branches:
       - main
   schedule:
-    # US daily checks: 07:30, 09:00, 10:30, 12:00, 14:00 JST Tue-Sat.
-    - cron: "30 22 * * 1-5"
-    - cron: "0 0 * * 2-6"
-    - cron: "30 1 * * 2-6"
-    - cron: "0 3 * * 2-6"
-    - cron: "0 5 * * 2-6"
-    # Japan/Taiwan daily checks after local markets and official updates: 19:30, 21:30 JST.
-    - cron: "30 10 * * 1-5"
-    - cron: "30 12 * * 1-5"
+    # US daily checks: 07:20, 08:50, 10:20, 11:50, 13:50 JST Tue-Sat.
+    - cron: "20 22 * * 1-5"
+    - cron: "50 23 * * 1-5"
+    - cron: "20 1 * * 2-6"
+    - cron: "50 2 * * 2-6"
+    - cron: "50 4 * * 2-6"
+    # Japan/Taiwan daily checks after local markets and official updates: 19:20, 21:20 JST.
+    - cron: "20 10 * * 1-5"
+    - cron: "20 12 * * 1-5"
   workflow_dispatch:
     inputs:
       update_profile:
@@ -72,13 +72,13 @@ jobs:
 
           if [ "${{ github.event_name }}" = "schedule" ]; then
             case "${{ github.event.schedule }}" in
-              "30 22 * * 1-5") profile=us ;;
-              "0 0 * * 2-6") profile=us ;;
-              "30 1 * * 2-6") profile=us ;;
-              "0 3 * * 2-6") profile=us ;;
-              "0 5 * * 2-6") profile=us-with-slow ;;
-              "30 10 * * 1-5") profile=asia ;;
-              "30 12 * * 1-5") profile=asia-retry ;;
+              "20 22 * * 1-5") profile=us ;;
+              "50 23 * * 1-5") profile=us ;;
+              "20 1 * * 2-6") profile=us ;;
+              "50 2 * * 2-6") profile=us ;;
+              "50 4 * * 2-6") profile=us-with-slow ;;
+              "20 10 * * 1-5") profile=asia ;;
+              "20 12 * * 1-5") profile=asia-retry ;;
               *) profile=full ;;
             esac
           fi
