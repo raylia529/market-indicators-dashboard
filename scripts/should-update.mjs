@@ -37,10 +37,16 @@ function previousIsoDate(dateText) {
   return date.toISOString().slice(0, 10);
 }
 
-function latestCompletedUsMarketDate() {
-  const parts = datePartsInTimeZone("America/New_York");
+function latestCompletedUsMarketDate(date = currentTime) {
+  const parts = datePartsInTimeZone("America/New_York", date);
   const localDate = `${parts.year}-${parts.month}-${parts.day}`;
   return Number(parts.hour) >= 16 ? localDate : previousIsoDate(localDate);
+}
+
+function latestCompletedAsiaMarketDate(date = currentTime) {
+  const parts = datePartsInTimeZone("Asia/Tokyo", date);
+  const localDate = `${parts.year}-${parts.month}-${parts.day}`;
+  return Number(parts.hour) >= 18 ? localDate : previousIsoDate(localDate);
 }
 
 if (mode === "force" || profile === "full") {
@@ -55,7 +61,12 @@ if (!fs.existsSync(statusFile)) {
 
 const metadata = JSON.parse(fs.readFileSync(statusFile, "utf8"));
 const todayJst = dateInTimeZone("Asia/Tokyo");
-const targetDate = profile === "us" ? latestCompletedUsMarketDate() : todayJst;
+const targetDate =
+  profile === "us"
+    ? latestCompletedUsMarketDate()
+    : profile === "asia"
+      ? latestCompletedAsiaMarketDate()
+      : todayJst;
 const pending = [];
 
 for (const key of keys) {
@@ -69,11 +80,21 @@ for (const key of keys) {
     continue;
   }
 
-  const lastRefreshDate = indicator.last_successful_refresh
-    ? dateInTimeZone("Asia/Tokyo", new Date(indicator.last_successful_refresh))
+  const lastRefreshTime = indicator.last_successful_refresh
+    ? new Date(indicator.last_successful_refresh)
+    : null;
+  const lastRefreshDate = lastRefreshTime
+    ? dateInTimeZone("Asia/Tokyo", lastRefreshTime)
+    : null;
+  const lastRefreshTargetDate = lastRefreshTime
+    ? profile === "us"
+      ? latestCompletedUsMarketDate(lastRefreshTime)
+      : profile === "asia"
+        ? latestCompletedAsiaMarketDate(lastRefreshTime)
+        : lastRefreshDate
     : null;
 
-  if (indicator.status === "Up to date" && lastRefreshDate === todayJst) {
+  if (indicator.status === "Up to date" && lastRefreshTargetDate === targetDate) {
     continue;
   }
 
