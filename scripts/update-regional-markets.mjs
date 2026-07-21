@@ -5,8 +5,8 @@ import { execFile } from "node:child_process";
 
 const userAgent = "market-indicators-dashboard/1.0 raylia529";
 const recentOverlapDays = 90;
-const downloadTimeoutMs = 30_000;
-const fredRetryBackoffMs = [15_000, 30_000, 60_000, 180_000, 300_000];
+const downloadTimeoutMs = 20_000;
+const retryBackoffMs = [5_000, 15_000];
 const files = {
   nikkei225: path.join("data", "nikkei-225.csv"),
   taiex: path.join("data", "taiex.csv"),
@@ -67,7 +67,7 @@ function downloadWithCurl(url) {
   return new Promise((resolve, reject) => {
     execFile(
       "curl",
-      ["-L", "--fail", "--silent", "--show-error", "--max-time", "30", url],
+      ["-L", "--fail", "--silent", "--show-error", "--max-time", "20", url],
       { encoding: "utf8", maxBuffer: 20 * 1024 * 1024 },
       (error, stdout, stderr) => {
         if (error) {
@@ -80,7 +80,7 @@ function downloadWithCurl(url) {
   });
 }
 
-async function downloadWithRetry(url, headers = {}, backoffMs = fredRetryBackoffMs) {
+async function downloadWithRetry(url, headers = {}, backoffMs = retryBackoffMs) {
   let lastError;
   for (let attempt = 0; attempt <= backoffMs.length; attempt += 1) {
     try {

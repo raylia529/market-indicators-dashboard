@@ -5,17 +5,20 @@ import path from "node:path";
 const userAgent = "market-indicators-dashboard/1.0 raylia529";
 const sourceUrl = "https://www.newyorkfed.org/medialibrary/media/research/data_indicators/ACMTermPremium.xls";
 const outputFile = path.join("data", "us-10y-term-premium.csv");
+const downloadTimeoutMs = 20_000;
+const retryBackoffMs = [5_000, 15_000];
 
-function downloadBuffer(url) {
+function downloadBuffer(url, timeoutMs = downloadTimeoutMs) {
   return new Promise((resolve, reject) => {
-    https
-      .get(url, { headers: { "User-Agent": userAgent } }, (response) => {
+    const request = https.get(url, { headers: { "User-Agent": userAgent } }, (response) => {
         if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
-          downloadBuffer(response.headers.location).then(resolve, reject);
+          response.resume();
+          downloadBuffer(response.headers.location, timeoutMs).then(resolve, reject);
           return;
         }
 
         if (response.statusCode !== 200) {
+          response.resume();
           reject(new Error(`Download failed: ${url} (${response.statusCode})`));
           return;
         }
@@ -23,9 +26,30 @@ function downloadBuffer(url) {
         const chunks = [];
         response.on("data", (chunk) => chunks.push(chunk));
         response.on("end", () => resolve(Buffer.concat(chunks)));
-      })
-      .on("error", reject);
+      });
+
+    request.setTimeout(timeoutMs, () => {
+      request.destroy(new Error(`Download timed out after ${timeoutMs / 1000}s: ${url}`));
+    });
+    request.on("error", reject);
   });
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function downloadBufferWithRetry(url) {
+  let lastError;
+  for (let attempt = 0; attempt <= retryBackoffMs.length; attempt += 1) {
+    try {
+      return await downloadBuffer(url);
+    } catch (error) {
+      lastError = error;
+      if (attempt < retryBackoffMs.length) await wait(retryBackoffMs[attempt]);
+    }
+  }
+  throw lastError;
 }
 
 function splitCsvLine(line) {
@@ -163,7 +187,7 @@ with open(out, "w", encoding="utf-8") as handle:
 
 async function main() {
   const existingRows = loadExisting(outputFile);
-  const buffer = await downloadBuffer(sourceUrl);
+  const buffer = await downloadBufferWithRetry(sourceUrl);
   const parsedRows = await parseAcmWithPython(buffer);
   const rows = mergeRows(existingRows, parsedRows);
   validateRows(rows, existingRows);

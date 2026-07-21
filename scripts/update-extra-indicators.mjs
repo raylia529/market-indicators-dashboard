@@ -4,6 +4,8 @@ import path from "node:path";
 
 const userAgent = "market-indicators-dashboard/1.0 raylia529";
 const oneDayMs = 86400000;
+const downloadTimeoutMs = 20_000;
+const retryBackoffMs = [5_000, 15_000];
 
 const files = {
   move: path.join("data", "move.csv"),
@@ -29,20 +31,24 @@ const requestedUpdates = onlyArg
     )
   : null;
 
-function download(url, headers = {}) {
+function download(url, headers = {}, timeoutMs = downloadTimeoutMs) {
   return new Promise((resolve, reject) => {
-    https
-      .get(url, { headers: { "User-Agent": userAgent, ...headers } }, (response) => {
+    const request = https.get(
+      url,
+      { headers: { "User-Agent": userAgent, ...headers } },
+      (response) => {
         if (
           response.statusCode >= 300 &&
           response.statusCode < 400 &&
           response.headers.location
         ) {
-          download(response.headers.location, headers).then(resolve, reject);
+          response.resume();
+          download(response.headers.location, headers, timeoutMs).then(resolve, reject);
           return;
         }
 
         if (response.statusCode !== 200) {
+          response.resume();
           reject(new Error(`Download failed: ${url} (${response.statusCode})`));
           return;
         }
@@ -53,8 +59,13 @@ function download(url, headers = {}) {
           body += chunk;
         });
         response.on("end", () => resolve(body));
-      })
-      .on("error", reject);
+      },
+    );
+
+    request.setTimeout(timeoutMs, () => {
+      request.destroy(new Error(`Download timed out after ${timeoutMs / 1000}s: ${url}`));
+    });
+    request.on("error", reject);
   });
 }
 
@@ -64,15 +75,15 @@ function wait(ms) {
   });
 }
 
-async function downloadWithRetry(url, headers = {}, attempts = 3) {
+async function downloadWithRetry(url, headers = {}, backoffMs = retryBackoffMs) {
   let lastError;
-  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+  for (let attempt = 0; attempt <= backoffMs.length; attempt += 1) {
     try {
       return await download(url, headers);
     } catch (error) {
       lastError = error;
-      if (attempt < attempts) {
-        await wait(2500 * attempt);
+      if (attempt < backoffMs.length) {
+        await wait(backoffMs[attempt]);
       }
     }
   }
@@ -386,10 +397,10 @@ function parseIsmRollingHistory(releaseHtml) {
 
 async function updateIsmManufacturingPmi() {
   const headers = { "User-Agent": prNewswireUserAgent };
-  const publisherHtml = await downloadWithRetry(ismPublisherUrl, headers, 3);
+  const publisherHtml = await downloadWithRetry(ismPublisherUrl, headers);
   const releaseUrl = findLatestIsmManufacturingReleaseUrl(publisherHtml);
   const downloadedRows = parseIsmRollingHistory(
-    await downloadWithRetry(releaseUrl, headers, 3),
+    await downloadWithRetry(releaseUrl, headers),
   );
   const existingRows = loadSingleCsv(files.ismManufacturingPmi);
   const rows = mergeRowsByDate(existingRows, downloadedRows);
@@ -478,7 +489,7 @@ async function fetchTsmcRevenueMonth(rocYear, month) {
     month,
   ).padStart(2, "0")}`;
   return parseMopsTsmcRevenue(
-    await downloadWithRetry(url, { Referer: "https://mops.twse.com.tw/mops/web/t05st10_ifrs" }, 4),
+    await downloadWithRetry(url, { Referer: "https://mops.twse.com.tw/mops/web/t05st10_ifrs" }),
     rocYear,
     month,
   );

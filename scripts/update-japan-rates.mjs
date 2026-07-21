@@ -3,6 +3,8 @@ import https from "node:https";
 import path from "node:path";
 
 const userAgent = "market-indicators-dashboard/1.0 raylia529";
+const downloadTimeoutMs = 20_000;
+const retryBackoffMs = [5_000, 15_000];
 const sources = {
   historical: "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/historical/jgbcme_all.csv",
   current: "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/jgbcme.csv",
@@ -13,16 +15,17 @@ const files = {
   fx: path.join("data", "fx.csv"),
 };
 
-function download(url) {
+function download(url, timeoutMs = downloadTimeoutMs) {
   return new Promise((resolve, reject) => {
-    https
-      .get(url, { headers: { "User-Agent": userAgent } }, (response) => {
+    const request = https.get(url, { headers: { "User-Agent": userAgent } }, (response) => {
         if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
-          download(response.headers.location).then(resolve, reject);
+          response.resume();
+          download(response.headers.location, timeoutMs).then(resolve, reject);
           return;
         }
 
         if (response.statusCode !== 200) {
+          response.resume();
           reject(new Error(`Download failed: ${url} (${response.statusCode})`));
           return;
         }
@@ -33,9 +36,30 @@ function download(url) {
           body += chunk;
         });
         response.on("end", () => resolve(body));
-      })
-      .on("error", reject);
+      });
+
+    request.setTimeout(timeoutMs, () => {
+      request.destroy(new Error(`Download timed out after ${timeoutMs / 1000}s: ${url}`));
+    });
+    request.on("error", reject);
   });
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function downloadWithRetry(url) {
+  let lastError;
+  for (let attempt = 0; attempt <= retryBackoffMs.length; attempt += 1) {
+    try {
+      return await download(url);
+    } catch (error) {
+      lastError = error;
+      if (attempt < retryBackoffMs.length) await wait(retryBackoffMs[attempt]);
+    }
+  }
+  throw lastError;
 }
 
 function splitCsvLine(line) {
@@ -195,14 +219,14 @@ async function main() {
   const existingTenYear = loadSingleCsv(files.tenYear);
   const existingSpread = loadSingleCsv(files.spread);
   const historicalRows = existingTenYear.length === 0
-    ? parseMofYield(await download(sources.historical), "10Y")
+    ? parseMofYield(await downloadWithRetry(sources.historical), "10Y")
     : [];
   if (existingTenYear.length > 0) {
     console.log("Japan 10Y historical MOF archive skipped; local history is already present.");
   }
   const downloadedRows = mergeRows([], [
     ...historicalRows,
-    ...parseMofYield(await download(sources.current), "10Y"),
+    ...parseMofYield(await downloadWithRetry(sources.current), "10Y"),
   ]);
   const tenYearRows = mergeRows(existingTenYear, downloadedRows);
   validateRows(tenYearRows, "Japan 10-Year JGB Yield", existingTenYear);

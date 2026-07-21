@@ -56,16 +56,17 @@ TAIWAN_MARGIN_OFFICIAL_CORRECTIONS = {
 
 def fetch(url: str, *, binary: bool = False, retries: int = 3) -> bytes | str:
     last_error: Exception | None = None
+    retry_delays = (5, 15)
     for attempt in range(retries):
         try:
             request = Request(url, headers={"User-Agent": USER_AGENT, "Accept": "*/*"})
-            with urlopen(request, timeout=30) as response:
+            with urlopen(request, timeout=20) as response:
                 body = response.read()
             return body if binary else body.decode("utf-8-sig", errors="replace")
         except (HTTPError, URLError, TimeoutError) as error:
             last_error = error
             if attempt + 1 < retries:
-                time.sleep(1.5 * (attempt + 1))
+                time.sleep(retry_delays[attempt])
     raise RuntimeError(f"Download failed after {retries} attempts: {url}: {last_error}")
 
 

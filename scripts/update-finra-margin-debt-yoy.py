@@ -3,6 +3,8 @@ from __future__ import annotations
 import calendar
 import math
 import tempfile
+import time
+from urllib.error import HTTPError, URLError
 import urllib.request
 from pathlib import Path
 
@@ -20,8 +22,22 @@ def month_end(year_month: str) -> str:
 
 
 def download_xlsx() -> Path:
-    with urllib.request.urlopen(SOURCE_URL, timeout=30) as response:
-        payload = response.read()
+    retry_delays = (5, 15)
+    last_error: Exception | None = None
+    payload: bytes | None = None
+
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(SOURCE_URL, timeout=20) as response:
+                payload = response.read()
+            break
+        except (HTTPError, URLError, TimeoutError) as error:
+            last_error = error
+            if attempt < len(retry_delays):
+                time.sleep(retry_delays[attempt])
+
+    if payload is None:
+        raise RuntimeError(f"FINRA download failed after 3 attempts: {last_error}")
 
     handle = tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx")
     handle.write(payload)
