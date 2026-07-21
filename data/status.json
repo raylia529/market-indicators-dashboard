@@ -1,9 +1,9 @@
 {
-  "last_dashboard_refresh": "2026-07-21T01:12:24+09:00",
-  "last_dashboard_refresh_display": "2026-07-21 01:12 JST",
-  "update_duration_seconds": 54,
+  "last_dashboard_refresh": "2026-07-21T20:17:42+09:00",
+  "last_dashboard_refresh_display": "2026-07-21 20:17 JST",
+  "update_duration_seconds": 12855,
   "dashboard_version": "1.0.0",
-  "last_git_commit": "7c74682",
+  "last_git_commit": "56dac9c",
   "python_version": "Python 3.12.13",
   "indicators": {
     "SP500": {
@@ -23,8 +23,8 @@
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Daily, US trading days",
       "unit": "Index",
-      "status": "Source lag",
-      "error_message": null,
+      "status": "Failed",
+      "error_message": "First attempt:\nS&P 500 archive download skipped; complete local history is already present.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500&cosd=2026-04-18); retry 1/5 in 15s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500&cosd=2026-04-18); retry 2/5 in 30s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500&cosd=2026-04-18); retry 3/5 in 60s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500&cosd=2026-04-18); retry 4/5 in 180s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500&cosd=2026-04-18); retry 5/5 in 300s.\nWARNING: S&P 500 latest download/parse failed. Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500&cosd=2026-04-18\nS&P 500 validation\nArchive earliest date: 1950-01-03\nArchive latest date: skipped (local history retained)\nFinal earliest date: 1950-01-03\nFinal latest date: 2026-07-17\nValid observations: 19256\nDuplicate dates: 0\n1997 observations: 253\n2008 observations: 253\n2020 observations: 253\nData source used for latest update: not updated; preserved existing/latest archive rows\n2000-03 close samples: 2000-03-01: 1379.19; 2000-03-16: 1458.47; 2000-03-31: 1498.58\n2008-10 close samples: 2008-10-01: 1161.06; 2008-10-16: 946.43; 2008-10-31: 968.75\n2020-03 close samples: 2020-03-02: 3090.23; 2020-03-17: 2529.19; 2020-03-31: 2584.59\n2022-10 close samples: 2022-10-03: 3678.43; 2022-10-17: 3677.95; 2022-10-31: 3871.98\nS&P 500 latest source update failed; existing history was preserved. Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500&cosd=2026-04-18\nRetry attempt:\nS&P 500 archive download skipped; complete local history is already present.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500&cosd=2026-04-18); retry 1/5 in 15s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500&cosd=2026-04-18); retry 2/5 in 30s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500&cosd=2026-04-18); retry 3/5 in 60s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500&cosd=2026-04-18); retry 4/5 in 180s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500&cosd=2026-04-18); retry 5/5 in 300s.\nWARNING: S&P 500 latest download/parse failed. Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500&cosd=2026-04-18\nS&P 500 validation\nArchive earliest date: 1950-01-03\nArchive latest date: skipped (local history retained)\nFinal earliest date: 1950-01-03\nFinal latest date: 2026-07-17\nValid observations: 19256\nDuplicate dates: 0\n1997 observations: 253\n2008 observations: 253\n2020 observations: 253\nData source used for latest update: not updated; preserved existing/latest archive rows\n2000-03 close samples: 2000-03-01: 1379.19; 2000-03-16: 1458.47; 2000-03-31: 1498.58\n2008-10 close samples: 2008-10-01: 1161.06; 2008-10-16: 946.43; 2008-10-31: 968.75\n2020-03 close samples: 2020-03-02: 3090.23; 2020-03-17: 2529.19; 2020-03-31: 2584.59\n2022-10 close samples: 2022-10-03: 3678.43; 2022-10-17: 3677.95; 2022-10-31: 3871.98\nS&P 500 latest source update failed; existing history was preserved. Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500&cosd=2026-04-18",
       "formula": null,
       "release_note": null
     },
@@ -45,8 +45,8 @@
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Daily, US trading days",
       "unit": "Index",
-      "status": "Source lag",
-      "error_message": null,
+      "status": "Failed",
+      "error_message": "First attempt:\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=VIXCLS&cosd=2026-04-17); retry 1/5 in 15s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=VIXCLS&cosd=2026-04-17); retry 2/5 in 30s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=VIXCLS&cosd=2026-04-17); retry 3/5 in 60s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=VIXCLS&cosd=2026-04-17); retry 4/5 in 180s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=VIXCLS&cosd=2026-04-17); retry 5/5 in 300s.\nDownload timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=VIXCLS&cosd=2026-04-17\nRetry attempt:\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=VIXCLS&cosd=2026-04-17); retry 1/5 in 15s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=VIXCLS&cosd=2026-04-17); retry 2/5 in 30s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=VIXCLS&cosd=2026-04-17); retry 3/5 in 60s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=VIXCLS&cosd=2026-04-17); retry 4/5 in 180s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=VIXCLS&cosd=2026-04-17); retry 5/5 in 300s.\nDownload timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=VIXCLS&cosd=2026-04-17",
       "formula": null,
       "release_note": null
     },
@@ -67,8 +67,8 @@
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Daily",
       "unit": "Percentage Points",
-      "status": "Source lag",
-      "error_message": null,
+      "status": "Failed",
+      "error_message": "First attempt:\nHY OAS archive download skipped; complete local history is already present.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2&cosd=2026-04-17); retry 1/5 in 15s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2&cosd=2026-04-17); retry 2/5 in 30s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2&cosd=2026-04-17); retry 3/5 in 60s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2&cosd=2026-04-17); retry 4/5 in 180s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2&cosd=2026-04-17); retry 5/5 in 300s.\nWARNING: FRED rolling download/parse failed. Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2&cosd=2026-04-17\nHY OAS validation\nEarliest date: 1996-12-31\nLatest date: 2026-07-16\nValid observations: 7623\nDuplicate dates: 0\n2008 maximum: 21.82\n2008 maximum date: 2008-12-15\n2020 maximum: 10.87\n2020 maximum date: 2020-03-23\nHY OAS latest source update failed; existing history was preserved. Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2&cosd=2026-04-17\nRetry attempt:\nHY OAS archive download skipped; complete local history is already present.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2&cosd=2026-04-17); retry 1/5 in 15s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2&cosd=2026-04-17); retry 2/5 in 30s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2&cosd=2026-04-17); retry 3/5 in 60s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2&cosd=2026-04-17); retry 4/5 in 180s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2&cosd=2026-04-17); retry 5/5 in 300s.\nWARNING: FRED rolling download/parse failed. Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2&cosd=2026-04-17\nHY OAS validation\nEarliest date: 1996-12-31\nLatest date: 2026-07-16\nValid observations: 7623\nDuplicate dates: 0\n2008 maximum: 21.82\n2008 maximum date: 2008-12-15\n2020 maximum: 10.87\n2020 maximum date: 2020-03-23\nHY OAS latest source update failed; existing history was preserved. Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2&cosd=2026-04-17",
       "formula": null,
       "release_note": null
     },
@@ -93,8 +93,8 @@
       "last_successful_refresh_display": "2026-07-18 12:46 JST",
       "frequency": "Daily, US trading days",
       "unit": "Adjusted-close ratio",
-      "status": "Source lag",
-      "error_message": null,
+      "status": "Failed",
+      "error_message": "First attempt:\nWARNING: HYG/IEF failed. HYG Yahoo endpoints failed. query2.finance.yahoo.com: Download failed: https://query2.finance.yahoo.com/v8/finance/chart/HYG?period1=1776470400&period2=1784715719&interval=1d&events=history (429) | query1.finance.yahoo.com: Download failed: https://query1.finance.yahoo.com/v8/finance/chart/HYG?period1=1776470400&period2=1784715719&interval=1d&events=history (429)\nRetry attempt:\nWARNING: HYG/IEF failed. HYG Yahoo endpoints failed. query2.finance.yahoo.com: Download failed: https://query2.finance.yahoo.com/v8/finance/chart/HYG?period1=1776470400&period2=1784715840&interval=1d&events=history (429) | query1.finance.yahoo.com: Download failed: https://query1.finance.yahoo.com/v8/finance/chart/HYG?period1=1776470400&period2=1784715840&interval=1d&events=history (429)",
       "formula": "HYG adjusted close / IEF adjusted close on matching trading dates",
       "release_note": "Uses only matching published observations. No forward fill or estimated values are used."
     },
@@ -141,8 +141,8 @@
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Daily",
       "unit": "Percent",
-      "status": "Source lag",
-      "error_message": null,
+      "status": "Failed",
+      "error_message": "First attempt:\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2026-04-17); retry 1/5 in 15s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2026-04-17); retry 2/5 in 30s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2026-04-17); retry 3/5 in 60s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2026-04-17); retry 4/5 in 180s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2026-04-17); retry 5/5 in 300s.\nDownload timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2026-04-17\nRetry attempt:\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2026-04-17); retry 1/5 in 15s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2026-04-17); retry 2/5 in 30s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2026-04-17); retry 3/5 in 60s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2026-04-17); retry 4/5 in 180s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2026-04-17); retry 5/5 in 300s.\nDownload timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2026-04-17",
       "formula": null,
       "release_note": null
     },
@@ -163,8 +163,8 @@
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Daily",
       "unit": "Percentage Points",
-      "status": "Source lag",
-      "error_message": null,
+      "status": "Failed",
+      "error_message": "First attempt:\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=T10Y2Y&cosd=2026-04-18); retry 1/5 in 15s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=T10Y2Y&cosd=2026-04-18); retry 2/5 in 30s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=T10Y2Y&cosd=2026-04-18); retry 3/5 in 60s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=T10Y2Y&cosd=2026-04-18); retry 4/5 in 180s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=T10Y2Y&cosd=2026-04-18); retry 5/5 in 300s.\nDownload timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=T10Y2Y&cosd=2026-04-18\nRetry attempt:\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=T10Y2Y&cosd=2026-04-18); retry 1/5 in 15s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=T10Y2Y&cosd=2026-04-18); retry 2/5 in 30s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=T10Y2Y&cosd=2026-04-18); retry 3/5 in 60s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=T10Y2Y&cosd=2026-04-18); retry 4/5 in 180s.\nFRED download failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=T10Y2Y&cosd=2026-04-18); retry 5/5 in 300s.\nDownload timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=T10Y2Y&cosd=2026-04-18",
       "formula": null,
       "release_note": null
     },
@@ -207,8 +207,8 @@
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Daily, US trading days",
       "unit": "Index",
-      "status": "Source lag",
-      "error_message": null,
+      "status": "Failed",
+      "error_message": "First attempt:\nWARNING: MOVE Index failed. MOVE Index Yahoo endpoints failed. query2.finance.yahoo.com: Download failed: https://query2.finance.yahoo.com/v8/finance/chart/%5EMOVE?period1=1776470400&period2=1784715492&interval=1d&events=history (429) | query1.finance.yahoo.com: Download failed: https://query1.finance.yahoo.com/v8/finance/chart/%5EMOVE?period1=1776470400&period2=1784715492&interval=1d&events=history (429)\nRetry attempt:\nWARNING: MOVE Index failed. MOVE Index Yahoo endpoints failed. query2.finance.yahoo.com: Download failed: https://query2.finance.yahoo.com/v8/finance/chart/%5EMOVE?period1=1776470400&period2=1784715613&interval=1d&events=history (429) | query1.finance.yahoo.com: Download failed: https://query1.finance.yahoo.com/v8/finance/chart/%5EMOVE?period1=1776470400&period2=1784715613&interval=1d&events=history (429)",
       "formula": null,
       "release_note": null
     },
@@ -227,13 +227,13 @@
           "url": "https://www.newyorkfed.org/medialibrary/media/research/data_indicators/ACMTermPremium.xls"
         }
       ],
-      "latest_available_date": "2026-07-15",
-      "next_expected_update_date": "2026-07-16",
-      "last_successful_refresh": "2026-07-18T00:34:58+09:00",
-      "last_successful_refresh_display": "2026-07-18 00:34 JST",
+      "latest_available_date": "2026-07-17",
+      "next_expected_update_date": "2026-07-20",
+      "last_successful_refresh": "2026-07-21T20:17:42+09:00",
+      "last_successful_refresh_display": "2026-07-21 20:17 JST",
       "frequency": "Daily, business days",
       "unit": "Percentage Points",
-      "status": "Source lag",
+      "status": "Up to date",
       "error_message": null,
       "formula": null,
       "release_note": "Adrian, Crump, and Moench ACM Daily sheet, column ACMTP10. Public redistribution terms for committed derived CSV data are not explicitly confirmed."
@@ -323,13 +323,13 @@
           "url": "https://cdn.cboe.com/api/global/us_indices/daily_prices/SKEW_History.csv"
         }
       ],
-      "latest_available_date": "2026-07-17",
-      "next_expected_update_date": "2026-07-20",
-      "last_successful_refresh": "2026-07-18T00:34:58+09:00",
-      "last_successful_refresh_display": "2026-07-18 00:34 JST",
+      "latest_available_date": "2026-07-20",
+      "next_expected_update_date": "2026-07-21",
+      "last_successful_refresh": "2026-07-21T20:17:42+09:00",
+      "last_successful_refresh_display": "2026-07-21 20:17 JST",
       "frequency": "Daily, US trading days",
       "unit": "Index",
-      "status": "Source lag",
+      "status": "Up to date",
       "error_message": null,
       "formula": null,
       "release_note": null
@@ -403,8 +403,8 @@
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Daily, US trading days",
       "unit": "Index",
-      "status": "Source lag",
-      "error_message": null,
+      "status": "Failed",
+      "error_message": "First attempt:\nWARNING: SOX Index failed. SOX Index Yahoo endpoints failed. query2.finance.yahoo.com: Download failed: https://query2.finance.yahoo.com/v8/finance/chart/%5ESOX?period1=1776470400&period2=1784715947&interval=1d&events=history (429) | query1.finance.yahoo.com: Download failed: https://query1.finance.yahoo.com/v8/finance/chart/%5ESOX?period1=1776470400&period2=1784715947&interval=1d&events=history (429)\nRetry attempt:\nWARNING: SOX Index failed. SOX Index Yahoo endpoints failed. query2.finance.yahoo.com: Download failed: https://query2.finance.yahoo.com/v8/finance/chart/%5ESOX?period1=1776470400&period2=1784716068&interval=1d&events=history (429) | query1.finance.yahoo.com: Download failed: https://query1.finance.yahoo.com/v8/finance/chart/%5ESOX?period1=1776470400&period2=1784716068&interval=1d&events=history (429)",
       "formula": null,
       "release_note": null
     },
@@ -471,13 +471,13 @@
           "url": "https://finance.yahoo.com/quote/JPY%3DX/history/"
         }
       ],
-      "latest_available_date": "2026-07-17",
-      "next_expected_update_date": "2026-07-20",
-      "last_successful_refresh": "2026-07-18T00:34:58+09:00",
-      "last_successful_refresh_display": "2026-07-18 00:34 JST",
+      "latest_available_date": "2026-07-20",
+      "next_expected_update_date": "2026-07-21",
+      "last_successful_refresh": "2026-07-21T20:17:42+09:00",
+      "last_successful_refresh_display": "2026-07-21 20:17 JST",
       "frequency": "Daily forex trading days",
       "unit": "JPY per USD",
-      "status": "Source lag",
+      "status": "Up to date",
       "error_message": null,
       "formula": null,
       "release_note": "FRED remains the official historical source. Yahoo Finance only fills recent dates that FRED has not published yet."
@@ -493,14 +493,14 @@
           "url": "https://fred.stlouisfed.org/series/DGS2"
         }
       ],
-      "latest_available_date": "2026-07-17",
-      "next_expected_update_date": "2026-07-20",
+      "latest_available_date": "2026-07-20",
+      "next_expected_update_date": "2026-07-21",
       "last_successful_refresh": "2026-07-18T00:34:58+09:00",
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
       "frequency": "Daily",
       "unit": "Percent",
-      "status": "Source lag",
-      "error_message": null,
+      "status": "Failed",
+      "error_message": "First attempt:\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18); retry 1/5 in 15s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18); retry 2/5 in 30s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18); retry 3/5 in 60s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18); retry 4/5 in 180s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18); retry 5/5 in 300s.\nWARNING: US 2Y download/parse failed. Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18\nFX validation\nEarliest date: 1971-01-04\nLatest date: 2026-07-17\nValid USDJPY observations: 13923\nYahoo USDJPY gap-fill observations downloaded: 0\nUSDJPY merge priority: existing < Yahoo gap fill < FRED official\nValid spread observations: 13389\nDuplicate dates: 0\nLatest USDJPY: 2026-07-17 162.3530\nLatest US 2Y: 2026-07-17 4.1600\nLatest Japan 2Y: 2026-07-17 1.4400\nLatest US-Japan 2Y Spread: 2026-07-17 2.7200\nRetry attempt:\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18); retry 1/5 in 15s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18); retry 2/5 in 30s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18); retry 3/5 in 60s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18); retry 4/5 in 180s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18); retry 5/5 in 300s.\nWARNING: US 2Y download/parse failed. Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18\nFX validation\nEarliest date: 1971-01-04\nLatest date: 2026-07-17\nValid USDJPY observations: 13923\nYahoo USDJPY gap-fill observations downloaded: 0\nUSDJPY merge priority: existing < Yahoo gap fill < FRED official\nValid spread observations: 13389\nDuplicate dates: 0\nLatest USDJPY: 2026-07-17 162.3530\nLatest US 2Y: 2026-07-17 4.1600\nLatest Japan 2Y: 2026-07-17 1.4400\nLatest US-Japan 2Y Spread: 2026-07-17 2.7200",
       "formula": null,
       "release_note": null
     },
@@ -515,8 +515,8 @@
           "url": "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/"
         }
       ],
-      "latest_available_date": "2026-07-17",
-      "next_expected_update_date": "2026-07-20",
+      "latest_available_date": "2026-07-20",
+      "next_expected_update_date": "2026-07-21",
       "last_successful_refresh": "2026-07-21T01:12:24+09:00",
       "last_successful_refresh_display": "2026-07-21 01:12 JST",
       "frequency": "Daily, Japan business days",
@@ -541,14 +541,14 @@
           "url": "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/"
         }
       ],
-      "latest_available_date": "2026-07-17",
-      "next_expected_update_date": "2026-07-20",
+      "latest_available_date": "2026-07-20",
+      "next_expected_update_date": "2026-07-21",
       "last_successful_refresh": "2026-07-21T01:12:24+09:00",
       "last_successful_refresh_display": "2026-07-21 01:12 JST",
       "frequency": "Daily",
       "unit": "Percentage Points",
-      "status": "Up to date",
-      "error_message": null,
+      "status": "Failed",
+      "error_message": "First attempt:\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18); retry 1/5 in 15s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18); retry 2/5 in 30s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18); retry 3/5 in 60s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18); retry 4/5 in 180s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18); retry 5/5 in 300s.\nWARNING: US 2Y download/parse failed. Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18\nFX validation\nEarliest date: 1971-01-04\nLatest date: 2026-07-17\nValid USDJPY observations: 13923\nYahoo USDJPY gap-fill observations downloaded: 0\nUSDJPY merge priority: existing < Yahoo gap fill < FRED official\nValid spread observations: 13389\nDuplicate dates: 0\nLatest USDJPY: 2026-07-17 162.3530\nLatest US 2Y: 2026-07-17 4.1600\nLatest Japan 2Y: 2026-07-17 1.4400\nLatest US-Japan 2Y Spread: 2026-07-17 2.7200\nRetry attempt:\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18); retry 1/5 in 15s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18); retry 2/5 in 30s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18); retry 3/5 in 60s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18); retry 4/5 in 180s.\nDownload failed (Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18); retry 5/5 in 300s.\nWARNING: US 2Y download/parse failed. Download timed out after 30s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2026-04-18\nFX validation\nEarliest date: 1971-01-04\nLatest date: 2026-07-17\nValid USDJPY observations: 13923\nYahoo USDJPY gap-fill observations downloaded: 0\nUSDJPY merge priority: existing < Yahoo gap fill < FRED official\nValid spread observations: 13389\nDuplicate dates: 0\nLatest USDJPY: 2026-07-17 162.3530\nLatest US 2Y: 2026-07-17 4.1600\nLatest Japan 2Y: 2026-07-17 1.4400\nLatest US-Japan 2Y Spread: 2026-07-17 2.7200",
       "formula": "US 2-Year Treasury Yield - Japan 2-Year JGB Yield",
       "release_note": null
     },
