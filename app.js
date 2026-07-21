@@ -908,6 +908,7 @@ function renderColorPaletteContent({ activeColor, targetId, targetType }) {
         class="current-color"
         type="button"
         data-color-menu-toggle
+        data-swatch-color="${activeColor.toLowerCase()}"
         style="--swatch-color: ${activeColor}"
         aria-label="Change line color"
         aria-expanded="false"
@@ -930,6 +931,7 @@ function renderColorPaletteContent({ activeColor, targetId, targetType }) {
                   type="button"
                   ${dataAttribute}
                   data-color-value="${color}"
+                  data-swatch-color="${color.toLowerCase()}"
                   style="--swatch-color: ${color}"
                   aria-label="Use ${color}"
                   aria-pressed="${active}"

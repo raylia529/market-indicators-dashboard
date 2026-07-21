@@ -1614,6 +1614,11 @@ h2 {
       0 4px 10px rgba(0, 0, 0, 0.18);
   }
 
+  .current-color[data-swatch-color="#111111"],
+  .color-swatch[data-swatch-color="#111111"] {
+    background: #f8fafc;
+  }
+
   .js-plotly-plot .plotly .modebar-group {
     background: transparent !important;
   }
