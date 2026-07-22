@@ -1,9 +1,9 @@
 {
-  "last_dashboard_refresh": "2026-07-22T19:13:20+09:00",
-  "last_dashboard_refresh_display": "2026-07-22 19:13 JST",
+  "last_dashboard_refresh": "2026-07-22T19:58:04+09:00",
+  "last_dashboard_refresh_display": "2026-07-22 19:58 JST",
   "update_duration_seconds": 285,
   "dashboard_version": "1.0.0",
-  "last_git_commit": "193166b",
+  "last_git_commit": "43987a5",
   "python_version": "Python 3.12.13",
   "indicators": {
     "SP500": {
@@ -94,7 +94,7 @@
       "frequency": "Daily, US trading days",
       "unit": "Adjusted-close ratio",
       "status": "Failed",
-      "error_message": "WARNING: HYG/IEF failed. HYG Yahoo endpoints failed. query2.finance.yahoo.com: Download failed: https://query2.finance.yahoo.com/v8/finance/chart/HYG?period1=1776470400&period2=1784801559&interval=1d&events=history (429) | query1.finance.yahoo.com: Download failed: https://query1.finance.yahoo.com/v8/finance/chart/HYG?period1=1776470400&period2=1784801559&interval=1d&events=history (429)",
+      "error_message": "WARNING: HYG/IEF failed. HYG Yahoo endpoints failed. query2.finance.yahoo.com: Download failed: https://query2.finance.yahoo.com/v8/finance/chart/HYG?period1=1776470400&period2=1784804244&interval=1d&events=history (429) | query1.finance.yahoo.com: Download failed: https://query1.finance.yahoo.com/v8/finance/chart/HYG?period1=1776470400&period2=1784804244&interval=1d&events=history (429)",
       "formula": "HYG adjusted close / IEF adjusted close on matching trading dates",
       "release_note": "Uses only matching published observations. No forward fill or estimated values are used."
     },
@@ -208,7 +208,7 @@
       "frequency": "Daily, US trading days",
       "unit": "Index",
       "status": "Failed",
-      "error_message": "WARNING: MOVE Index failed. MOVE Index Yahoo endpoints failed. query2.finance.yahoo.com: Download failed: https://query2.finance.yahoo.com/v8/finance/chart/%5EMOVE?period1=1776470400&period2=1784801519&interval=1d&events=history (429) | query1.finance.yahoo.com: Download failed: https://query1.finance.yahoo.com/v8/finance/chart/%5EMOVE?period1=1776470400&period2=1784801519&interval=1d&events=history (429)",
+      "error_message": "WARNING: MOVE Index failed. MOVE Index Yahoo endpoints failed. query2.finance.yahoo.com: Download failed: https://query2.finance.yahoo.com/v8/finance/chart/%5EMOVE?period1=1776470400&period2=1784804203&interval=1d&events=history (429) | query1.finance.yahoo.com: Download failed: https://query1.finance.yahoo.com/v8/finance/chart/%5EMOVE?period1=1776470400&period2=1784804203&interval=1d&events=history (429)",
       "formula": null,
       "release_note": null
     },
@@ -229,8 +229,8 @@
       ],
       "latest_available_date": "2026-07-20",
       "next_expected_update_date": "2026-07-21",
-      "last_successful_refresh": "2026-07-22T19:13:20+09:00",
-      "last_successful_refresh_display": "2026-07-22 19:13 JST",
+      "last_successful_refresh": "2026-07-22T19:58:04+09:00",
+      "last_successful_refresh_display": "2026-07-22 19:58 JST",
       "frequency": "Daily, business days",
       "unit": "Percentage Points",
       "status": "Source lag",
