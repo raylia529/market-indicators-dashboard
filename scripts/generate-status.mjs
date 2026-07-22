@@ -860,8 +860,10 @@ function buildMetadata() {
 
   for (const definition of indicatorDefinitions) {
     const updateResult = updateResults[definition.key] || updateResults[definition.file] || null;
+    const previousIndicator = previousMetadata.indicators?.[definition.key] || null;
     let latestAvailableDate = null;
-    let errorMessage = updateResult?.error_message || null;
+    let errorMessage =
+      updateResult?.error_message || (!updateResult ? previousIndicator?.error_message : null) || null;
 
     try {
       latestAvailableDate = getLatestAvailableDate(definition);
@@ -869,14 +871,16 @@ function buildMetadata() {
       errorMessage = error.message;
     }
 
-    const previousIndicator = previousMetadata.indicators?.[definition.key] || null;
-    const status = calculateStatus(
-      definition,
-      latestAvailableDate,
-      updateResult,
-      previousIndicator?.last_successful_refresh,
-      todayText,
-    );
+    const status =
+      !updateResult && previousIndicator?.status === "Failed"
+        ? "Failed"
+        : calculateStatus(
+            definition,
+            latestAvailableDate,
+            updateResult,
+            previousIndicator?.last_successful_refresh,
+            todayText,
+          );
     const nextExpectedUpdate = calculateNextExpectedUpdate(definition, latestAvailableDate);
     let lastSuccessfulRefresh = previousIndicator?.last_successful_refresh || null;
     if (updateResult?.status === "success") {
