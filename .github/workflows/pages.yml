@@ -186,7 +186,7 @@ jobs:
 
               if [ -n "${state_prefix}" ] && {
                 [ "${exit_code}" -eq 124 ] ||
-                printf '%s' "${output}" | grep -Eiq 'timed out|timeout|ECONNRESET|ENOTFOUND|EAI_AGAIN|socket hang up|connection reset|connection refused|temporary failure|HTTP (307|429|5[0-9][0-9])|HTTP Error (307|429|5[0-9][0-9])|fetch failed|TLS|network';
+                printf '%s' "${output}" | grep -Eiq 'timed out|timeout|ECONNRESET|ENOTFOUND|EAI_AGAIN|socket hang up|connection reset|connection refused|temporary failure|HTTP (307|429|5[0-9][0-9])|HTTP Error (307|429|5[0-9][0-9])|\((307|429|5[0-9][0-9])\)|fetch failed|TLS|network';
               }; then
                 failure_count=0
                 if [ -f "${state_prefix}.count" ]; then
@@ -225,7 +225,7 @@ jobs:
           run_us_market() {
             run_update "MOVE Index" "node scripts/update-extra-indicators.mjs --only=move" "MOVE" "daily" "us" "yahoo"
             run_update "HYG/IEF" "node scripts/update-extra-indicators.mjs --only=hyg-ief" "HYG_IEF" "daily" "us" "yahoo"
-            run_update "CBOE SKEW Index" "node scripts/update-extra-indicators.mjs --only=skew" "SKEW" "daily" "us" "yahoo"
+            run_update "CBOE SKEW Index" "node scripts/update-extra-indicators.mjs --only=skew" "SKEW" "daily" "us" "cboe"
             run_update "SOX Index" "node scripts/update-extra-indicators.mjs --only=sox" "SOX" "daily" "us" "yahoo"
             run_update "US breadth indicators" "node scripts/update-extra-indicators.mjs --only=breadth" "ADVANCE_DECLINE_LINE,SP500_ABOVE_200DMA" "daily" "us" "yahoo"
             run_update "USD/JPY" "node scripts/update-fx.mjs --profile=us --only=usdjpy" "DEXJPUS" "daily" "us" "fx-market"
