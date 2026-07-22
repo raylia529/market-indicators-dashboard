@@ -709,15 +709,15 @@ const indicatorThresholdZones = {
   ],
   move: [
     { to: 100, tone: "favorable" },
-    { from: 140, tone: "unfavorable" },
+    { from: 110, tone: "unfavorable" },
   ],
   "us-rates-move": [
     { to: 100, tone: "favorable" },
-    { from: 140, tone: "unfavorable" },
+    { from: 110, tone: "unfavorable" },
   ],
   "taiwan-margin-financing-balance-yoy": [
-    { to: -20, tone: "favorable" },
-    { from: 20, tone: "unfavorable" },
+    { to: -30, tone: "favorable" },
+    { from: 50, tone: "unfavorable" },
   ],
 };
 const glossaryLinkAliasMaxLength = 24;
