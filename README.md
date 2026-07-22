@@ -182,7 +182,7 @@ The Data Status page reads generated metadata from:
 data/status.json
 ```
 
-The Data Status table links each indicator name to its primary source and shows the latest observation, next expected update, and current status directly beneath the indicator name. Source links, update frequency, formulas, release notes, and errors are grouped under `Details`. `Up to date` means a successful refresh confirmed that the dashboard holds the source's newest published observation; `Source lag` means no successful source check has confirmed the expected update; `Failed` means the latest refresh attempt failed or no valid data is available.
+The Data Status table links each indicator name to its primary source and shows the latest observation, next expected update, and current status directly beneath the indicator name. Source links, update frequency, formulas, release notes, and errors are grouped under `Details`. `Up to date` means the next observation is not overdue. `Source lag` means the source was checked after the expected update date but still had no newer observation. `Update not run` means the expected update date passed before a successful source check occurred. `Failed` means the latest refresh attempt failed or no valid data is available.
 
 The Glossary page reads static reference text from:
 
@@ -214,6 +214,37 @@ The scripts use merge-and-validate workflows where applicable and avoid replacin
 The scheduled workflow can target individual groups with options such as `--series=DGS10`, `--only=taiex`, and `--profile=asia`; the FX updater can also isolate `usdjpy`, `us2y`, or `japan2y`. A manual full refresh runs every updater group, but each updater still performs an incremental merge rather than replacing complete history with a full download. `scripts/should-update.mjs` reads `data/status.json` before each scheduled download and skips indicators that are already complete for that market cycle. Data Status preserves the prior successful refresh timestamp for indicators that were not run.
 
 Scheduled downloads use short bounded retries: at most three download attempts, with 20-second request timeouts. The workflow does not rerun an entire failed updater command; a failed indicator keeps its committed history and is deferred to the next scheduled check. Individual scheduled updater commands are capped at three minutes. A per-source circuit breaker defers remaining requests after two consecutive connection failures from the same provider, reducing queue congestion and unnecessary requests during provider outages. Manual full refreshes retain a longer command limit for validated historical processing. Freshness checks use completed market-cycle dates rather than the refresh calendar date, so a delayed Asia run finishing after midnight does not suppress the next local post-close update.
+
+## External Schedule Backup
+
+GitHub documents that scheduled workflow events can be delayed or dropped during periods of high Actions load. The optional Cloudflare Worker in `scheduler/` provides an independent clock while GitHub Actions continues to perform the actual update and deployment.
+
+The Worker dispatches the existing workflow at these times:
+
+| Profile | JST | UTC cron |
+| --- | --- | --- |
+| US | 08:40 Tue-Sat | `40 23 * * 1-5` |
+| US | 11:10 Tue-Sat | `10 2 * * 2-6` |
+| US | 14:10 Tue-Sat | `10 5 * * 2-6` |
+| Asia | 19:40 Mon-Fri | `40 10 * * 1-5` |
+| Asia | 21:40 Mon-Fri | `40 12 * * 1-5` |
+
+The existing GitHub schedules remain enabled as a fallback. Duplicate dispatches do not duplicate provider downloads because `scripts/should-update.mjs` skips indicators already complete for the current market cycle.
+
+To deploy the external scheduler:
+
+1. Create a fine-grained GitHub personal access token restricted to this repository with only `Actions: Read and write` permission.
+2. Authenticate Wrangler and store the token as a Cloudflare secret. Never add the token to a file or commit it.
+3. Deploy the Worker.
+
+```bash
+cd scheduler
+npx wrangler@latest login
+npx wrangler@latest secret put GITHUB_ACTIONS_TOKEN
+npx wrangler@latest deploy
+```
+
+Cloudflare runs the five UTC cron expressions from `scheduler/wrangler.jsonc`. The Worker only calls GitHub's workflow-dispatch API; it never contacts FRED, Yahoo Finance, or another market-data provider.
 
 The Fed Funds Rate card uses the official target-rate series rather than the effective overnight rate. Its daily as-of observations are drawn as a step line so unchanged policy periods remain hoverable at every observation. Card change is measured against the previous distinct policy setting and labeled `Last change`; this avoids implying that an unchanged FOMC decision was itself a rate move. Data Status uses the published FOMC decision calendar for the next expected update; unscheduled policy decisions may occur before that date.
 

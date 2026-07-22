@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
+  "name": "market-dashboard-scheduler",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-07-22",
+  "triggers": {
+    "crons": [
+      "40 23 * * 1-5",
+      "10 2 * * 2-6",
+      "10 5 * * 2-6",
+      "40 10 * * 1-5",
+      "40 12 * * 1-5"
+    ]
+  }
+}

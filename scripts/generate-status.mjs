@@ -817,17 +817,26 @@ function calculateStatus(
     return "Failed";
   }
 
-  if (updateResult?.status === "success") {
-    return "Up to date";
-  }
-
   const nextExpectedUpdate = calculateNextExpectedUpdate(definition, latestAvailableDate);
   if (nextExpectedUpdate) {
-    const successfulRefreshDate = previousSuccessfulRefresh?.slice(0, 10) || "";
-    if (successfulRefreshDate >= todayText) {
+    const successfulRefreshDate =
+      updateResult?.status === "success"
+        ? todayText
+        : previousSuccessfulRefresh?.slice(0, 10) || "";
+
+    if (nextExpectedUpdate >= todayText) {
       return "Up to date";
     }
-    return nextExpectedUpdate < todayText ? "Source lag" : "Up to date";
+
+    if (!successfulRefreshDate || successfulRefreshDate < nextExpectedUpdate) {
+      return "Update not run";
+    }
+
+    return "Source lag";
+  }
+
+  if (updateResult?.status === "success") {
+    return "Up to date";
   }
 
   const lagDays = dateDiffDays(latestAvailableDate, todayText);

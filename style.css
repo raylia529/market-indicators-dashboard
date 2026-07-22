@@ -1166,6 +1166,11 @@ h2 {
   color: var(--blue);
 }
 
+.data-status-badge.update-not-run {
+  background: var(--warning-soft);
+  color: var(--gold);
+}
+
 .data-status-badge.failed {
   background: var(--danger-soft);
   color: var(--red);

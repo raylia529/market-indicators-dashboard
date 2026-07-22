@@ -317,6 +317,8 @@ jobs:
           node --check scripts/update-japan-rates.mjs
           node --check scripts/update-regional-markets.mjs
           node --check scripts/should-update.mjs
+          node --check scheduler/worker.mjs
+          node -e 'JSON.parse(require("fs").readFileSync("scheduler/wrangler.jsonc", "utf8"))'
           python -B -m py_compile scripts/update-regional-official.py
           python -B -m py_compile scripts/update-finra-margin-debt-yoy.py
 

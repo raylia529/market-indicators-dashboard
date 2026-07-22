@@ -725,6 +725,7 @@ const glossaryLinkAliasMaxLength = 24;
 const statusClassNames = {
   "Up to date": "up-to-date",
   "Source lag": "source-lag",
+  "Update not run": "update-not-run",
   Failed: "failed",
 };
 
