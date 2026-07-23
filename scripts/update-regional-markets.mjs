@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import https from "node:https";
 import path from "node:path";
-import { execFile } from "node:child_process";
 
 const userAgent = "market-indicators-dashboard/1.0 raylia529";
 const recentOverlapDays = 90;
@@ -57,47 +56,18 @@ function download(url, headers = {}) {
   });
 }
 
-function wait(ms) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
-
-function downloadWithCurl(url) {
-  return new Promise((resolve, reject) => {
-    execFile(
-      "curl",
-      ["-L", "--fail", "--silent", "--show-error", "--max-time", "20", url],
-      { encoding: "utf8", maxBuffer: 20 * 1024 * 1024 },
-      (error, stdout, stderr) => {
-        if (error) {
-          reject(new Error(stderr.trim() || error.message));
-          return;
-        }
-        resolve(stdout);
-      },
-    );
-  });
-}
-
 async function downloadWithRetry(url, headers = {}, backoffMs = retryBackoffMs) {
   let lastError;
   for (let attempt = 0; attempt <= backoffMs.length; attempt += 1) {
     try {
       return await download(url, headers);
     } catch (error) {
-      try {
-        console.warn(`HTTPS download failed (${error.message}); trying curl fallback.`);
-        return await downloadWithCurl(url);
-      } catch (curlError) {
-        lastError = new Error(`${error.message}; curl fallback: ${curlError.message}`);
-      }
+      lastError = error;
       if (attempt < backoffMs.length) {
         const delayMs = backoffMs[attempt];
         console.warn(
           `Download failed (${lastError.message}); retry ${attempt + 1}/${backoffMs.length} in ${delayMs / 1000}s.`,
         );
-        await wait(delayMs);
       }
     }
   }

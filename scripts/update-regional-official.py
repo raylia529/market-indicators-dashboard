@@ -11,7 +11,6 @@ import json
 import os
 import re
 import tempfile
-import time
 from bisect import bisect_right
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date, datetime, timedelta
@@ -54,20 +53,14 @@ TAIWAN_MARGIN_OFFICIAL_CORRECTIONS = {
 }
 
 
-def fetch(url: str, *, binary: bool = False, retries: int = 1) -> bytes | str:
-    last_error: Exception | None = None
-    retry_delays = (5, 15)
-    for attempt in range(retries):
-        try:
-            request = Request(url, headers={"User-Agent": USER_AGENT, "Accept": "*/*"})
-            with urlopen(request, timeout=20) as response:
-                body = response.read()
-            return body if binary else body.decode("utf-8-sig", errors="replace")
-        except (HTTPError, URLError, TimeoutError) as error:
-            last_error = error
-            if attempt + 1 < retries:
-                time.sleep(retry_delays[attempt])
-    raise RuntimeError(f"Download failed after {retries} attempts: {url}: {last_error}")
+def fetch(url: str, *, binary: bool = False) -> bytes | str:
+    try:
+        request = Request(url, headers={"User-Agent": USER_AGENT, "Accept": "*/*"})
+        with urlopen(request, timeout=20) as response:
+            body = response.read()
+        return body if binary else body.decode("utf-8-sig", errors="replace")
+    except (HTTPError, URLError, TimeoutError) as error:
+        raise RuntimeError(f"Download failed: {url}: {error}") from error
 
 
 def load_rows(path: Path) -> list[dict[str, float | str]]:

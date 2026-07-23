@@ -214,7 +214,7 @@ node scripts/generate-consolidated.mjs
 The scripts use merge-and-validate workflows where applicable and avoid replacing complete history with short rolling datasets.
 The scheduled workflow can target individual groups with options such as `--series=DGS10`, `--only=taiex`, and `--profile=asia`; the FX updater can also isolate `usdjpy`, `us2y`, or `japan2y`. A manual full refresh runs every updater group, but each updater still performs an incremental merge rather than replacing complete history with a full download. `scripts/should-update.mjs` reads `data/status.json` before each scheduled download and skips indicators that are already complete for that market cycle. Data Status preserves the prior successful refresh timestamp for indicators that were not run.
 
-Scheduled downloads have no delayed retries and use 20-second request timeouts. The workflow does not rerun an entire failed updater command; a failed indicator keeps its committed history and is deferred to the next assigned scheduled check. Individual scheduled updater commands are capped at three minutes. A per-source circuit breaker defers remaining requests after two consecutive connection failures from the same provider, reducing queue congestion and unnecessary requests during provider outages. Manual full refreshes retain a longer command limit for validated historical processing. Freshness checks use completed market-cycle dates rather than the refresh calendar date, so a delayed Asia run finishing after midnight does not suppress the next local post-close update.
+Scheduled downloads have no delayed retries and use 20-second request timeouts. Each configured endpoint is contacted only once per scheduled check; Yahoo uses one chart host and regional downloads do not retry through curl. The workflow does not rerun an entire failed updater command. A failed indicator keeps its committed history and is deferred to its next assigned slot. If Yahoo returns HTTP 429, a persisted JST-date cooldown skips all remaining Yahoo requests that day and automatically permits requests again on the next JST date. Individual scheduled updater commands are capped at three minutes. A per-workflow source circuit breaker still defers remaining requests after two consecutive connection failures from another provider. Manual full refreshes retain a longer command limit for validated historical processing. Freshness checks use completed market-cycle dates rather than the refresh calendar date, so a delayed Asia run finishing after midnight does not suppress the next local post-close update. Weekly, monthly, quarterly, and policy series do not enter retry slots until their metadata `next_expected_update_date` is due; after that date, an unsuccessful series participates in each applicable scheduled slot until it succeeds.
 
 ## External Schedule Backup
 
@@ -224,11 +224,11 @@ The Worker dispatches the existing workflow at these times:
 
 | Profile | JST | UTC cron |
 | --- | --- | --- |
-| US | 08:40 Tue-Sat | `40 23 * * 1-5` |
-| US | 11:10 Tue-Sat | `10 2 * * 2-6` |
-| US | 14:10 Tue-Sat | `10 5 * * 2-6` |
-| Asia | 19:40 Mon-Fri | `40 10 * * 1-5` |
-| Asia | 21:40 Mon-Fri | `40 12 * * 1-5` |
+| US + Asia | 08:15 Tue-Sat | `15 23 * * 1-5` |
+| US | 09:15, 10:15, 12:15 Tue-Sat | `15 0,1,3 * * 2-6` |
+| US + Asia | 18:15 Mon-Fri | `15 9 * * 1-5` |
+| US | 18:15 Sat | `15 9 * * 6` |
+| Asia | 19:15, 20:15, 22:15 Mon-Fri | `15 10,11,13 * * 1-5` |
 
 The existing GitHub schedules remain enabled as a fallback. Duplicate dispatches do not duplicate provider downloads because `scripts/should-update.mjs` skips indicators already complete for the current market cycle.
 

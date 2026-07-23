@@ -132,10 +132,10 @@ for (const key of keys) {
   }
 
   if (mode === "slow-overdue" || mode === "slow-baseline") {
+    const expectedDate = indicator.next_expected_update_date;
     const overdue =
-      indicator.status === "Failed" ||
       !indicator.latest_available_date ||
-      (indicator.next_expected_update_date && indicator.next_expected_update_date <= todayJst);
+      (expectedDate && expectedDate <= todayJst);
 
     if (overdue) {
       pending.push(

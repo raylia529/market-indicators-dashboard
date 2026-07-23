@@ -231,17 +231,7 @@ async function downloadYahooChart(symbol, label, period1 = 0) {
     "User-Agent":
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/126 Safari/537.36",
   };
-  const errors = [];
-
-  for (const host of ["query2.finance.yahoo.com", "query1.finance.yahoo.com"]) {
-    try {
-      return await downloadWithRetry(`https://${host}${chartPath}`, headers);
-    } catch (error) {
-      errors.push(`${host}: ${error.message}`);
-    }
-  }
-
-  throw new Error(`${label} Yahoo endpoints failed. ${errors.join(" | ")}`);
+  return downloadWithRetry(`https://query2.finance.yahoo.com${chartPath}`, headers);
 }
 
 async function updateYahooIndex({ symbol, label, file, decimals = 2 }) {
