@@ -1,10 +1,10 @@
 {
-  "last_dashboard_refresh": "2026-07-23T17:22:40+09:00",
-  "last_dashboard_refresh_display": "2026-07-23 17:22 JST",
-  "update_duration_seconds": 65,
+  "last_dashboard_refresh": "2026-07-23T17:25:14+09:00",
+  "last_dashboard_refresh_display": "2026-07-23 17:25 JST",
+  "update_duration_seconds": 14,
   "dashboard_version": "1.0.0",
-  "last_git_commit": "89b9659",
-  "python_version": "Python 3.12.13",
+  "last_git_commit": "945a491",
+  "python_version": "Python 3.13.3",
   "indicators": {
     "SP500": {
       "display_name": "S&P 500 Index",
@@ -17,14 +17,14 @@
           "url": "https://fred.stlouisfed.org/series/SP500"
         }
       ],
-      "latest_available_date": "2026-07-21",
-      "next_expected_update_date": "2026-07-22",
-      "last_successful_refresh": "2026-07-23T07:52:33+09:00",
-      "last_successful_refresh_display": "2026-07-23 07:52 JST",
+      "latest_available_date": "2026-07-22",
+      "next_expected_update_date": "2026-07-23",
+      "last_successful_refresh": "2026-07-23T17:25:14+09:00",
+      "last_successful_refresh_display": "2026-07-23 17:25 JST",
       "frequency": "Daily, US trading days",
       "unit": "Index",
-      "status": "Failed",
-      "error_message": "S&P 500 archive download skipped; complete local history is already present.\nWARNING: S&P 500 latest download/parse failed. Download timed out after 20s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500&cosd=2026-04-22\nS&P 500 validation\nArchive earliest date: 1950-01-03\nArchive latest date: skipped (local history retained)\nFinal earliest date: 1950-01-03\nFinal latest date: 2026-07-21\nValid observations: 19258\nDuplicate dates: 0\n1997 observations: 253\n2008 observations: 253\n2020 observations: 253\nData source used for latest update: not updated; preserved existing/latest archive rows\n2000-03 close samples: 2000-03-01: 1379.19; 2000-03-16: 1458.47; 2000-03-31: 1498.58\n2008-10 close samples: 2008-10-01: 1161.06; 2008-10-16: 946.43; 2008-10-31: 968.75\n2020-03 close samples: 2020-03-02: 3090.23; 2020-03-17: 2529.19; 2020-03-31: 2584.59\n2022-10 close samples: 2022-10-03: 3678.43; 2022-10-17: 3677.95; 2022-10-31: 3871.98\nS&P 500 latest source update failed; existing history was preserved. Download timed out after 20s: https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500&cosd=2026-04-22",
+      "status": "Up to date",
+      "error_message": null,
       "formula": null,
       "release_note": null
     },
