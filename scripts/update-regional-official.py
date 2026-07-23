@@ -54,7 +54,7 @@ TAIWAN_MARGIN_OFFICIAL_CORRECTIONS = {
 }
 
 
-def fetch(url: str, *, binary: bool = False, retries: int = 3) -> bytes | str:
+def fetch(url: str, *, binary: bool = False, retries: int = 1) -> bytes | str:
     last_error: Exception | None = None
     retry_delays = (5, 15)
     for attempt in range(retries):

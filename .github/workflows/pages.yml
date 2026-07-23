@@ -5,15 +5,15 @@ on:
     branches:
       - main
   schedule:
-    # US daily checks: 07:20, 08:50, 10:20, 11:50, 13:50 JST Tue-Sat.
-    - cron: "20 22 * * 1-5"
-    - cron: "50 23 * * 1-5"
-    - cron: "20 1 * * 2-6"
-    - cron: "50 2 * * 2-6"
-    - cron: "50 4 * * 2-6"
-    # Japan/Taiwan daily checks after local markets and official updates: 19:20, 21:20 JST.
-    - cron: "20 10 * * 1-5"
-    - cron: "20 12 * * 1-5"
+    # 08:15 JST Tue-Sat: U.S. plus pending Japan/Taiwan data from the prior session.
+    - cron: "15 23 * * 1-5"
+    # U.S. pending-only checks: 09:15, 10:15, and 12:15 JST Tue-Sat.
+    - cron: "15 0,1,3 * * 2-6"
+    # 18:15 JST: combined on local weekdays, U.S.-only on Saturday.
+    - cron: "15 9 * * 1-5"
+    - cron: "15 9 * * 6"
+    # Japan/Taiwan pending-only checks: 19:15, 20:15, and 22:15 JST Mon-Fri.
+    - cron: "15 10,11,13 * * 1-5"
   workflow_dispatch:
     inputs:
       update_profile:
@@ -28,6 +28,8 @@ on:
           - us-market
           - us-slow
           - asia
+          - asia-retry
+          - combined
 
 permissions:
   contents: write
@@ -72,13 +74,11 @@ jobs:
 
           if [ "${{ github.event_name }}" = "schedule" ]; then
             case "${{ github.event.schedule }}" in
-              "20 22 * * 1-5") profile=us ;;
-              "50 23 * * 1-5") profile=us ;;
-              "20 1 * * 2-6") profile=us ;;
-              "50 2 * * 2-6") profile=us ;;
-              "50 4 * * 2-6") profile=us-with-slow ;;
-              "20 10 * * 1-5") profile=asia ;;
-              "20 12 * * 1-5") profile=asia-retry ;;
+              "15 23 * * 1-5") profile=combined ;;
+              "15 0,1,3 * * 2-6") profile=us ;;
+              "15 9 * * 1-5") profile=combined ;;
+              "15 9 * * 6") profile=us ;;
+              "15 10,11,13 * * 1-5") profile=asia-retry ;;
               *) profile=full ;;
             esac
           fi
@@ -277,6 +277,12 @@ jobs:
             run_asia_daily
             run_asia_slow slow-baseline
           elif [ "${UPDATE_PROFILE}" = "asia-retry" ]; then
+            run_asia_daily
+            run_asia_slow slow-overdue
+          elif [ "${UPDATE_PROFILE}" = "combined" ]; then
+            run_us_fast
+            run_us_market
+            run_us_slow slow-overdue
             run_asia_daily
             run_asia_slow slow-overdue
           else

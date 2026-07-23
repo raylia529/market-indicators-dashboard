@@ -37,16 +37,58 @@ function previousIsoDate(dateText) {
   return date.toISOString().slice(0, 10);
 }
 
+function previousWeekday(dateText) {
+  let candidate = previousIsoDate(dateText);
+  while ([0, 6].includes(new Date(`${candidate}T12:00:00Z`).getUTCDay())) {
+    candidate = previousIsoDate(candidate);
+  }
+  return candidate;
+}
+
 function latestCompletedUsMarketDate(date = currentTime) {
   const parts = datePartsInTimeZone("America/New_York", date);
   const localDate = `${parts.year}-${parts.month}-${parts.day}`;
-  return Number(parts.hour) >= 16 ? localDate : previousIsoDate(localDate);
+  const day = new Date(`${localDate}T12:00:00Z`).getUTCDay();
+  return Number(parts.hour) >= 16 && ![0, 6].includes(day)
+    ? localDate
+    : previousWeekday(localDate);
 }
 
 function latestCompletedAsiaMarketDate(date = currentTime) {
   const parts = datePartsInTimeZone("Asia/Tokyo", date);
   const localDate = `${parts.year}-${parts.month}-${parts.day}`;
-  return Number(parts.hour) >= 18 ? localDate : previousIsoDate(localDate);
+  const day = new Date(`${localDate}T12:00:00Z`).getUTCDay();
+  return Number(parts.hour) >= 18 && ![0, 6].includes(day)
+    ? localDate
+    : previousWeekday(localDate);
+}
+
+function latestPublishedJapanJgbDate(date = currentTime) {
+  const parts = datePartsInTimeZone("Asia/Tokyo", date);
+  const localDate = `${parts.year}-${parts.month}-${parts.day}`;
+  const priorBusinessDay = previousWeekday(localDate);
+  return Number(parts.hour) >= 10
+    ? priorBusinessDay
+    : previousWeekday(priorBusinessDay);
+}
+
+const japanJgbKeys = new Set([
+  "JAPAN_2Y_JGB",
+  "US_JAPAN_2Y_SPREAD",
+  "JAPAN_10Y_JGB",
+  "JAPAN_10Y_2Y_SPREAD",
+]);
+
+function targetDateFor(profileName, key, date = currentTime) {
+  if (profileName === "us") {
+    return latestCompletedUsMarketDate(date);
+  }
+  if (profileName === "asia") {
+    return japanJgbKeys.has(key)
+      ? latestPublishedJapanJgbDate(date)
+      : latestCompletedAsiaMarketDate(date);
+  }
+  return dateInTimeZone("Asia/Tokyo", date);
 }
 
 if (mode === "force" || profile === "full") {
@@ -61,15 +103,10 @@ if (!fs.existsSync(statusFile)) {
 
 const metadata = JSON.parse(fs.readFileSync(statusFile, "utf8"));
 const todayJst = dateInTimeZone("Asia/Tokyo");
-const targetDate =
-  profile === "us"
-    ? latestCompletedUsMarketDate()
-    : profile === "asia"
-      ? latestCompletedAsiaMarketDate()
-      : todayJst;
 const pending = [];
 
 for (const key of keys) {
+  const targetDate = targetDateFor(profile, key);
   const indicator = metadata.indicators?.[key];
   if (!indicator) {
     pending.push(`${key} (missing metadata)`);
@@ -87,11 +124,7 @@ for (const key of keys) {
     ? dateInTimeZone("Asia/Tokyo", lastRefreshTime)
     : null;
   const lastRefreshTargetDate = lastRefreshTime
-    ? profile === "us"
-      ? latestCompletedUsMarketDate(lastRefreshTime)
-      : profile === "asia"
-        ? latestCompletedAsiaMarketDate(lastRefreshTime)
-        : lastRefreshDate
+    ? targetDateFor(profile, key, lastRefreshTime)
     : null;
 
   if (indicator.status === "Up to date" && lastRefreshTargetDate === targetDate) {
@@ -133,5 +166,5 @@ if (pending.length > 0) {
   process.exit(0);
 }
 
-console.log(`Update skipped: ${keys.join(", ")} already satisfy the ${targetDate} ${profile} cycle.`);
+console.log(`Update skipped: ${keys.join(", ")} already satisfy the current ${profile} cycle.`);
 process.exit(3);

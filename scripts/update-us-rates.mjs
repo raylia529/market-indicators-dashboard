@@ -6,7 +6,7 @@ const userAgent = "market-indicators-dashboard/1.0 raylia529";
 const sourceUrl = "https://www.newyorkfed.org/medialibrary/media/research/data_indicators/ACMTermPremium.xls";
 const outputFile = path.join("data", "us-10y-term-premium.csv");
 const downloadTimeoutMs = 20_000;
-const retryBackoffMs = [5_000, 15_000];
+const retryBackoffMs = [];
 
 function downloadBuffer(url, timeoutMs = downloadTimeoutMs) {
   return new Promise((resolve, reject) => {

@@ -5,7 +5,7 @@ import path from "node:path";
 const userAgent = "market-indicators-dashboard/1.0 raylia529";
 const oneDayMs = 86400000;
 const downloadTimeoutMs = 20_000;
-const retryBackoffMs = [5_000, 15_000];
+const retryBackoffMs = [];
 
 const files = {
   move: path.join("data", "move.csv"),

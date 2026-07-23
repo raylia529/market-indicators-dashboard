@@ -6,7 +6,7 @@ import { execFile } from "node:child_process";
 const userAgent = "market-indicators-dashboard/1.0 raylia529";
 const recentOverlapDays = 90;
 const downloadTimeoutMs = 20_000;
-const retryBackoffMs = [5_000, 15_000];
+const retryBackoffMs = [];
 const files = {
   nikkei225: path.join("data", "nikkei-225.csv"),
   taiex: path.join("data", "taiex.csv"),

@@ -31,16 +31,17 @@ https://raylia529.github.io/market-indicators-dashboard/
 The repository includes `.github/workflows/pages.yml`, which:
 
 - deploys the current static dashboard when changes are pushed to `main`;
-- checks all U.S. daily sources at 07:20, 08:50, 10:20, 11:50, and 13:50 JST, Tuesday through Saturday;
-- checks slower U.S. weekly, monthly, and quarterly series once at 13:50 JST, then includes only overdue or previously failed slow series in the other U.S. retry slots;
-- checks Japan/Taiwan daily data at 19:20 and 21:20 JST on local weekdays;
-- checks slower Japan/Taiwan series at 19:20 and retries them at 21:20 only when their expected release date has passed or the earlier check failed;
+- checks pending U.S. data at 08:15, 09:15, 10:15, 12:15, and 18:15 JST, Tuesday through Saturday;
+- checks pending Japan/Taiwan data at 08:15, 18:15, 19:15, 20:15, and 22:15 JST on the applicable local business-day cycle;
+- uses combined U.S./Asia profiles at 08:15 and 18:15, while the remaining times run only their assigned region;
+- includes weekly, monthly, and quarterly data only after its expected release date has arrived;
+- treats Japan MOF JGB yields as next-business-day releases, so the 08:15 check does not request a reference date that is not scheduled for publication until 09:30;
 - skips each indicator after a successful source check on that JST date, so later retry slots contact only sources that failed or have not yet been checked;
 - uses source-aware expected release dates for slow data, so a successful download of unchanged official data does not permanently suppress later overdue retries;
 - can be run manually from the GitHub Actions tab for `full`, `us`, `us-fast`, `us-market`, `us-slow`, or `asia` with `workflow_dispatch`;
 - deploys `index.html`, `style.css`, `app.js`, PWA assets, icons, and `data/` to Pages.
 
-GitHub Actions cron expressions use UTC. The comments and times above are the intended fixed Japan Standard Time schedule. Every scheduled run evaluates freshness indicator by indicator before downloading anything. Exchange holidays can keep a daily series pending until a later retry slot, while already complete indicators are skipped. FRED requests use a 30-second timeout and five delayed retries; existing committed data is retained if a source remains unavailable.
+GitHub Actions cron expressions use UTC. The comments and times above are the intended fixed Japan Standard Time schedule. Every scheduled run evaluates freshness indicator by indicator before downloading anything. Exchange holidays can keep a daily series pending until a later check, while already complete indicators are skipped. Downloaders make no delayed retries; each configured primary or fallback endpoint is requested at most once per scheduled check. Existing committed data is retained if a source remains unavailable.
 
 Network updates are incremental. Each updater reads the complete local CSV first, requests only a recent overlap window, and merges newer observations by date. FRED, Yahoo Finance, FinMind, TWSE, MOPS, JPX, and Japan MOF updates therefore do not bootstrap full history again when a valid local archive exists. The overlap is normally 90 days; Breadth downloads about 420 days per current constituent because a genuine 200-day moving average needs that lookback. Full-file downloads remain unavoidable for source endpoints that expose only one complete artifact: FINRA margin statistics, the New York Fed ACM workbook, Cboe SKEW history, Taiwan MOF exports, and SEC Company Facts. Freshness gates prevent those files from being requested again after the indicator is current.
 
@@ -213,7 +214,7 @@ node scripts/generate-consolidated.mjs
 The scripts use merge-and-validate workflows where applicable and avoid replacing complete history with short rolling datasets.
 The scheduled workflow can target individual groups with options such as `--series=DGS10`, `--only=taiex`, and `--profile=asia`; the FX updater can also isolate `usdjpy`, `us2y`, or `japan2y`. A manual full refresh runs every updater group, but each updater still performs an incremental merge rather than replacing complete history with a full download. `scripts/should-update.mjs` reads `data/status.json` before each scheduled download and skips indicators that are already complete for that market cycle. Data Status preserves the prior successful refresh timestamp for indicators that were not run.
 
-Scheduled downloads use short bounded retries: at most three download attempts, with 20-second request timeouts. The workflow does not rerun an entire failed updater command; a failed indicator keeps its committed history and is deferred to the next scheduled check. Individual scheduled updater commands are capped at three minutes. A per-source circuit breaker defers remaining requests after two consecutive connection failures from the same provider, reducing queue congestion and unnecessary requests during provider outages. Manual full refreshes retain a longer command limit for validated historical processing. Freshness checks use completed market-cycle dates rather than the refresh calendar date, so a delayed Asia run finishing after midnight does not suppress the next local post-close update.
+Scheduled downloads have no delayed retries and use 20-second request timeouts. The workflow does not rerun an entire failed updater command; a failed indicator keeps its committed history and is deferred to the next assigned scheduled check. Individual scheduled updater commands are capped at three minutes. A per-source circuit breaker defers remaining requests after two consecutive connection failures from the same provider, reducing queue congestion and unnecessary requests during provider outages. Manual full refreshes retain a longer command limit for validated historical processing. Freshness checks use completed market-cycle dates rather than the refresh calendar date, so a delayed Asia run finishing after midnight does not suppress the next local post-close update.
 
 ## External Schedule Backup
 
@@ -244,7 +245,7 @@ npx wrangler@latest secret put GITHUB_ACTIONS_TOKEN
 npx wrangler@latest deploy
 ```
 
-Cloudflare runs the five UTC cron expressions from `scheduler/wrangler.jsonc`. The Worker only calls GitHub's workflow-dispatch API; it never contacts FRED, Yahoo Finance, or another market-data provider.
+Cloudflare runs the UTC cron expressions from `scheduler/wrangler.jsonc`. The Worker only calls GitHub's workflow-dispatch API; it never contacts FRED, Yahoo Finance, or another market-data provider.
 
 The Fed Funds Rate card uses the official target-rate series rather than the effective overnight rate. Its daily as-of observations are drawn as a step line so unchanged policy periods remain hoverable at every observation. Card change is measured against the previous distinct policy setting and labeled `Last change`; this avoids implying that an unchanged FOMC decision was itself a rate move. Data Status uses the published FOMC decision calendar for the next expected update; unscheduled policy decisions may occur before that date.
 

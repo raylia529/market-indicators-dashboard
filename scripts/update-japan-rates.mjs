@@ -4,7 +4,7 @@ import path from "node:path";
 
 const userAgent = "market-indicators-dashboard/1.0 raylia529";
 const downloadTimeoutMs = 20_000;
-const retryBackoffMs = [5_000, 15_000];
+const retryBackoffMs = [];
 const sources = {
   historical: "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/historical/jgbcme_all.csv",
   current: "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/jgbcme.csv",

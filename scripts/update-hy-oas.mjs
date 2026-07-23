@@ -3,8 +3,8 @@ import https from "node:https";
 import path from "node:path";
 
 const downloadTimeoutMs = 20_000;
-const defaultRetryBackoffMs = [5_000, 15_000];
-const fredRetryBackoffMs = [10_000, 30_000];
+const defaultRetryBackoffMs = [];
+const fredRetryBackoffMs = [];
 
 const archiveUrl =
   "https://raw.githubusercontent.com/csaladenes/eco-archive/refs/heads/main/BAMLH0A0HYM2.csv";

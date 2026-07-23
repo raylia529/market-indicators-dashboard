@@ -3,7 +3,7 @@ import https from "node:https";
 import path from "node:path";
 
 const downloadTimeoutMs = 20_000;
-const fredRetryBackoffMs = [10_000, 30_000];
+const fredRetryBackoffMs = [];
 const recentOverlapDays = 90;
 
 const series = [

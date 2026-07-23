@@ -3,8 +3,8 @@ import https from "node:https";
 import path from "node:path";
 
 const downloadTimeoutMs = 20_000;
-const defaultRetryBackoffMs = [5_000, 15_000];
-const fredRetryBackoffMs = [10_000, 30_000];
+const defaultRetryBackoffMs = [];
+const fredRetryBackoffMs = [];
 
 const sources = {
   usdJpy: "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DEXJPUS",
