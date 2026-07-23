@@ -1000,6 +1000,7 @@ h2 {
 
 .glossary-table tr[data-glossary-row] {
   cursor: pointer;
+  scroll-margin-top: 12px;
 }
 
 .glossary-table tr[data-glossary-row]:hover {

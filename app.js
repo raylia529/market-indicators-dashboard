@@ -4187,7 +4187,7 @@ function scrollGlossaryEntryIntoView(id) {
     const targetRow = Array.from(glossaryBody.querySelectorAll("[data-glossary-row]")).find(
       (row) => row.dataset.glossaryRow === id,
     );
-    targetRow?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    targetRow?.scrollIntoView({ block: "start", behavior: "smooth" });
   });
 }
 
@@ -4424,8 +4424,12 @@ if (glossaryBody) {
 
     if (target) {
       const id = target.dataset.glossaryExpand || target.dataset.glossaryRow;
-      expandedGlossaryId = expandedGlossaryId === id ? null : id;
+      const willExpand = expandedGlossaryId !== id;
+      expandedGlossaryId = willExpand ? id : null;
       renderGlossary({ indicators: glossaryEntries });
+      if (willExpand) {
+        scrollGlossaryEntryIntoView(id);
+      }
       return;
     }
   });
@@ -4443,8 +4447,12 @@ if (glossaryBody) {
 
     event.preventDefault();
     const id = row.dataset.glossaryRow;
-    expandedGlossaryId = expandedGlossaryId === id ? null : id;
+    const willExpand = expandedGlossaryId !== id;
+    expandedGlossaryId = willExpand ? id : null;
     renderGlossary({ indicators: glossaryEntries });
+    if (willExpand) {
+      scrollGlossaryEntryIntoView(id);
+    }
   });
 }
 
