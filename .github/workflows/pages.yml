@@ -14,6 +14,8 @@ on:
     - cron: "15 9 * * 6"
     # Japan/Taiwan pending-only checks: 19:15, 20:15, and 22:15 JST Mon-Fri.
     - cron: "15 10,11,13 * * 1-5"
+    # 12:45 JST Saturday: isolated weekly S&P 500 breadth refresh.
+    - cron: "45 3 * * 6"
   workflow_dispatch:
     inputs:
       update_profile:
@@ -30,6 +32,7 @@ on:
           - asia
           - asia-retry
           - combined
+          - breadth
 
 permissions:
   contents: write
@@ -79,6 +82,7 @@ jobs:
               "15 9 * * 1-5") profile=combined ;;
               "15 9 * * 6") profile=us ;;
               "15 10,11,13 * * 1-5") profile=asia-retry ;;
+              "45 3 * * 6") profile=breadth ;;
               *) profile=full ;;
             esac
           fi
@@ -143,6 +147,7 @@ jobs:
             mode="$4"
             profile="$5"
             source_group="${6:-}"
+            timeout_override="${7:-}"
 
             if [ "${mode}" != "force" ]; then
               node scripts/should-update.mjs "${profile}" "${mode}" "${keys}"
@@ -187,6 +192,9 @@ jobs:
             timeout_seconds="${command_timeout_seconds}"
             if [ "${mode}" = "force" ]; then
               timeout_seconds=900
+            fi
+            if [ -n "${timeout_override}" ]; then
+              timeout_seconds="${timeout_override}"
             fi
             output="$(timeout --signal=TERM --kill-after=10s "${timeout_seconds}s" bash -lc "${command}" 2>&1)"
             exit_code=$?
@@ -247,8 +255,11 @@ jobs:
             run_update "HYG/IEF" "node scripts/update-extra-indicators.mjs --only=hyg-ief" "HYG_IEF" "daily" "us" "yahoo"
             run_update "CBOE SKEW Index" "node scripts/update-extra-indicators.mjs --only=skew" "SKEW" "daily" "us" "cboe"
             run_update "SOX Index" "node scripts/update-extra-indicators.mjs --only=sox" "SOX" "daily" "us" "yahoo"
-            run_update "US breadth indicators" "node scripts/update-extra-indicators.mjs --only=breadth" "ADVANCE_DECLINE_LINE,SP500_ABOVE_200DMA" "daily" "us" "yahoo"
             run_update "USD/JPY" "node scripts/update-fx.mjs --profile=us --only=usdjpy" "DEXJPUS" "daily" "us" "fx-market"
+          }
+
+          run_breadth() {
+            run_update "US breadth indicators" "node scripts/update-extra-indicators.mjs --only=breadth" "ADVANCE_DECLINE_LINE,SP500_ABOVE_200DMA" "daily" "us" "yahoo-breadth" "900"
           }
 
           run_us_slow() {
@@ -305,11 +316,13 @@ jobs:
             run_us_slow slow-overdue
             run_asia_daily
             run_asia_slow slow-overdue
+          elif [ "${UPDATE_PROFILE}" = "breadth" ]; then
+            run_breadth
           else
             run_update "S&P 500" "node scripts/update-sp500.mjs" "SP500" "force" "full"
             run_update "HY OAS" "node scripts/update-hy-oas.mjs" "BAMLH0A0HYM2" "force" "full"
             run_update "FRED macro series" "node scripts/update-fred-series.mjs" "VIXCLS,T10Y2Y,DGS10,WALCL,NFCI,DFEDTARU" "force" "full"
-            run_update "Extra market indicators" "node scripts/update-extra-indicators.mjs" "MOVE,HYG_IEF,SKEW,SOX,TSMC_REVENUE_YOY,AI_CAPEX,ISM_MANUFACTURING_PMI,ADVANCE_DECLINE_LINE,SP500_ABOVE_200DMA" "force" "full"
+            run_update "Extra market indicators" "node scripts/update-extra-indicators.mjs --only=move,hyg-ief,skew,sox,tsmc,ai-capex,ism-pmi" "MOVE,HYG_IEF,SKEW,SOX,TSMC_REVENUE_YOY,AI_CAPEX,ISM_MANUFACTURING_PMI" "force" "full"
             run_update "FX series" "node scripts/update-fx.mjs --profile=full" "DEXJPUS,DGS2,JAPAN_2Y_JGB,US_JAPAN_2Y_SPREAD" "force" "full"
             run_update "US rates" "node scripts/update-us-rates.mjs" "ACMTP10" "force" "full"
             run_update "Japan rates" "node scripts/update-japan-rates.mjs" "JAPAN_10Y_JGB,JAPAN_10Y_2Y_SPREAD" "force" "full"
@@ -375,6 +388,7 @@ jobs:
           cp index.html style.css app.js manifest.json sw.js offline.html _site/
           cp -R icons _site/icons
           cp -R data _site/data
+          rm -rf _site/data/internal
           touch _site/.nojekyll
 
       - name: Setup Pages

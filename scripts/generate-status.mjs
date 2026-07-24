@@ -269,12 +269,12 @@ const indicatorDefinitions = [
         url: "https://github.com/datasets/s-and-p-500-companies",
       },
     ],
-    frequency: "Daily, US trading days",
+    frequency: "Weekly refresh; daily US trading-day observations",
     unit: "Cumulative Net Advances",
-    releaseNote: "Current-constituent proxy. Historical membership changes are not reconstructed, and each refresh preserves the existing cumulative baseline before appending new dates.",
+    releaseNote: "Current-constituent proxy refreshed each Saturday. Historical membership changes are not reconstructed, and each refresh preserves the existing cumulative baseline before appending new dates.",
     file: "data/advance-decline-line.csv",
     type: "single",
-    dailyLagDays: 5,
+    weeklyRefreshWeekday: 6,
   },
   {
     key: "SP500_ABOVE_200DMA",
@@ -289,12 +289,12 @@ const indicatorDefinitions = [
         url: "https://github.com/datasets/s-and-p-500-companies",
       },
     ],
-    frequency: "Daily, US trading days",
+    frequency: "Weekly refresh; daily US trading-day observations",
     unit: "Percent",
-    releaseNote: "Calculated from current S&P 500 constituents; historical membership changes are not reconstructed.",
+    releaseNote: "Calculated from current S&P 500 constituents and refreshed each Saturday; historical membership changes are not reconstructed.",
     file: "data/sp500-above-200dma.csv",
     type: "single",
-    dailyLagDays: 5,
+    weeklyRefreshWeekday: 6,
   },
   {
     key: "SOX",
@@ -717,6 +717,17 @@ function addBusinessDays(dateText, days) {
   return formatDateText(date);
 }
 
+function nextWeeklyRefreshDate(dateText, weekday) {
+  const date = new Date(`${dateText}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + 7);
+
+  while (date.getUTCDay() !== weekday) {
+    date.setUTCDate(date.getUTCDate() + 1);
+  }
+
+  return formatDateText(date);
+}
+
 function addMonths(year, month, offset) {
   const date = new Date(Date.UTC(year, month - 1 + offset, 1));
   return { year: date.getUTCFullYear(), month: date.getUTCMonth() + 1 };
@@ -737,6 +748,10 @@ function calculateNextExpectedUpdate(definition, latestAvailableDate) {
 
   if (Number.isInteger(definition.expectedReleaseDelayDays)) {
     return addDays(latestAvailableDate, definition.expectedReleaseDelayDays);
+  }
+
+  if (Number.isInteger(definition.weeklyRefreshWeekday)) {
+    return nextWeeklyRefreshDate(latestAvailableDate, definition.weeklyRefreshWeekday);
   }
 
   const normalizedFrequency = definition.frequency.toLowerCase();

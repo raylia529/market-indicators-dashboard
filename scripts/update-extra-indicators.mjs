@@ -14,6 +14,7 @@ const files = {
   sox: path.join("data", "sox.csv"),
   adLine: path.join("data", "advance-decline-line.csv"),
   above200: path.join("data", "sp500-above-200dma.csv"),
+  breadthPricesDir: path.join("data", "internal", "breadth-prices"),
   tsmcRevenueYoy: path.join("data", "tsmc-revenue-yoy.csv"),
   aiCapex: path.join("data", "ai-capex.csv"),
   ismManufacturingPmi: path.join("data", "ism-manufacturing-pmi.csv"),
@@ -172,15 +173,6 @@ function loadSingleCsv(file) {
     })
     .filter((row) => row.date && Number.isFinite(row.value))
     .sort((a, b) => a.date.localeCompare(b.date));
-}
-
-function shouldSkipRecent(file) {
-  const latest = loadSingleCsv(file).at(-1)?.date;
-  if (!latest) {
-    return false;
-  }
-
-  return Date.now() - Date.parse(`${latest}T00:00:00Z`) < oneDayMs * 1.5;
 }
 
 function parseYahooChart(text, label, { adjusted = false } = {}) {
@@ -740,58 +732,94 @@ function movingAverage(values, index, windowSize) {
 }
 
 async function updateBreadth() {
-  if (shouldSkipRecent(files.adLine) && shouldSkipRecent(files.above200)) {
-    console.log("Breadth validation");
-    console.log("Existing breadth files are recent; skipped constituent refresh.");
-    return;
-  }
-
   const symbols = await getSp500Constituents();
+  const minimumCoverage = Math.ceil(symbols.length * 0.95);
+  const retainedTradingDays = 260;
   const advancesByDate = new Map();
   const declinesByDate = new Map();
+  const participationByDate = new Map();
   const aboveByDate = new Map();
   const totalByDate = new Map();
-  let successCount = 0;
+  const pricesBySymbol = new Map();
+  let downloadSuccessCount = 0;
+  let yahooRateLimited = false;
   const breadthStart = new Date();
   breadthStart.setUTCDate(breadthStart.getUTCDate() - 420);
   const breadthPeriod1 = Math.floor(breadthStart.getTime() / 1000);
 
-  await withConcurrency(symbols, 8, async (symbol) => {
+  fs.mkdirSync(files.breadthPricesDir, { recursive: true });
+
+  await withConcurrency(symbols, 2, async (symbol) => {
+    const cacheFile = path.join(files.breadthPricesDir, `${symbol}.csv`);
+    const existingRows = loadSingleCsv(cacheFile);
+    if (existingRows.length > 0) {
+      pricesBySymbol.set(symbol, existingRows);
+    }
+
+    if (yahooRateLimited) {
+      return;
+    }
+
     try {
-      const rows = parseYahooChart(
-        await downloadYahooChart(symbol, symbol, { period1: breadthPeriod1 }),
+      const downloadedRows = parseYahooChart(
+        await downloadYahooChart(
+          symbol,
+          symbol,
+          existingRows.length >= 200 ? { range: "5d" } : { period1: breadthPeriod1 },
+        ),
         symbol,
       );
-      const closes = rows.map((row) => row.value);
-
-      for (let index = 1; index < rows.length; index += 1) {
-        const previous = closes[index - 1];
-        const current = closes[index];
-        const date = rows[index].date;
-
-        if (current > previous) {
-          advancesByDate.set(date, (advancesByDate.get(date) || 0) + 1);
-        } else if (current < previous) {
-          declinesByDate.set(date, (declinesByDate.get(date) || 0) + 1);
-        }
-
-        const average200 = movingAverage(closes, index, 200);
-        if (average200) {
-          totalByDate.set(date, (totalByDate.get(date) || 0) + 1);
-          if (current > average200) {
-            aboveByDate.set(date, (aboveByDate.get(date) || 0) + 1);
-          }
-        }
-      }
-
-      successCount += 1;
+      const cachedRows = mergeRowsByDate(existingRows, downloadedRows).slice(-retainedTradingDays);
+      atomicWriteCsv(cacheFile, cachedRows, `${symbol} breadth price cache`, 6);
+      pricesBySymbol.set(symbol, cachedRows);
+      downloadSuccessCount += 1;
+      await wait(750);
     } catch (error) {
       console.warn(`WARNING: ${symbol} breadth download failed. ${error.message}`);
+      if (/\(429\)|HTTP 429|status code 429/i.test(error.message)) {
+        yahooRateLimited = true;
+        console.warn("WARNING: Yahoo rate limit detected; stopping the remaining breadth requests.");
+      }
     }
   });
 
-  if (successCount < 250) {
-    throw new Error(`Only ${successCount} S&P 500 constituents downloaded; keeping existing breadth files.`);
+  const readyCacheCount = Array.from(pricesBySymbol.values()).filter(
+    (rows) => rows.length >= 200,
+  ).length;
+
+  if (readyCacheCount < minimumCoverage) {
+    throw new Error(
+      `Breadth cache is ready for only ${readyCacheCount}/${symbols.length} constituents; ` +
+        `at least ${minimumCoverage} are required. Partial cache progress was preserved.`,
+    );
+  }
+
+  for (const rows of pricesBySymbol.values()) {
+    if (rows.length < 200) {
+      continue;
+    }
+
+    const closes = rows.map((row) => row.value);
+    for (let index = 1; index < rows.length; index += 1) {
+      const previous = closes[index - 1];
+      const current = closes[index];
+      const date = rows[index].date;
+      participationByDate.set(date, (participationByDate.get(date) || 0) + 1);
+
+      if (current > previous) {
+        advancesByDate.set(date, (advancesByDate.get(date) || 0) + 1);
+      } else if (current < previous) {
+        declinesByDate.set(date, (declinesByDate.get(date) || 0) + 1);
+      }
+
+      const average200 = movingAverage(closes, index, 200);
+      if (average200) {
+        totalByDate.set(date, (totalByDate.get(date) || 0) + 1);
+        if (current > average200) {
+          aboveByDate.set(date, (aboveByDate.get(date) || 0) + 1);
+        }
+      }
+    }
   }
 
   const dates = Array.from(new Set([...advancesByDate.keys(), ...totalByDate.keys()])).sort();
@@ -800,13 +828,17 @@ async function updateBreadth() {
   const above200Rows = [];
 
   for (const date of dates) {
+    if ((participationByDate.get(date) || 0) < minimumCoverage) {
+      continue;
+    }
+
     const advances = advancesByDate.get(date) || 0;
     const declines = declinesByDate.get(date) || 0;
     cumulative += advances - declines;
     adLineRows.push({ date, value: cumulative });
 
     const total = totalByDate.get(date) || 0;
-    if (total >= 250) {
+    if (total >= minimumCoverage) {
       above200Rows.push({
         date,
         value: ((aboveByDate.get(date) || 0) / total) * 100,
@@ -842,11 +874,20 @@ async function updateBreadth() {
   atomicWriteCsv(files.adLine, finalAdLineRows, "Advance / Decline Line (current-constituent proxy)", 0);
   atomicWriteCsv(files.above200, finalAbove200Rows, "% Stocks Above 200-Day Moving Average (current-constituent proxy)", 1);
   console.log("Breadth validation");
-  console.log(`S&P 500 constituents downloaded: ${successCount}/${symbols.length}`);
-  console.log(`Constituent request window starts: ${toIsoDate(breadthStart)} (supports 200DMA plus overlap)`);
+  console.log(`S&P 500 constituents requested successfully: ${downloadSuccessCount}/${symbols.length}`);
+  console.log(`Price caches with at least 200 trading days: ${readyCacheCount}/${symbols.length}`);
+  console.log(`Minimum calculation coverage: ${minimumCoverage}/${symbols.length} (95%)`);
+  console.log(`Cached trading days per constituent: ${retainedTradingDays}`);
   console.log("Method: current S&P 500 constituent proxy; existing history is preserved and only new dates are appended");
   console.log(`Advance/Decline latest date: ${finalAdLineRows.at(-1).date}`);
   console.log(`Above 200DMA latest date: ${finalAbove200Rows.at(-1).date}`);
+
+  if (downloadSuccessCount < minimumCoverage) {
+    throw new Error(
+      `Only ${downloadSuccessCount}/${symbols.length} constituent downloads succeeded; ` +
+        "existing breadth results and successful cache updates were preserved.",
+    );
+  }
 }
 
 async function runStep(label, fn) {

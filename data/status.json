@@ -350,15 +350,15 @@
         }
       ],
       "latest_available_date": "2026-07-17",
-      "next_expected_update_date": "2026-07-20",
+      "next_expected_update_date": "2026-07-25",
       "last_successful_refresh": "2026-07-18T00:34:58+09:00",
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
-      "frequency": "Daily, US trading days",
+      "frequency": "Weekly refresh; daily US trading-day observations",
       "unit": "Cumulative Net Advances",
       "status": "Failed",
       "error_message": "yahoo circuit breaker is open after two consecutive connection failures; deferred to the next scheduled run.",
       "formula": null,
-      "release_note": "Current-constituent proxy. Historical membership changes are not reconstructed, and each refresh preserves the existing cumulative baseline before appending new dates."
+      "release_note": "Current-constituent proxy refreshed each Saturday. Historical membership changes are not reconstructed, and each refresh preserves the existing cumulative baseline before appending new dates."
     },
     "SP500_ABOVE_200DMA": {
       "display_name": "S&P 500 Percent of Stocks Above 200-Day Moving Average",
@@ -376,15 +376,15 @@
         }
       ],
       "latest_available_date": "2026-07-17",
-      "next_expected_update_date": "2026-07-20",
+      "next_expected_update_date": "2026-07-25",
       "last_successful_refresh": "2026-07-18T00:34:58+09:00",
       "last_successful_refresh_display": "2026-07-18 00:34 JST",
-      "frequency": "Daily, US trading days",
+      "frequency": "Weekly refresh; daily US trading-day observations",
       "unit": "Percent",
       "status": "Failed",
       "error_message": "yahoo circuit breaker is open after two consecutive connection failures; deferred to the next scheduled run.",
       "formula": null,
-      "release_note": "Calculated from current S&P 500 constituents; historical membership changes are not reconstructed."
+      "release_note": "Calculated from current S&P 500 constituents and refreshed each Saturday; historical membership changes are not reconstructed."
     },
     "SOX": {
       "display_name": "PHLX Semiconductor Sector Index",
