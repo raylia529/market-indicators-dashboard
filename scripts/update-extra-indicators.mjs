@@ -240,13 +240,8 @@ async function downloadYahooChart(symbol, label, { period1 = 0, range = null } =
 async function updateYahooIndex({ symbol, label, file, decimals = 2 }) {
   const existingRows = loadSingleCsv(file);
   const latestDate = existingRows.at(-1)?.date;
-  const startDate = latestDate ? new Date(`${latestDate}T00:00:00Z`) : null;
-  if (startDate) {
-    startDate.setUTCDate(startDate.getUTCDate() - 90);
-  }
-  const period1 = startDate ? Math.floor(startDate.getTime() / 1000) : 0;
   const downloadedRows = parseYahooChart(
-    await downloadYahooChart(symbol, label, startDate ? { range: "10d" } : { period1 }),
+    await downloadYahooChart(symbol, label, latestDate ? { range: "5d" } : { period1: 0 }),
     label,
   );
   const rows = mergeRowsByDate(existingRows, downloadedRows);
@@ -257,20 +252,13 @@ async function updateYahooIndex({ symbol, label, file, decimals = 2 }) {
   console.log(`Latest date: ${rows.at(-1).date}`);
   console.log(`Valid observations: ${rows.length}`);
   console.log(`Downloaded observations: ${downloadedRows.length}`);
-  console.log(`Request mode: ${startDate ? `incremental from ${toIsoDate(startDate)}` : "full bootstrap"}`);
+  console.log(`Request mode: ${latestDate ? "latest 5 days" : "full bootstrap"}`);
 }
 
 async function updateHygIef() {
   const existingRows = loadSingleCsv(files.hygIef);
   const latestExistingDate = existingRows.at(-1)?.date;
-  const period1Date = latestExistingDate
-    ? new Date(`${latestExistingDate}T00:00:00Z`)
-    : null;
-  if (period1Date) {
-    period1Date.setUTCDate(period1Date.getUTCDate() - 90);
-  }
-  const period1 = period1Date ? Math.floor(period1Date.getTime() / 1000) : 0;
-  const requestWindow = period1Date ? { range: "10d" } : { period1 };
+  const requestWindow = latestExistingDate ? { range: "5d" } : { period1: 0 };
   const hygText = await downloadYahooChart("HYG", "HYG", requestWindow);
   await wait(2500);
   const iefText = await downloadYahooChart("IEF", "IEF", requestWindow);
