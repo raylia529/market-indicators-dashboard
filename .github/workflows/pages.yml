@@ -259,6 +259,10 @@ jobs:
           }
 
           run_breadth() {
+            if [ "$(TZ=Asia/Tokyo date +%F)" = "2026-07-25" ]; then
+              echo "::notice::Breadth refresh deferred to 2026-08-01 after Yahoo rate limiting."
+              return
+            fi
             run_update "US breadth indicators" "node scripts/update-extra-indicators.mjs --only=breadth" "ADVANCE_DECLINE_LINE,SP500_ABOVE_200DMA" "daily" "us" "yahoo-breadth" "900"
           }
 
