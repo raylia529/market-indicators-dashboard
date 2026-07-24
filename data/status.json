@@ -1,9 +1,9 @@
 {
-  "last_dashboard_refresh": "2026-07-24T16:58:26+09:00",
-  "last_dashboard_refresh_display": "2026-07-24 16:58 JST",
-  "update_duration_seconds": 69,
+  "last_dashboard_refresh": "2026-07-24T18:13:27+09:00",
+  "last_dashboard_refresh_display": "2026-07-24 18:13 JST",
+  "update_duration_seconds": 44,
   "dashboard_version": "1.0.0",
-  "last_git_commit": "34832a3",
+  "last_git_commit": "60271ab",
   "python_version": "Python 3.12.13",
   "indicators": {
     "SP500": {
@@ -229,8 +229,8 @@
       ],
       "latest_available_date": "2026-07-22",
       "next_expected_update_date": "2026-07-23",
-      "last_successful_refresh": "2026-07-24T16:58:26+09:00",
-      "last_successful_refresh_display": "2026-07-24 16:58 JST",
+      "last_successful_refresh": "2026-07-24T18:13:27+09:00",
+      "last_successful_refresh_display": "2026-07-24 18:13 JST",
       "frequency": "Daily, business days",
       "unit": "Percentage Points",
       "status": "Source lag",
