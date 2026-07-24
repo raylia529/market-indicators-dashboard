@@ -221,11 +221,14 @@ function parseYahooChart(text, label, { adjusted = false } = {}) {
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
-async function downloadYahooChart(symbol, label, period1 = 0) {
+async function downloadYahooChart(symbol, label, { period1 = 0, range = null } = {}) {
   const period2 = Math.floor(Date.now() / 1000) + 86400;
+  const windowQuery = range
+    ? `range=${encodeURIComponent(range)}`
+    : `period1=${period1}&period2=${period2}`;
   const chartPath = `/v8/finance/chart/${encodeURIComponent(
     symbol,
-  )}?period1=${period1}&period2=${period2}&interval=1d&events=history`;
+  )}?${windowQuery}&interval=1d&events=history`;
   const headers = {
     Accept: "application/json",
     "User-Agent":
@@ -243,7 +246,7 @@ async function updateYahooIndex({ symbol, label, file, decimals = 2 }) {
   }
   const period1 = startDate ? Math.floor(startDate.getTime() / 1000) : 0;
   const downloadedRows = parseYahooChart(
-    await downloadYahooChart(symbol, label, period1),
+    await downloadYahooChart(symbol, label, startDate ? { range: "10d" } : { period1 }),
     label,
   );
   const rows = mergeRowsByDate(existingRows, downloadedRows);
@@ -267,9 +270,10 @@ async function updateHygIef() {
     period1Date.setUTCDate(period1Date.getUTCDate() - 90);
   }
   const period1 = period1Date ? Math.floor(period1Date.getTime() / 1000) : 0;
-  const hygText = await downloadYahooChart("HYG", "HYG", period1);
+  const requestWindow = period1Date ? { range: "10d" } : { period1 };
+  const hygText = await downloadYahooChart("HYG", "HYG", requestWindow);
   await wait(2500);
-  const iefText = await downloadYahooChart("IEF", "IEF", period1);
+  const iefText = await downloadYahooChart("IEF", "IEF", requestWindow);
   const hygRows = parseYahooChart(hygText, "HYG", { adjusted: true });
   const iefRows = parseYahooChart(iefText, "IEF", { adjusted: true });
   const iefByDate = new Map(iefRows.map((row) => [row.date, row.value]));
@@ -767,7 +771,7 @@ async function updateBreadth() {
   await withConcurrency(symbols, 8, async (symbol) => {
     try {
       const rows = parseYahooChart(
-        await downloadYahooChart(symbol, symbol, breadthPeriod1),
+        await downloadYahooChart(symbol, symbol, { period1: breadthPeriod1 }),
         symbol,
       );
       const closes = rows.map((row) => row.value);
