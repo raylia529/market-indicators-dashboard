@@ -3,6 +3,7 @@ import https from "node:https";
 import path from "node:path";
 
 const downloadTimeoutMs = 20_000;
+const fredDownloadTimeoutMs = 60_000;
 const defaultRetryBackoffMs = [];
 const fredRetryBackoffMs = [];
 
@@ -94,11 +95,16 @@ function wait(ms) {
   });
 }
 
-async function downloadWithRetry(url, headers = {}, backoffMs = defaultRetryBackoffMs) {
+async function downloadWithRetry(
+  url,
+  headers = {},
+  backoffMs = defaultRetryBackoffMs,
+  timeoutMs = downloadTimeoutMs,
+) {
   let lastError;
   for (let attempt = 0; attempt <= backoffMs.length; attempt += 1) {
     try {
-      return await download(url, headers);
+      return await download(url, headers, timeoutMs);
     } catch (error) {
       lastError = error;
       if (attempt < backoffMs.length) {
@@ -409,6 +415,7 @@ async function main() {
           incrementalFredUrl(sources.usdJpy, existingUsdJpy, "1971-01-04"),
           {},
           fredRetryBackoffMs,
+          fredDownloadTimeoutMs,
         ),
         "DEXJPUS",
       );
@@ -435,6 +442,7 @@ async function main() {
           incrementalFredUrl(sources.us2y, existingUs2y),
           {},
           fredRetryBackoffMs,
+          fredDownloadTimeoutMs,
         ),
         "DGS2",
       );

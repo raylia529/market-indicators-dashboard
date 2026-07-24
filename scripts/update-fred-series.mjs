@@ -2,7 +2,7 @@ import fs from "node:fs";
 import https from "node:https";
 import path from "node:path";
 
-const downloadTimeoutMs = 20_000;
+const downloadTimeoutMs = 60_000;
 const fredRetryBackoffMs = [];
 const recentOverlapDays = 90;
 

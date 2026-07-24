@@ -5,6 +5,7 @@ import path from "node:path";
 const userAgent = "market-indicators-dashboard/1.0 raylia529";
 const recentOverlapDays = 90;
 const downloadTimeoutMs = 20_000;
+const fredDownloadTimeoutMs = 60_000;
 const retryBackoffMs = [];
 const files = {
   nikkei225: path.join("data", "nikkei-225.csv"),
@@ -22,7 +23,7 @@ const requestedUpdates = onlyArg
     )
   : null;
 
-function download(url, headers = {}) {
+function download(url, headers = {}, timeoutMs = downloadTimeoutMs) {
   return new Promise((resolve, reject) => {
     const request = https.get(
       url,
@@ -30,7 +31,7 @@ function download(url, headers = {}) {
       (response) => {
         if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
           response.resume();
-          download(response.headers.location, headers).then(resolve, reject);
+          download(response.headers.location, headers, timeoutMs).then(resolve, reject);
           return;
         }
 
@@ -49,18 +50,23 @@ function download(url, headers = {}) {
       },
     );
 
-    request.setTimeout(downloadTimeoutMs, () => {
-      request.destroy(new Error(`Download timed out after ${downloadTimeoutMs / 1000}s: ${url}`));
+    request.setTimeout(timeoutMs, () => {
+      request.destroy(new Error(`Download timed out after ${timeoutMs / 1000}s: ${url}`));
     });
     request.on("error", reject);
   });
 }
 
-async function downloadWithRetry(url, headers = {}, backoffMs = retryBackoffMs) {
+async function downloadWithRetry(
+  url,
+  headers = {},
+  backoffMs = retryBackoffMs,
+  timeoutMs = downloadTimeoutMs,
+) {
   let lastError;
   for (let attempt = 0; attempt <= backoffMs.length; attempt += 1) {
     try {
-      return await download(url, headers);
+      return await download(url, headers, timeoutMs);
     } catch (error) {
       lastError = error;
       if (attempt < backoffMs.length) {
@@ -253,7 +259,10 @@ async function updateUsdTwd() {
   const fredUrl = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=DEXTAUS${
     startDate ? `&cosd=${startDate.toISOString().slice(0, 10)}` : ""
   }`;
-  const fredRows = parseFredCsv(await downloadWithRetry(fredUrl), "DEXTAUS").filter(
+  const fredRows = parseFredCsv(
+    await downloadWithRetry(fredUrl, {}, retryBackoffMs, fredDownloadTimeoutMs),
+    "DEXTAUS",
+  ).filter(
     (row) => row.value >= 10 && row.value <= 100,
   );
   const latestFredDate = fredRows.at(-1)?.date;
