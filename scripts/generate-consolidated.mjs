@@ -20,9 +20,7 @@ const sources = [
   { file: "iwm-spy.csv", columns: { value: "IWM_SPY" } },
   { file: "new-high-low-breadth.csv", columns: { value: "NEW_HIGH_LOW_BREADTH" } },
   { file: "sp500-above-200dma.csv", columns: { value: "SP500_ABOVE_200DMA" } },
-  { file: "sox.csv", columns: { value: "SOX" } },
   { file: "tsmc-revenue-yoy.csv", columns: { value: "TSMC_REVENUE_YOY" } },
-  { file: "ai-capex.csv", columns: { value: "AI_CAPEX_YOY" } },
   { file: "fed-funds-rate.csv", columns: { value: "FED_FUNDS_RATE" } },
   {
     file: "fx.csv",

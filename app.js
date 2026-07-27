@@ -214,41 +214,6 @@ const flowsIndicators = [
   },
 ];
 
-const semiconductorIndicators = [
-  {
-    id: "sox",
-    name: "SOX Index",
-    file: "data/sox.csv",
-    unitLabel: "Index",
-    valueSuffix: "",
-    category: "price",
-    color: "#2563eb",
-    decimals: 2,
-  },
-  {
-    id: "tsmc-revenue-yoy",
-    name: "TSMC Revenue YoY",
-    file: "data/tsmc-revenue-yoy.csv",
-    unitLabel: "Percent YoY",
-    valueSuffix: "%",
-    category: "percentage",
-    color: "#14b8a6",
-    decimals: 1,
-    cadence: "monthly",
-  },
-  {
-    id: "ai-capex",
-    name: "AI CapEx Proxy YoY",
-    file: "data/ai-capex.csv",
-    unitLabel: "Percent YoY",
-    valueSuffix: "%",
-    category: "percentage",
-    color: "#8b5cf6",
-    decimals: 1,
-    cadence: "quarterly",
-  },
-];
-
 const usRatesIndicators = [
   {
     id: "fed-funds-rate",
@@ -549,7 +514,6 @@ function getIndicatorColorKey(id) {
   ...indicators,
   ...breadthIndicators,
   ...flowsIndicators,
-  ...semiconductorIndicators,
   ...usRatesIndicators,
   ...jpRatesIndicators,
   ...japanIndicators,
@@ -680,9 +644,6 @@ const glossaryDisplayOrder = [
   "SPY_TLT",
   "XLY_XLP",
   "IWM_SPY",
-  "SOX",
-  "TSMC_REVENUE_YOY",
-  "AI_CAPEX",
   "DFEDTARU",
   "DGS2",
   "DGS10",
@@ -698,6 +659,7 @@ const glossaryDisplayOrder = [
   "JAPAN_CORE_CPI_YOY",
   "TOKYO_CORE_CPI_YOY",
   "TAIEX",
+  "TSMC_REVENUE_YOY",
   "TAIWAN_FOREIGN_NET_BUYING",
   "USDTWD",
   "TAIWAN_MARGIN_FINANCING_BALANCE_YOY",
@@ -730,10 +692,7 @@ const indicatorGlossaryIds = {
   "spy-tlt": "SPY_TLT",
   "xly-xlp": "XLY_XLP",
   "iwm-spy": "IWM_SPY",
-  sox: "SOX",
-  "tsmc-revenue-yoy": "TSMC_REVENUE_YOY",
   "taiwan-tsmc-revenue-yoy": "TSMC_REVENUE_YOY",
-  "ai-capex": "AI_CAPEX",
   "fed-funds-rate": "DFEDTARU",
   "us-2y-yield": "DGS2",
   "us-rates-10y-yield": "DGS10",
@@ -779,12 +738,10 @@ const glossaryDashboardTargets = {
     tab: "breadth",
     selector: '[data-breadth-indicator="sp500-above-200dma"]',
   },
-  SOX: { tab: "semiconductor", selector: '[data-semiconductor-indicator="sox"]' },
   TSMC_REVENUE_YOY: {
-    tab: "semiconductor",
-    selector: '[data-semiconductor-indicator="tsmc-revenue-yoy"]',
+    tab: "taiwan",
+    selector: '[data-taiwan-indicator="taiwan-tsmc-revenue-yoy"]',
   },
-  AI_CAPEX: { tab: "semiconductor", selector: '[data-semiconductor-indicator="ai-capex"]' },
   DFEDTARU: { tab: "us-rates", selector: '[data-us-rates-indicator="fed-funds-rate"]' },
   DGS2: { tab: "us-rates", selector: '[data-us-rates-indicator="us-2y-yield"]' },
   DGS10: { tab: "us-rates", selector: '[data-us-rates-indicator="us-rates-10y-yield"]' },
@@ -908,7 +865,6 @@ const sharedIndicatorColorDefaults = new Map([
     ...indicators,
     ...breadthIndicators,
     ...flowsIndicators,
-    ...semiconductorIndicators,
     ...usRatesIndicators,
     ...jpRatesIndicators,
     ...japanIndicators,
@@ -3032,7 +2988,11 @@ function getAxisGroupAnnotations(ids, side, getDefinition, theme) {
   }
 
   if (ids.length === 1) {
-    return getHorizontalAxisAnnotations(getDefinition(ids[0]), side, theme.ink);
+    return getHorizontalAxisAnnotations(
+      getDefinition(ids[0]),
+      side,
+      getChartSeriesColor(ids[0]),
+    );
   }
 
   return [
@@ -3061,14 +3021,18 @@ function getHorizontalAxisMargins(hasRightAxis, hasLeftAxis = true) {
   };
 }
 
-function getYAxisLayout(side, indicator, rows, theme = getChartTheme()) {
+function getAxisGroupColor(ids, theme) {
+  return ids.length === 1 ? getChartSeriesColor(ids[0]) : theme.ink;
+}
+
+function getYAxisLayout(side, indicator, rows, theme = getChartTheme(), axisColor = theme.ink) {
   const scale = macroScale === "log" && canUseLog(rows) ? "log" : "linear";
   const range = getAutoRange(rows, scale, indicator.axisBounds);
   const axis = {
     gridcolor: side === "left" ? theme.grid : "rgba(0,0,0,0)",
     zeroline: true,
     zerolinecolor: theme.zero,
-    tickfont: { color: theme.ink, size: usesTouchChartMode() ? 10 : 11, weight: 700 },
+    tickfont: { color: axisColor, size: usesTouchChartMode() ? 10 : 11, weight: 700 },
     type: scale,
   };
 
@@ -3108,7 +3072,6 @@ function getChartIndicatorDefinition(id) {
   return [
     ...indicators,
     ...breadthIndicators,
-    ...semiconductorIndicators,
     ...usRatesIndicators,
     ...jpRatesIndicators,
     ...japanIndicators,
@@ -3281,13 +3244,25 @@ function renderChart() {
   };
 
   if (leftIndicator) {
-    layout.yaxis = getYAxisLayout("left", leftIndicator, leftRows, theme);
+    layout.yaxis = getYAxisLayout(
+      "left",
+      leftIndicator,
+      leftRows,
+      theme,
+      getAxisGroupColor(leftIds, theme),
+    );
   } else {
     layout.yaxis = { visible: false };
   }
 
   if (rightIndicator) {
-    layout.yaxis2 = getYAxisLayout("right", rightIndicator, rightRows, theme);
+    layout.yaxis2 = getYAxisLayout(
+      "right",
+      rightIndicator,
+      rightRows,
+      theme,
+      getAxisGroupColor(rightIds, theme),
+    );
   }
 
   layout.shapes = getThresholdZoneShapes(selected, layout, axisById);
@@ -3510,7 +3485,11 @@ function renderFxChart() {
   const yaxis = leftIds.length
     ? {
         range: fxAxisRange(leftValues),
-        tickfont: { color: theme.ink, size: usesTouchChartMode() ? 10 : 11, weight: 700 },
+        tickfont: {
+          color: getAxisGroupColor(leftIds, theme),
+          size: usesTouchChartMode() ? 10 : 11,
+          weight: 700,
+        },
         gridcolor: theme.grid,
         zeroline: false,
       }
@@ -3520,7 +3499,11 @@ function renderFxChart() {
   const yaxis2 = rightIds.length
     ? {
         range: fxAxisRange(rightValues),
-        tickfont: { color: theme.ink, size: usesTouchChartMode() ? 10 : 11, weight: 700 },
+        tickfont: {
+          color: getAxisGroupColor(rightIds, theme),
+          size: usesTouchChartMode() ? 10 : 11,
+          weight: 700,
+        },
         overlaying: "y",
         side: "right",
         showgrid: false,
@@ -3768,14 +3751,20 @@ function createComparisonSection(config) {
     }
   }
 
-  function getLocalYAxisLayout(side, indicator, rows, theme = getChartTheme()) {
+  function getLocalYAxisLayout(
+    side,
+    indicator,
+    rows,
+    theme = getChartTheme(),
+    axisColor = theme.ink,
+  ) {
     const scale = state.scale === "log" && canUseLocalLog(rows) ? "log" : "linear";
     const range = getAutoRange(rows, scale, indicator.axisBounds);
     const axis = {
       gridcolor: side === "left" ? theme.grid : "rgba(0,0,0,0)",
       zeroline: true,
       zerolinecolor: theme.zero,
-      tickfont: { color: theme.ink, size: usesTouchChartMode() ? 10 : 11, weight: 700 },
+      tickfont: { color: axisColor, size: usesTouchChartMode() ? 10 : 11, weight: 700 },
       type: scale,
     };
 
@@ -3997,13 +3986,25 @@ function createComparisonSection(config) {
     };
 
     if (leftIndicator) {
-      layout.yaxis = getLocalYAxisLayout("left", leftIndicator, leftRows, theme);
+      layout.yaxis = getLocalYAxisLayout(
+        "left",
+        leftIndicator,
+        leftRows,
+        theme,
+        getAxisGroupColor(leftIds, theme),
+      );
     } else {
       layout.yaxis = { visible: false };
     }
 
     if (rightIndicator) {
-      layout.yaxis2 = getLocalYAxisLayout("right", rightIndicator, rightRows, theme);
+      layout.yaxis2 = getLocalYAxisLayout(
+        "right",
+        rightIndicator,
+        rightRows,
+        theme,
+        getAxisGroupColor(rightIds, theme),
+      );
     }
 
     layout.shapes = getThresholdZoneShapes(selected, layout, axisById);
@@ -4147,14 +4148,6 @@ const comparisonSections = [
     defaultSelectedIds: ["flows-rsp-spy"],
     defaultRange: "5Y",
     storageKey: "flowsIndicatorColors",
-  }),
-  createComparisonSection({
-    key: "semiconductor",
-    label: "Chips & AI",
-    indicators: semiconductorIndicators,
-    defaultSelectedIds: ["sox", "ai-capex"],
-    defaultRange: "5Y",
-    storageKey: "semiconductorIndicatorColors",
   }),
   createComparisonSection({
     key: "us-rates",

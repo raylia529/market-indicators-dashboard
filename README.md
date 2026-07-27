@@ -31,14 +31,14 @@ https://raylia529.github.io/market-indicators-dashboard/
 The repository includes `.github/workflows/pages.yml`, which:
 
 - deploys the current static dashboard when changes are pushed to `main`;
-- checks pending U.S. data at 08:15, 09:15, 10:15, 12:15, and 18:15 JST, Tuesday through Saturday;
+- checks pending U.S. data at 09:15, 10:15, 11:15, 12:15, and 18:15 JST, Tuesday through Saturday;
 - checks pending Japan/Taiwan data at 08:15, 18:15, 19:15, 20:15, and 22:15 JST on the applicable local business-day cycle;
-- uses combined U.S./Asia profiles at 08:15 and 18:15, while the remaining times run only their assigned region;
+- uses a combined U.S./Asia profile at 18:15, while the remaining times run only their assigned region;
 - includes weekly, monthly, and quarterly data only after its expected release date has arrived;
 - treats Japan MOF JGB yields as next-business-day releases, so the 08:15 check does not request a reference date that is not scheduled for publication until 09:30;
 - skips each indicator after a successful source check on that JST date, so later retry slots contact only sources that failed or have not yet been checked;
 - uses source-aware expected release dates for slow data, so a successful download of unchanged official data does not permanently suppress later overdue retries;
-- refreshes the two S&P 500 Breadth indicators in an isolated weekly job at 12:45 JST every Saturday;
+- refreshes the two S&P 500 Breadth indicators in an isolated daily job at 11:45 JST, Tuesday through Saturday;
 - can be run manually from the GitHub Actions tab for `full`, `us`, `us-fast`, `us-market`, `us-slow`, `asia`, `breadth`, or `alpaca` with `workflow_dispatch`;
 - deploys `index.html`, `style.css`, `app.js`, PWA assets, icons, and `data/` to Pages.
 
@@ -54,7 +54,7 @@ Alpaca-powered ETF ratios and Breadth require two repository Actions secrets: `A
 
 ## Current Features
 
-- Macro, Breadth, Flows, Chips & AI, US Rates, JP Rates, Japan, Taiwan, FX, Data Status, and Glossary tabs with matching responsive layouts where applicable.
+- Macro, Breadth, Flows, US Rates, JP Rates, Japan, Taiwan, FX, Data Status, and Glossary tabs with matching responsive layouts where applicable.
 - Data Status tab with latest and next expected observation dates beneath each indicator plus three clear statuses: `Up to date`, `Source lag`, or `Failed`; source, frequency, formula, and error information stays available under each row's `Details` control.
 - Observation dates retain each source's local market or publication date; dashboard refresh timestamps are displayed in Japan Standard Time (`JST`).
 - Glossary tab with search plus collapsible indicator explanations in English, Japanese, and Chinese. Long-press an indicator card to open its Glossary entry; long-press a Glossary card to return to that indicator's dashboard tab.
@@ -65,7 +65,7 @@ Alpaca-powered ETF ratios and Breadth require two repository Actions secrets: `A
 - FX comparison supports USD/JPY, US-Japan 2Y yield spread, Japan Core CPI YoY, and Tokyo Core CPI YoY.
 - Interactive Plotly charts with zoom, pan, hover tooltips, and range controls.
 - Range controls:
-  - Macro, Breadth, Flows, Chips & AI, US Rates, JP Rates, Japan, Taiwan: 3M, 6M, 1Y, 3Y, 5Y, 10Y, Max
+  - Macro, Breadth, Flows, US Rates, JP Rates, Japan, Taiwan: 3M, 6M, 1Y, 3Y, 5Y, 10Y, Max
   - FX: 3M, 6M, 1Y, 2Y, 5Y, 10Y, MAX
 - Macro Max display starts at 1997/1.
 - Comparisons use original units without normalization. Shared percentage series use the right Y-axis; other valid two-series comparisons retain independent axes.
@@ -131,11 +131,9 @@ All dashboard data is stored in `data/`.
 | SPY/TLT | `data/spy-tlt.csv` | Alpaca IEX split-adjusted `SPY` close divided by `TLT` close on matching dates | Alpaca account history | Daily/US trading days |
 | XLY/XLP | `data/xly-xlp.csv` | Alpaca IEX split-adjusted `XLY` close divided by `XLP` close on matching dates | Alpaca account history | Daily/US trading days |
 | IWM/SPY | `data/iwm-spy.csv` | Alpaca IEX split-adjusted `IWM` close divided by `SPY` close on matching dates | Alpaca account history | Daily/US trading days |
-| New High / New Low (Proxy) | `data/new-high-low-breadth.csv` | Calculated from current S&P 500 constituents using Alpaca IEX daily bars | 2021-07-27 | Daily observations; refreshed weekly |
-| % Above 200DMA (Proxy) | `data/sp500-above-200dma.csv` | Calculated from current S&P 500 constituents using Alpaca IEX daily bars | 2021-05-12 | Daily observations; refreshed weekly |
-| SOX Index | `data/sox.csv` | Yahoo Finance `^SOX` | 1994-05-04 | Daily/business daily |
+| New High / New Low (Proxy) | `data/new-high-low-breadth.csv` | Calculated from current S&P 500 constituents using Alpaca IEX daily bars | 2021-07-27 | Daily/US trading days |
+| % Above 200DMA (Proxy) | `data/sp500-above-200dma.csv` | Calculated from current S&P 500 constituents using Alpaca IEX daily bars | 2021-05-12 | Daily/US trading days |
 | TSMC Revenue YoY | `data/tsmc-revenue-yoy.csv` | MOPSOV monthly operating revenue for TSMC `2330` | 2013-01-31 | Monthly |
-| AI CapEx Proxy YoY | `data/ai-capex.csv` | SEC companyfacts, calculated as YoY growth of combined reported MSFT, AMZN, GOOGL, and META total CapEx | 2018-09-30 | Quarterly |
 | USD/JPY | `data/fx.csv` | FRED `DEXJPUS`, with Yahoo Finance `JPY=X` filling only recent unpublished dates | 1971-01-04 | Daily/forex trading days |
 | US-JP 2Y Spread | `data/fx.csv` | FRED `DGS2` minus Japan MOF 2Y JGB yield | 1976-06-01 | Daily/business daily with forward-filled published yield observations |
 | Japan Core CPI YoY | `data/japan-core-cpi-yoy.csv` | Statistics Bureau of Japan / e-Stat, all items less fresh food | 1971-01-31 | Monthly |
@@ -155,10 +153,10 @@ All dashboard data is stored in `data/`.
 
 This is a personal dashboard built from publicly accessible sources. The repository keeps source attribution in Data Status, and `data/status.json` is regenerated during each refresh so the visible source list stays aligned with the update pipeline.
 
-- Official or public-agency sources used here include FRED, SEC EDGAR companyfacts, FINRA, Japan Ministry of Finance, JPX, TWSE/MOPS, and Taiwan Ministry of Finance.
+- Official or public-agency sources used here include FRED, FINRA, Japan Ministry of Finance, JPX, TWSE/MOPS, and Taiwan Ministry of Finance.
 - Free market-data endpoints used here include Alpaca Market Data API's Paper IEX feed, Yahoo Finance, Yahoo Japan, and Cboe public CSV downloads where available.
 - HYG/IEF retains the existing pre-Alpaca archive and uses Alpaca split-adjusted HYG and IEF closes for new observations because FRED does not provide matching ETF price series. RSP/SPY, SPY/TLT, XLY/XLP, and IWM/SPY use the same Alpaca feed. All ratios use matching published dates only, with no forward fill or estimates.
-- Alpaca replaces Yahoo or FRED only where the dashboard needs the exact same U.S.-listed stock or ETF close. It does not replace macroeconomic series, FX, or exact index definitions with ETF proxies. S&P 500, VIX, HY OAS, Treasury yields, and other macro series therefore retain their canonical sources; MOVE, SOX, and non-U.S. indices retain their current sources unless an exact validated replacement becomes available.
+- Alpaca replaces Yahoo or FRED only where the dashboard needs the exact same U.S.-listed stock or ETF close. It does not replace macroeconomic series, FX, or exact index definitions with ETF proxies. S&P 500, VIX, HY OAS, Treasury yields, and other macro series therefore retain their canonical sources; MOVE and non-U.S. indices retain their current sources unless an exact validated replacement becomes available.
 - ISM Manufacturing PMI is parsed from the revised rolling 12-month table in ISM's official monthly press release distributed by PR Newswire. FRED removed ISM series from its services in 2016, so this repository does not label a proxy or an unverified third-party reconstruction as official history. The committed series begins in July 2025 and grows by monthly merge. ISM content and PMI trademarks remain subject to ISM's terms; review those terms before redistribution or commercial use.
 - Some sources may still be subject to provider terms, third-party data rights, rate limits, or redistribution restrictions. This is especially relevant for Alpaca/IEX market data, ICE-linked HY OAS data available through FRED, ISM PMI content, Yahoo Finance data, Cboe data, and New York Fed term premium data.
 - For personal, low-traffic use, the current setup is intended to be practical and transparent. Before commercial use, broad redistribution, or presenting this as a data service, review the relevant provider terms and replace any source whose terms are not suitable.
@@ -236,8 +234,10 @@ The Worker dispatches the existing workflow at these times:
 
 | Profile | JST | UTC cron |
 | --- | --- | --- |
-| US + Asia | 08:15 Tue-Sat | `15 23 * * 1-5` |
+| Asia | 08:15 Tue-Sat | `15 23 * * 1-5` |
 | US | 09:15, 10:15, 12:15 Tue-Sat | `15 0,1,3 * * 2-6` |
+| US | 11:15 Tue-Sat | `15 2 * * 2-6` |
+| Breadth | 11:45 Tue-Sat | `45 2 * * 2-6` |
 | US + Asia | 18:15 Mon-Fri | `15 9 * * 1-5` |
 | US | 18:15 Sat | `15 9 * * 6` |
 | Asia | 19:15, 20:15, 22:15 Mon-Fri | `15 10,11,13 * * 1-5` |
@@ -328,7 +328,8 @@ Japan 10-Year JGB Yield - Japan 2-Year JGB Yield
 ### Taiwan
 
 - TAIEX uses Yahoo Finance `^TWII` and is clearly labelled as a market-data source, not TWSE official historical archive.
-- TSMC Revenue YoY reuses the Chips & AI canonical MOPSOV dataset.
+- TSMC Revenue YoY uses the canonical MOPSOV dataset shared by the Taiwan dashboard and update pipeline.
+- The historical archive starts in 2013 because the MOPS IFRS monthly revenue endpoint is available from ROC year 102. The updater merges newly available months and preserves existing history if a source request fails.
 - USD/TWD uses FRED `DEXTAUS` as the canonical history and Yahoo Finance `TWD=X` only for dates newer than FRED's latest observation; definition is `1 USD = X TWD`. Values outside 10–100 are rejected.
 - Foreign Investors Net Buying of Taiwan Equities uses FinMind's TWSE-derived `TaiwanStockTotalInstitutionalInvestors` bulk history from 2004 and filters `Foreign_Investor`. Recent dates are checked against the official [TWSE BFI82U report](https://www.twse.com.tw/en/trading/foreign/bfi82u.html), whose values take priority when available. The historical request uses TWSE's `dayDate` parameter and rejects a response whose reported date does not match the requested date.
 - Taiwan Electronics Exports YoY is calculated from the Taiwan Ministry of Finance [Exports by main commodity](https://data.gov.tw/en/datasets/8380) monthly CSV, using the USD electronic-components column. The resulting history begins in 2002.
@@ -347,20 +348,12 @@ Japan 10-Year JGB Yield - Japan 2-Year JGB Yield
 - Breadth contains the canonical S&P 500, RSP/SPY, New High / New Low, and % Above 200DMA.
 - RSP/SPY uses matching split-adjusted Alpaca IEX daily closes and is updated with the regular U.S. market group.
 - The two constituent-based indicators use the current S&P 500 list published by the `datasets/s-and-p-500-companies` GitHub dataset and Alpaca IEX daily bars.
-- Breadth is isolated from the normal U.S. market updater and runs once per week at 12:45 JST on Saturday.
+- Breadth is isolated from the normal U.S. market updater and runs once after each U.S. trading day at 11:45 JST, Tuesday through Saturday.
 - The updater requests a rolling window sufficient for 200-day averages and 252-trading-day highs/lows, calculates aggregate series in memory, and saves only the derived CSVs. Raw constituent bars are not committed or deployed.
 - At least 95% of the current constituent list must have valid history before a new aggregate observation is accepted. Existing published Breadth history remains intact when coverage is insufficient.
 - `New High / New Low` is `(new 252-trading-day highs - new 252-trading-day lows) / valid constituents * 100`.
 - `% Above 200DMA` calculates the percentage of downloaded constituents whose close is above their own 200-day moving average.
 - This is a practical free-data approximation based on current constituents. It does not reconstruct historical S&P 500 membership changes.
-
-### Chips & AI
-
-- SOX uses Yahoo Finance `^SOX` daily index data.
-- TSMC Revenue YoY is parsed from MOPSOV single-company monthly operating revenue for TSMC `2330`.
-- The current historical archive starts in 2013 because the MOPS IFRS monthly revenue endpoint is available from ROC year 102. The updater merges newly available months and keeps existing history if a MOPSOV request fails.
-- MOPSOV occasionally returns temporary 307 responses while bootstrapping many months. The bootstrap skips failed months instead of shortening the CSV; missing archive months can be filled later by rerunning or by importing a manually downloaded MOPS archive.
-- AI CapEx Proxy YoY is calculated from combined total quarterly CapEx reported by Microsoft, Amazon, Alphabet, and Meta through SEC companyfacts. It is a proxy for AI infrastructure investment because company filings do not isolate all AI-only spending. The updater prefers reported single-quarter facts and, where only fiscal YTD facts exist, subtracts consecutive reported cumulative values to recover the quarter. It uses no estimates and writes only dates aligned across all four companies.
 
 ## Validation
 

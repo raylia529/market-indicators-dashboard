@@ -3,16 +3,13 @@ import https from "node:https";
 import path from "node:path";
 
 const userAgent = "market-indicators-dashboard/1.0 raylia529";
-const oneDayMs = 86400000;
 const downloadTimeoutMs = 20_000;
 const retryBackoffMs = [];
 
 const files = {
   move: path.join("data", "move.csv"),
   skew: path.join("data", "skew.csv"),
-  sox: path.join("data", "sox.csv"),
   tsmcRevenueYoy: path.join("data", "tsmc-revenue-yoy.csv"),
-  aiCapex: path.join("data", "ai-capex.csv"),
   ismManufacturingPmi: path.join("data", "ism-manufacturing-pmi.csv"),
 };
 
@@ -515,146 +512,6 @@ async function updateTsmcRevenueYoy() {
   console.log(`Failed months skipped: ${failedMonths}`);
 }
 
-function extractQuarterlyFactRows(fact) {
-  const periodFacts = new Map();
-  for (const item of fact.units.USD || []) {
-    const value = Math.abs(Number(item.val));
-    if (
-      !item.start ||
-      !item.end ||
-      !Number.isFinite(value) ||
-      !["10-Q", "10-K"].includes(item.form)
-    ) {
-      continue;
-    }
-
-    const key = `${item.start}|${item.end}`;
-    const existing = periodFacts.get(key);
-    if (!existing || String(item.filed || "") > String(existing.filed || "")) {
-      periodFacts.set(key, { ...item, value: value / 1000000 });
-    }
-  }
-
-  const facts = Array.from(periodFacts.values());
-  const quarterRows = new Map();
-  const durationDays = (item) =>
-    Math.round((Date.parse(`${item.end}T00:00:00Z`) - Date.parse(`${item.start}T00:00:00Z`)) / oneDayMs) + 1;
-
-  // Prefer reported single-quarter facts whenever the filing provides them.
-  for (const item of facts) {
-    const days = durationDays(item);
-    if (days >= 65 && days <= 115) {
-      const existing = quarterRows.get(item.end);
-      if (!existing || String(item.filed || "") > String(existing.filed || "")) {
-        quarterRows.set(item.end, { value: item.value, filed: item.filed });
-      }
-    }
-  }
-
-  // Alphabet and Meta commonly report Q2/Q3 CapEx as fiscal YTD. Subtract
-  // consecutive cumulative facts from the same filing period to recover the
-  // actual quarter; this is arithmetic on reported values, not an estimate.
-  const cumulativeByStart = new Map();
-  for (const item of facts) {
-    const group = cumulativeByStart.get(item.start) || [];
-    group.push(item);
-    cumulativeByStart.set(item.start, group);
-  }
-
-  for (const group of cumulativeByStart.values()) {
-    group.sort((a, b) => a.end.localeCompare(b.end));
-    if (group.length < 2 || durationDays(group[0]) < 65 || durationDays(group[0]) > 115) {
-      continue;
-    }
-
-    let previous = 0;
-    let previousEnd = null;
-    for (const item of group) {
-      const days = durationDays(item);
-      const intervalDays = previousEnd
-        ? Math.round((Date.parse(`${item.end}T00:00:00Z`) - Date.parse(`${previousEnd}T00:00:00Z`)) / oneDayMs)
-        : days;
-      const value = item.value - previous;
-
-      if (days <= 380 && intervalDays >= 65 && intervalDays <= 115 && value >= 0 && !quarterRows.has(item.end)) {
-        quarterRows.set(item.end, { value, filed: item.filed });
-      }
-      previous = item.value;
-      previousEnd = item.end;
-    }
-  }
-
-  return Array.from(quarterRows, ([date, item]) => ({ date, value: item.value }))
-    .filter((row) => Number.isFinite(row.value) && row.value >= 0)
-    .sort((a, b) => a.date.localeCompare(b.date));
-}
-
-async function updateAiCapex() {
-  const companies = [
-    { name: "Microsoft", cik: "0000789019", tag: "PaymentsToAcquirePropertyPlantAndEquipment" },
-    { name: "Amazon", cik: "0001018724", tag: "PaymentsToAcquireProductiveAssets" },
-    { name: "Alphabet", cik: "0001652044", tag: "PaymentsToAcquirePropertyPlantAndEquipment" },
-    { name: "Meta", cik: "0001326801", tag: "PaymentsToAcquirePropertyPlantAndEquipment" },
-  ];
-  const totals = new Map();
-  const companyCounts = new Map();
-
-  for (const company of companies) {
-    const url = `https://data.sec.gov/api/xbrl/companyfacts/CIK${company.cik}.json`;
-    const facts = JSON.parse(await download(url));
-    const usGaap = facts?.facts?.["us-gaap"] || {};
-    const fact = usGaap[company.tag];
-
-    if (!fact) {
-      throw new Error(`Could not find CapEx tag for ${company.name}.`);
-    }
-
-    for (const row of extractQuarterlyFactRows(fact)) {
-      totals.set(row.date, (totals.get(row.date) || 0) + row.value);
-      companyCounts.set(row.date, (companyCounts.get(row.date) || 0) + 1);
-    }
-  }
-
-  const rows = Array.from(totals, ([date, value]) => ({ date, value }))
-    .filter((row) => companyCounts.get(row.date) === companies.length)
-    .sort((a, b) => a.date.localeCompare(b.date));
-  const recentQuarterDates = rows.filter((row) => row.date >= "2023-01-01").map((row) => row.date);
-  for (let index = 1; index < recentQuarterDates.length; index += 1) {
-    const gapDays = Math.round(
-      (Date.parse(`${recentQuarterDates[index]}T00:00:00Z`) -
-        Date.parse(`${recentQuarterDates[index - 1]}T00:00:00Z`)) /
-        oneDayMs,
-    );
-    if (gapDays > 115) {
-      throw new Error(`AI CapEx has a missing reported quarter after ${recentQuarterDates[index - 1]}.`);
-    }
-  }
-  const valuesByDate = new Map(rows.map((row) => [row.date, row.value]));
-  const yoyRows = rows
-    .map((row) => {
-      const priorYearDate = `${Number(row.date.slice(0, 4)) - 1}${row.date.slice(4)}`;
-      const priorYearValue = valuesByDate.get(priorYearDate);
-
-      if (!Number.isFinite(priorYearValue) || priorYearValue === 0) {
-        return null;
-      }
-
-      return {
-        date: row.date,
-        value: ((row.value / priorYearValue) - 1) * 100,
-      };
-    })
-    .filter(Boolean);
-
-  atomicWriteCsv(files.aiCapex, yoyRows, "AI CapEx Proxy YoY", 1);
-  console.log("AI CapEx Proxy YoY validation");
-  console.log("Source: SEC companyfacts, combined reported MSFT/AMZN/GOOGL/META quarterly CapEx");
-  console.log("Method: single-quarter facts, or differences of consecutive reported fiscal YTD facts; no estimates");
-  console.log(`Earliest date: ${yoyRows[0].date}`);
-  console.log(`Latest date: ${yoyRows.at(-1).date}`);
-  console.log(`Valid observations: ${yoyRows.length}`);
-}
-
 async function runStep(label, fn) {
   try {
     await fn();
@@ -673,13 +530,7 @@ async function main() {
       update: () => updateYahooIndex({ symbol: "^MOVE", label: "MOVE Index", file: files.move }),
     },
     { key: "skew", label: "CBOE SKEW Index", update: updateSkew },
-    {
-      key: "sox",
-      label: "SOX Index",
-      update: () => updateYahooIndex({ symbol: "^SOX", label: "SOX Index", file: files.sox }),
-    },
     { key: "tsmc", label: "TSMC Revenue YoY", update: updateTsmcRevenueYoy },
-    { key: "ai-capex", label: "AI CapEx Proxy YoY", update: updateAiCapex },
     {
       key: "ism-pmi",
       label: "ISM Manufacturing PMI",

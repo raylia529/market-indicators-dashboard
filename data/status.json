@@ -1,10 +1,10 @@
 {
-  "last_dashboard_refresh": "2026-07-27T11:28:55+09:00",
-  "last_dashboard_refresh_display": "2026-07-27 11:28 JST",
+  "last_dashboard_refresh": "2026-07-27T12:00:16+09:00",
+  "last_dashboard_refresh_display": "2026-07-27 12:00 JST",
   "update_duration_seconds": 0,
   "dashboard_version": "1.0.0",
-  "last_git_commit": "8d24684",
-  "python_version": "Python 3.12.3",
+  "last_git_commit": "b26df48",
+  "python_version": "Python 3.13.3",
   "indicators": {
     "SP500": {
       "display_name": "S&P 500 Index",
@@ -434,15 +434,15 @@
         }
       ],
       "latest_available_date": "2026-07-24",
-      "next_expected_update_date": "2026-08-01",
+      "next_expected_update_date": "2026-07-27",
       "last_successful_refresh": "2026-07-27T10:59:11+09:00",
       "last_successful_refresh_display": "2026-07-27 10:59 JST",
-      "frequency": "Weekly refresh; daily US trading-day observations",
+      "frequency": "Daily, US trading days",
       "unit": "Percent",
       "status": "Up to date",
       "error_message": null,
       "formula": "(Stocks at a 252-trading-day high - stocks at a 252-trading-day low) / valid constituents * 100",
-      "release_note": "Current-constituent proxy refreshed each Saturday. Historical membership changes are not reconstructed; at least 95% constituent coverage is required."
+      "release_note": "Current-constituent proxy refreshed after each US trading day. Historical membership changes are not reconstructed; at least 95% constituent coverage is required."
     },
     "SP500_ABOVE_200DMA": {
       "display_name": "S&P 500 Percent of Stocks Above 200-Day Moving Average",
@@ -460,37 +460,15 @@
         }
       ],
       "latest_available_date": "2026-07-24",
-      "next_expected_update_date": "2026-08-01",
+      "next_expected_update_date": "2026-07-27",
       "last_successful_refresh": "2026-07-27T10:59:11+09:00",
       "last_successful_refresh_display": "2026-07-27 10:59 JST",
-      "frequency": "Weekly refresh; daily US trading-day observations",
+      "frequency": "Daily, US trading days",
       "unit": "Percent",
       "status": "Up to date",
       "error_message": null,
       "formula": null,
-      "release_note": "Calculated from current S&P 500 constituents and refreshed each Saturday. Historical membership changes are not reconstructed; at least 95% constituent coverage is required."
-    },
-    "SOX": {
-      "display_name": "PHLX Semiconductor Sector Index",
-      "short_name": "SOX",
-      "source_name": "Yahoo Finance",
-      "source_url": "https://finance.yahoo.com/quote/%5ESOX/",
-      "source_urls": [
-        {
-          "label": "Yahoo Finance ^SOX",
-          "url": "https://finance.yahoo.com/quote/%5ESOX/"
-        }
-      ],
-      "latest_available_date": "2026-07-17",
-      "next_expected_update_date": "2026-07-20",
-      "last_successful_refresh": "2026-07-18T00:34:58+09:00",
-      "last_successful_refresh_display": "2026-07-18 00:34 JST",
-      "frequency": "Daily, US trading days",
-      "unit": "Index",
-      "status": "Failed",
-      "error_message": "Yahoo Finance returned HTTP 429; existing history was preserved.",
-      "formula": null,
-      "release_note": null
+      "release_note": "Calculated from current S&P 500 constituents and refreshed after each US trading day. Historical membership changes are not reconstructed; at least 95% constituent coverage is required."
     },
     "TSMC_REVENUE_YOY": {
       "display_name": "TSMC Revenue Year-over-Year Growth",
@@ -517,28 +495,6 @@
       "error_message": null,
       "formula": null,
       "release_note": "Historical archive is parsed from MOPSOV single-company monthly operating revenue for TSMC 2330. The updater merges newly available months and keeps existing history if a source request fails."
-    },
-    "AI_CAPEX": {
-      "display_name": "Hyperscaler CapEx Year-over-Year Growth: Microsoft, Amazon, Alphabet, and Meta",
-      "short_name": "AI CapEx Proxy YoY",
-      "source_name": "SEC companyfacts",
-      "source_url": "https://www.sec.gov/edgar/sec-api-documentation",
-      "source_urls": [
-        {
-          "label": "SEC companyfacts API",
-          "url": "https://www.sec.gov/edgar/sec-api-documentation"
-        }
-      ],
-      "latest_available_date": "2026-03-31",
-      "next_expected_update_date": "2026-08-08",
-      "last_successful_refresh": "2026-07-25T09:18:06+09:00",
-      "last_successful_refresh_display": "2026-07-25 09:18 JST",
-      "frequency": "Quarterly",
-      "unit": "Percent YoY",
-      "status": "Up to date",
-      "error_message": null,
-      "formula": "Year-over-year growth of Microsoft CapEx + Amazon CapEx + Alphabet CapEx + Meta CapEx",
-      "release_note": "Proxy for AI infrastructure investment using total reported CapEx. Single-quarter SEC facts are used where available; otherwise a quarter is derived from consecutive reported fiscal YTD values. No estimates are used."
     },
     "DEXJPUS": {
       "display_name": "USD/JPY Exchange Rate",

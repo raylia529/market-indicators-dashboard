@@ -5,17 +5,19 @@ on:
     branches:
       - main
   schedule:
-    # 08:15 JST Tue-Sat: U.S. plus pending Japan/Taiwan data from the prior session.
+    # 08:15 JST Tue-Sat: pending Japan/Taiwan data from the prior session.
     - cron: "15 23 * * 1-5"
     # U.S. pending-only checks: 09:15, 10:15, and 12:15 JST Tue-Sat.
     - cron: "15 0,1,3 * * 2-6"
+    # 11:15 JST Tue-Sat: U.S. pending-only check.
+    - cron: "15 2 * * 2-6"
     # 18:15 JST: combined on local weekdays, U.S.-only on Saturday.
     - cron: "15 9 * * 1-5"
     - cron: "15 9 * * 6"
     # Japan/Taiwan pending-only checks: 19:15, 20:15, and 22:15 JST Mon-Fri.
     - cron: "15 10,11,13 * * 1-5"
-    # 12:45 JST Saturday: isolated weekly S&P 500 breadth refresh.
-    - cron: "45 3 * * 6"
+    # 11:45 JST Tue-Sat: isolated daily S&P 500 breadth refresh.
+    - cron: "45 2 * * 2-6"
   workflow_dispatch:
     inputs:
       update_profile:
@@ -78,12 +80,13 @@ jobs:
 
           if [ "${{ github.event_name }}" = "schedule" ]; then
             case "${{ github.event.schedule }}" in
-              "15 23 * * 1-5") profile=combined ;;
+              "15 23 * * 1-5") profile=asia-retry ;;
               "15 0,1,3 * * 2-6") profile=us ;;
+              "15 2 * * 2-6") profile=us ;;
               "15 9 * * 1-5") profile=combined ;;
               "15 9 * * 6") profile=us ;;
               "15 10,11,13 * * 1-5") profile=asia-retry ;;
-              "45 3 * * 6") profile=breadth ;;
+              "45 2 * * 2-6") profile=breadth ;;
               *) profile=full ;;
             esac
           fi
@@ -258,7 +261,6 @@ jobs:
             run_update "MOVE Index" "node scripts/update-extra-indicators.mjs --only=move" "MOVE" "daily" "us" "yahoo"
             run_update "Alpaca ETF ratios" "node scripts/update-alpaca-indicators.mjs --only=ratios" "HYG_IEF,RSP_SPY,SPY_TLT,XLY_XLP,IWM_SPY" "daily" "us" "alpaca"
             run_update "CBOE SKEW Index" "node scripts/update-extra-indicators.mjs --only=skew" "SKEW" "daily" "us" "cboe"
-            run_update "SOX Index" "node scripts/update-extra-indicators.mjs --only=sox" "SOX" "daily" "us" "yahoo"
             run_update "USD/JPY" "node scripts/update-fx.mjs --profile=us --only=usdjpy" "DEXJPUS" "daily" "us" "fx-market"
           }
 
@@ -274,7 +276,6 @@ jobs:
             run_update "Fed balance sheet" "node scripts/update-fred-series.mjs --series=WALCL" "WALCL" "${slow_mode}" "us" "fred"
             run_update "NFCI" "node scripts/update-fred-series.mjs --series=NFCI" "NFCI" "${slow_mode}" "us" "fred"
             run_update "ISM Manufacturing PMI" "node scripts/update-extra-indicators.mjs --only=ism-pmi" "ISM_MANUFACTURING_PMI" "${slow_mode}" "us" "ism"
-            run_update "AI CapEx" "node scripts/update-extra-indicators.mjs --only=ai-capex" "AI_CAPEX" "${slow_mode}" "us" "sec"
             run_update "FINRA Margin Debt YoY" "python scripts/update-finra-margin-debt-yoy.py" "FINRA_MARGIN_DEBT_YOY" "${slow_mode}" "us" "finra"
           }
 
@@ -332,7 +333,7 @@ jobs:
             run_update "S&P 500" "node scripts/update-sp500.mjs" "SP500" "force" "full"
             run_update "HY OAS" "node scripts/update-hy-oas.mjs" "BAMLH0A0HYM2" "force" "full"
             run_update "FRED macro series" "node scripts/update-fred-series.mjs" "VIXCLS,T10Y2Y,DGS10,WALCL,NFCI,DFEDTARU" "force" "full"
-            run_update "Extra market indicators" "node scripts/update-extra-indicators.mjs --only=move,skew,sox,tsmc,ai-capex,ism-pmi" "MOVE,SKEW,SOX,TSMC_REVENUE_YOY,AI_CAPEX,ISM_MANUFACTURING_PMI" "force" "full"
+            run_update "Extra market indicators" "node scripts/update-extra-indicators.mjs --only=move,skew,tsmc,ism-pmi" "MOVE,SKEW,TSMC_REVENUE_YOY,ISM_MANUFACTURING_PMI" "force" "full"
             run_update "Alpaca market indicators" "node scripts/update-alpaca-indicators.mjs" "HYG_IEF,RSP_SPY,SPY_TLT,XLY_XLP,IWM_SPY,NEW_HIGH_LOW_BREADTH,SP500_ABOVE_200DMA" "force" "full" "alpaca" "900"
             run_update "FX series" "node scripts/update-fx.mjs --profile=full" "DEXJPUS,DGS2,JAPAN_2Y_JGB,US_JAPAN_2Y_SPREAD" "force" "full"
             run_update "US rates" "node scripts/update-us-rates.mjs" "ACMTP10" "force" "full"
