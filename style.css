@@ -353,8 +353,17 @@ h2 {
 }
 
 .indicator-card,
-.fx-card {
+.fx-card,
+.tab-button,
+.mobile-view-button {
   cursor: pointer;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.indicator-card,
+.fx-card {
   text-align: left;
   color: inherit;
   font: inherit;
@@ -1018,6 +1027,9 @@ h2 {
 .glossary-table tr[data-glossary-row] {
   cursor: pointer;
   scroll-margin-top: 12px;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .glossary-table tr[data-glossary-row]:hover {
@@ -1123,6 +1135,15 @@ h2 {
   font-size: 0.88rem;
   font-weight: 650;
   line-height: 1.65;
+  cursor: text;
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.glossary-description * {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .glossary-description p {

@@ -899,10 +899,11 @@ function consumeLongPressClick(element) {
   return true;
 }
 
-function attachLongPress(element, callback) {
+function attachLongPress(element, callback, options = {}) {
   let timer = null;
   let startX = 0;
   let startY = 0;
+  const shouldIgnoreTarget = options.shouldIgnoreTarget || (() => false);
 
   function cancel() {
     if (timer) {
@@ -912,7 +913,11 @@ function attachLongPress(element, callback) {
   }
 
   element.addEventListener("pointerdown", (event) => {
-    if (event.button !== 0 || event.target.closest("[data-color-control], button, input, a")) {
+    if (
+      event.button !== 0 ||
+      shouldIgnoreTarget(event.target) ||
+      event.target.closest("[data-color-control], button, input, a")
+    ) {
       return;
     }
 
@@ -935,6 +940,11 @@ function attachLongPress(element, callback) {
   });
   ["pointerup", "pointercancel", "pointerleave"].forEach((eventName) => {
     element.addEventListener(eventName, cancel);
+  });
+  element.addEventListener("contextmenu", (event) => {
+    if (!shouldIgnoreTarget(event.target)) {
+      event.preventDefault();
+    }
   });
 }
 
@@ -1078,6 +1088,12 @@ const statusClassNames = {
 
 function usesTouchChartMode() {
   return window.matchMedia("(pointer: coarse)").matches;
+}
+
+function usesMobilePaneLayout() {
+  return window.matchMedia(
+    "(max-width: 760px), (max-width: 900px) and (orientation: landscape)",
+  ).matches;
 }
 
 function getChartDragMode() {
@@ -4204,20 +4220,40 @@ function resizeVisibleCharts() {
 }
 
 function centerMobileChartPane(track) {
-  if (!usesTouchChartMode()) {
+  if (!usesMobilePaneLayout()) {
     return;
   }
 
   const chartPane = track.querySelector('[data-mobile-pane="charts"]');
+  const chart = chartPane?.querySelector("#indicator-chart, #fx-chart, .comparison-chart");
 
   if (!chartPane) {
     return;
   }
 
-  chartPane.scrollIntoView({
+  (chart || chartPane).scrollIntoView({
     behavior: "smooth",
     block: "center",
     inline: "nearest",
+  });
+}
+
+function centerActiveLandscapeChart() {
+  if (!usesMobilePaneLayout() || !window.matchMedia("(orientation: landscape)").matches) {
+    return;
+  }
+
+  const activePanel = document.querySelector(".tab-panel.active");
+  const track = activePanel?.querySelector("[data-mobile-track]");
+  const chartPane = track?.querySelector('[data-mobile-pane="charts"].active');
+
+  if (!track || !chartPane) {
+    return;
+  }
+
+  requestAnimationFrame(() => {
+    resizeVisibleCharts();
+    requestAnimationFrame(() => centerMobileChartPane(track));
   });
 }
 
@@ -4691,7 +4727,9 @@ function renderGlossary(glossary) {
     .join("");
 
   glossaryBody.querySelectorAll("[data-glossary-row]").forEach((row) => {
-    attachLongPress(row, () => openDashboardForGlossary(row.dataset.glossaryRow));
+    attachLongPress(row, () => openDashboardForGlossary(row.dataset.glossaryRow), {
+      shouldIgnoreTarget: (target) => Boolean(target.closest(".glossary-description")),
+    });
   });
 }
 
@@ -4874,6 +4912,10 @@ if (glossaryBody) {
       return;
     }
 
+    if (event.target.closest(".glossary-description")) {
+      return;
+    }
+
     const target = event.target.closest("[data-glossary-expand], [data-glossary-row]");
 
     if (target) {
@@ -4934,6 +4976,12 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () 
     renderFxChart();
   }
   comparisonSections.filter((section) => section.loaded).forEach((section) => section.renderChart());
+});
+
+window.matchMedia("(orientation: landscape)").addEventListener("change", (event) => {
+  if (event.matches) {
+    window.setTimeout(centerActiveLandscapeChart, 180);
+  }
 });
 
 loadIndicatorData()
