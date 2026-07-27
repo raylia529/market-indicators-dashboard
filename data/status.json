@@ -1,10 +1,10 @@
 {
-  "last_dashboard_refresh": "2026-07-27T10:59:11+09:00",
-  "last_dashboard_refresh_display": "2026-07-27 10:59 JST",
-  "update_duration_seconds": 4,
+  "last_dashboard_refresh": "2026-07-27T11:28:55+09:00",
+  "last_dashboard_refresh_display": "2026-07-27 11:28 JST",
+  "update_duration_seconds": 0,
   "dashboard_version": "1.0.0",
-  "last_git_commit": "8a722bf",
-  "python_version": "Python 3.12.13",
+  "last_git_commit": "8d24684",
+  "python_version": "Python 3.12.3",
   "indicators": {
     "SP500": {
       "display_name": "S&P 500 Index",
@@ -350,6 +350,72 @@
       "status": "Up to date",
       "error_message": null,
       "formula": "RSP split-adjusted close / SPY split-adjusted close on matching trading dates",
+      "release_note": "Uses matching Alpaca IEX daily bars only; no forward fill or estimated values are used."
+    },
+    "SPY_TLT": {
+      "display_name": "SPDR S&P 500 ETF / iShares 20+ Year Treasury Bond ETF Ratio",
+      "short_name": "SPY/TLT",
+      "source_name": "Alpaca Market Data API",
+      "source_url": "https://docs.alpaca.markets/docs/about-market-data-api",
+      "source_urls": [
+        {
+          "label": "Alpaca Market Data API",
+          "url": "https://docs.alpaca.markets/docs/about-market-data-api"
+        }
+      ],
+      "latest_available_date": "2026-07-24",
+      "next_expected_update_date": "2026-07-27",
+      "last_successful_refresh": "2026-07-27T11:28:55+09:00",
+      "last_successful_refresh_display": "2026-07-27 11:28 JST",
+      "frequency": "Daily, US trading days",
+      "unit": "Split-adjusted close ratio",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": "SPY split-adjusted close / TLT split-adjusted close on matching trading dates",
+      "release_note": "Uses matching Alpaca IEX daily bars only; no forward fill or estimated values are used."
+    },
+    "XLY_XLP": {
+      "display_name": "Consumer Discretionary Select Sector SPDR / Consumer Staples Select Sector SPDR Ratio",
+      "short_name": "XLY/XLP",
+      "source_name": "Alpaca Market Data API",
+      "source_url": "https://docs.alpaca.markets/docs/about-market-data-api",
+      "source_urls": [
+        {
+          "label": "Alpaca Market Data API",
+          "url": "https://docs.alpaca.markets/docs/about-market-data-api"
+        }
+      ],
+      "latest_available_date": "2026-07-24",
+      "next_expected_update_date": "2026-07-27",
+      "last_successful_refresh": "2026-07-27T11:28:55+09:00",
+      "last_successful_refresh_display": "2026-07-27 11:28 JST",
+      "frequency": "Daily, US trading days",
+      "unit": "Split-adjusted close ratio",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": "XLY split-adjusted close / XLP split-adjusted close on matching trading dates",
+      "release_note": "Uses matching Alpaca IEX daily bars only; no forward fill or estimated values are used."
+    },
+    "IWM_SPY": {
+      "display_name": "iShares Russell 2000 ETF / SPDR S&P 500 ETF Ratio",
+      "short_name": "IWM/SPY",
+      "source_name": "Alpaca Market Data API",
+      "source_url": "https://docs.alpaca.markets/docs/about-market-data-api",
+      "source_urls": [
+        {
+          "label": "Alpaca Market Data API",
+          "url": "https://docs.alpaca.markets/docs/about-market-data-api"
+        }
+      ],
+      "latest_available_date": "2026-07-24",
+      "next_expected_update_date": "2026-07-27",
+      "last_successful_refresh": "2026-07-27T11:28:55+09:00",
+      "last_successful_refresh_display": "2026-07-27 11:28 JST",
+      "frequency": "Daily, US trading days",
+      "unit": "Split-adjusted close ratio",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": "IWM split-adjusted close / SPY split-adjusted close on matching trading dates",
       "release_note": "Uses matching Alpaca IEX daily bars only; no forward fill or estimated values are used."
     },
     "NEW_HIGH_LOW_BREADTH": {
