@@ -50,14 +50,14 @@ In GitHub, set `Settings -> Pages -> Build and deployment -> Source` to `GitHub 
 
 If the daily data commit step fails with a permission error, set `Settings -> Actions -> General -> Workflow permissions` to `Read and write permissions`.
 
-Alpaca-powered ETF ratios and Breadth require two repository Actions secrets: `ALPACA_API_KEY_ID` and `ALPACA_API_SECRET_KEY`. Configure them under `Settings -> Secrets and variables -> Actions`; never put either value in a tracked file.
+Alpaca-powered ETF ratios and Breadth require two repository Actions secrets: `ALPACA_API_KEY_ID` and `ALPACA_API_SECRET_KEY`. Configure them under `Settings -> Secrets and variables -> Actions`; never put either value in a tracked file. The five Flows ratios are updated together in one multi-symbol request. Existing CSVs are read first and only a 14-calendar-day overlap is downloaded and merged, so routine refreshes do not redownload full history.
 
 ## Current Features
 
-- Macro, Breadth, Chips & AI, US Rates, JP Rates, Japan, Taiwan, FX, Data Status, and Glossary tabs with matching responsive layouts where applicable.
+- Macro, Breadth, Flows, Chips & AI, US Rates, JP Rates, Japan, Taiwan, FX, Data Status, and Glossary tabs with matching responsive layouts where applicable.
 - Data Status tab with latest and next expected observation dates beneath each indicator plus three clear statuses: `Up to date`, `Source lag`, or `Failed`; source, frequency, formula, and error information stays available under each row's `Details` control.
 - Observation dates retain each source's local market or publication date; dashboard refresh timestamps are displayed in Japan Standard Time (`JST`).
-- Glossary tab with search plus collapsible indicator explanations in English, Japanese, and Chinese.
+- Glossary tab with search plus collapsible indicator explanations in English, Japanese, and Chinese. Long-press an indicator card to open its Glossary entry; long-press a Glossary card to return to that indicator's dashboard tab.
 - Mobile card-to-chart swipe layout for portrait and landscape phone screens.
 - Indicator cards loaded from local CSV files.
 - Click cards to show or hide series.
@@ -65,7 +65,7 @@ Alpaca-powered ETF ratios and Breadth require two repository Actions secrets: `A
 - FX comparison supports USD/JPY, US-Japan 2Y yield spread, Japan Core CPI YoY, and Tokyo Core CPI YoY.
 - Interactive Plotly charts with zoom, pan, hover tooltips, and range controls.
 - Range controls:
-  - Macro, Breadth, Chips & AI, US Rates, JP Rates, Japan, Taiwan: 1Y, 3Y, 5Y, 10Y, Max
+  - Macro, Breadth, Flows, Chips & AI, US Rates, JP Rates, Japan, Taiwan: 3M, 6M, 1Y, 3Y, 5Y, 10Y, Max
   - FX: 3M, 6M, 1Y, 2Y, 5Y, 10Y, MAX
 - Macro Max display starts at 1997/1.
 - Comparisons use original units without normalization. Shared percentage series use the right Y-axis; other valid two-series comparisons retain independent axes.
@@ -128,6 +128,9 @@ All dashboard data is stored in `data/`.
 | ISM Manufacturing PMI | `data/ism-manufacturing-pmi.csv` | Institute for Supply Management official release via PR Newswire | 2025-07-31 | Monthly |
 | SKEW Index | `data/skew.csv` | Cboe SKEW history CSV | 1990-01-02 | Daily/business daily |
 | RSP/SPY | `data/rsp-spy.csv` | Alpaca IEX split-adjusted `RSP` close divided by `SPY` close on matching dates | 2020-07-27 | Daily/US trading days |
+| SPY/TLT | `data/spy-tlt.csv` | Alpaca IEX split-adjusted `SPY` close divided by `TLT` close on matching dates | Alpaca account history | Daily/US trading days |
+| XLY/XLP | `data/xly-xlp.csv` | Alpaca IEX split-adjusted `XLY` close divided by `XLP` close on matching dates | Alpaca account history | Daily/US trading days |
+| IWM/SPY | `data/iwm-spy.csv` | Alpaca IEX split-adjusted `IWM` close divided by `SPY` close on matching dates | Alpaca account history | Daily/US trading days |
 | New High / New Low (Proxy) | `data/new-high-low-breadth.csv` | Calculated from current S&P 500 constituents using Alpaca IEX daily bars | 2021-07-27 | Daily observations; refreshed weekly |
 | % Above 200DMA (Proxy) | `data/sp500-above-200dma.csv` | Calculated from current S&P 500 constituents using Alpaca IEX daily bars | 2021-05-12 | Daily observations; refreshed weekly |
 | SOX Index | `data/sox.csv` | Yahoo Finance `^SOX` | 1994-05-04 | Daily/business daily |
@@ -154,7 +157,8 @@ This is a personal dashboard built from publicly accessible sources. The reposit
 
 - Official or public-agency sources used here include FRED, SEC EDGAR companyfacts, FINRA, Japan Ministry of Finance, JPX, TWSE/MOPS, and Taiwan Ministry of Finance.
 - Free market-data endpoints used here include Alpaca Market Data API's Paper IEX feed, Yahoo Finance, Yahoo Japan, and Cboe public CSV downloads where available.
-- HYG/IEF retains the existing pre-Alpaca archive and uses Alpaca split-adjusted HYG and IEF closes for new observations because FRED does not provide matching ETF price series. RSP/SPY uses the same Alpaca feed. Both ratios use matching published dates only, with no forward fill or estimates.
+- HYG/IEF retains the existing pre-Alpaca archive and uses Alpaca split-adjusted HYG and IEF closes for new observations because FRED does not provide matching ETF price series. RSP/SPY, SPY/TLT, XLY/XLP, and IWM/SPY use the same Alpaca feed. All ratios use matching published dates only, with no forward fill or estimates.
+- Alpaca replaces Yahoo or FRED only where the dashboard needs the exact same U.S.-listed stock or ETF close. It does not replace macroeconomic series, FX, or exact index definitions with ETF proxies. S&P 500, VIX, HY OAS, Treasury yields, and other macro series therefore retain their canonical sources; MOVE, SOX, and non-U.S. indices retain their current sources unless an exact validated replacement becomes available.
 - ISM Manufacturing PMI is parsed from the revised rolling 12-month table in ISM's official monthly press release distributed by PR Newswire. FRED removed ISM series from its services in 2016, so this repository does not label a proxy or an unverified third-party reconstruction as official history. The committed series begins in July 2025 and grows by monthly merge. ISM content and PMI trademarks remain subject to ISM's terms; review those terms before redistribution or commercial use.
 - Some sources may still be subject to provider terms, third-party data rights, rate limits, or redistribution restrictions. This is especially relevant for Alpaca/IEX market data, ICE-linked HY OAS data available through FRED, ISM PMI content, Yahoo Finance data, Cboe data, and New York Fed term premium data.
 - For personal, low-traffic use, the current setup is intended to be practical and transparent. Before commercial use, broad redistribution, or presenting this as a data service, review the relevant provider terms and replace any source whose terms are not suitable.
@@ -206,6 +210,7 @@ node scripts/update-sp500.mjs
 node scripts/update-hy-oas.mjs
 node scripts/update-fred-series.mjs
 node scripts/update-extra-indicators.mjs
+node scripts/update-alpaca-indicators.mjs --only=ratios
 node scripts/update-fx.mjs
 node scripts/update-us-rates.mjs
 node scripts/update-japan-rates.mjs

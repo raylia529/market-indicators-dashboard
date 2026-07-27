@@ -17,9 +17,46 @@ const rollingWindowCalendarDays = 430;
 const files = {
   hygIef: path.join("data", "hyg-ief.csv"),
   rspSpy: path.join("data", "rsp-spy.csv"),
+  spyTlt: path.join("data", "spy-tlt.csv"),
+  xlyXlp: path.join("data", "xly-xlp.csv"),
+  iwmSpy: path.join("data", "iwm-spy.csv"),
   above200: path.join("data", "sp500-above-200dma.csv"),
   newHighLow: path.join("data", "new-high-low-breadth.csv"),
 };
+
+const ratioDefinitions = [
+  {
+    label: "RSP/SPY",
+    left: "RSP",
+    right: "SPY",
+    file: files.rspSpy,
+  },
+  {
+    label: "HYG/IEF",
+    left: "HYG",
+    right: "IEF",
+    file: files.hygIef,
+    preservedEarliestDate: "2007-04-12",
+  },
+  {
+    label: "SPY/TLT",
+    left: "SPY",
+    right: "TLT",
+    file: files.spyTlt,
+  },
+  {
+    label: "XLY/XLP",
+    left: "XLY",
+    right: "XLP",
+    file: files.xlyXlp,
+  },
+  {
+    label: "IWM/SPY",
+    left: "IWM",
+    right: "SPY",
+    file: files.iwmSpy,
+  },
+];
 
 const onlyArg = process.argv.find((argument) => argument.startsWith("--only="));
 const requestedUpdates = new Set(
@@ -255,66 +292,57 @@ function calculateRatio(leftRows, rightRows) {
 }
 
 async function updateRatios() {
-  const existingRspSpy = loadSingleCsv(files.rspSpy);
-  const existingHygIef = loadSingleCsv(files.hygIef);
-  const rspStart = existingRspSpy.length
-    ? daysBefore(existingRspSpy.at(-1).date, overlapCalendarDays)
-    : ratioBootstrapDate;
-  const hygStart = existingHygIef.length
-    ? daysBefore(existingHygIef.at(-1).date, overlapCalendarDays)
-    : ratioBootstrapDate;
-  const requestStart = rspStart < hygStart ? rspStart : hygStart;
-  const { barsBySymbol, pages } = await getAlpacaBars(
-    ["RSP", "SPY", "HYG", "IEF"],
-    requestStart,
-    requestEndDate(),
-  );
+  const ratioStates = ratioDefinitions.map((definition) => {
+    const existing = loadSingleCsv(definition.file);
+    const start = existing.length
+      ? daysBefore(existing.at(-1).date, overlapCalendarDays)
+      : ratioBootstrapDate;
+    return { ...definition, existing, start };
+  });
+  const requestStart = ratioStates
+    .map((definition) => definition.start)
+    .sort((left, right) => left.localeCompare(right))[0];
+  const symbols = [
+    ...new Set(ratioDefinitions.flatMap((definition) => [definition.left, definition.right])),
+  ];
+  const { barsBySymbol, pages } = await getAlpacaBars(symbols, requestStart, requestEndDate());
 
-  const downloadedRspSpy = calculateRatio(
-    barsBySymbol.get("RSP") || [],
-    barsBySymbol.get("SPY") || [],
-  ).filter((row) => row.date >= rspStart);
-  const downloadedHygIef = calculateRatio(
-    barsBySymbol.get("HYG") || [],
-    barsBySymbol.get("IEF") || [],
-  ).filter((row) => row.date >= hygStart);
-  const finalRspSpy = mergeRowsByDate(existingRspSpy, downloadedRspSpy);
-  const finalHygIef = mergeRowsByDate(existingHygIef, downloadedHygIef);
+  const prepared = ratioStates.map((definition) => {
+    const downloaded = calculateRatio(
+      barsBySymbol.get(definition.left) || [],
+      barsBySymbol.get(definition.right) || [],
+    ).filter((row) => row.date >= definition.start);
+    const finalRows = mergeRowsByDate(definition.existing, downloaded);
+    const temporaryFile = prepareCsv(
+      definition.file,
+      finalRows,
+      `${definition.label} split-adjusted close ratio`,
+      6,
+      {
+        // Existing archives remain authoritative. New Alpaca-only files use the
+        // free Paper IEX history currently available to this account.
+        earliestDate: definition.preservedEarliestDate || yearsBeforeToday(5),
+        minimumRows: definition.existing.length || 1000,
+      },
+    );
+    return { ...definition, downloaded, finalRows, temporaryFile };
+  });
 
-  const rspSpyTemporaryFile = prepareCsv(
-    files.rspSpy,
-    finalRspSpy,
-    "RSP/SPY split-adjusted close ratio",
-    6,
-    {
-      // Free Paper IEX currently exposes a rolling history of roughly six years.
-      earliestDate: yearsBeforeToday(5),
-      minimumRows: 1000,
-    },
-  );
-  const hygIefTemporaryFile = prepareCsv(
-    files.hygIef,
-    finalHygIef,
-    "HYG/IEF split-adjusted close ratio",
-    6,
-    {
-      earliestDate: "2007-04-12",
-      minimumRows: existingHygIef.length || 200,
-    },
-  );
-  fs.renameSync(rspSpyTemporaryFile, files.rspSpy);
-  fs.renameSync(hygIefTemporaryFile, files.hygIef);
+  for (const definition of prepared) {
+    fs.renameSync(definition.temporaryFile, definition.file);
+  }
 
   console.log("Alpaca ETF ratio validation");
   console.log("Source: Alpaca Market Data API, free IEX daily bars");
   console.log("Adjustment: split");
+  console.log(`Requested window: ${requestStart} through ${requestEndDate()}`);
   console.log(`Pages requested: ${pages}`);
-  console.log(`RSP/SPY earliest date: ${finalRspSpy[0].date}`);
-  console.log(`RSP/SPY latest date: ${finalRspSpy.at(-1).date}`);
-  console.log(`RSP/SPY valid observations: ${finalRspSpy.length}`);
-  console.log(`HYG/IEF earliest date: ${finalHygIef[0].date}`);
-  console.log(`HYG/IEF latest date: ${finalHygIef.at(-1).date}`);
-  console.log(`HYG/IEF valid observations: ${finalHygIef.length}`);
+  for (const definition of prepared) {
+    console.log(`${definition.label} downloaded observations: ${definition.downloaded.length}`);
+    console.log(`${definition.label} earliest date: ${definition.finalRows[0].date}`);
+    console.log(`${definition.label} latest date: ${definition.finalRows.at(-1).date}`);
+    console.log(`${definition.label} valid observations: ${definition.finalRows.length}`);
+  }
 }
 
 function increment(map, date, amount = 1) {

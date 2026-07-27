@@ -11,15 +11,16 @@
     <title>Market Indicators Dashboard</title>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2" />
-    <link rel="stylesheet" href="style.css?v=alpaca-breadth-v23" />
+    <link rel="stylesheet" href="style.css?v=flows-v24" />
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
-    <script src="app.js?v=alpaca-breadth-v23" defer></script>
+    <script src="app.js?v=flows-v24" defer></script>
   </head>
   <body>
     <main class="dashboard-shell">
       <nav class="tab-bar" aria-label="Dashboard sections">
         <button class="tab-button active" type="button" data-tab="macro">Macro</button>
         <button class="tab-button" type="button" data-tab="breadth">Breadth</button>
+        <button class="tab-button" type="button" data-tab="flows">Flows</button>
         <button class="tab-button" type="button" data-tab="semiconductor">Chips &amp; AI</button>
         <button class="tab-button" type="button" data-tab="us-rates">US Rates</button>
         <button class="tab-button" type="button" data-tab="jp-rates">JP Rates</button>
@@ -95,25 +96,25 @@
         <div class="mobile-swipe-track" data-mobile-track="fx">
           <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="FX indicator cards">
             <div class="metric-grid fx-card-grid">
-              <article class="metric-card fx-card active" data-fx-card="USDJPY" tabindex="0">
+              <article class="metric-card fx-card active" data-fx-card="USDJPY" data-glossary-id="DEXJPUS" tabindex="0">
                 <span>USD/JPY</span>
                 <strong id="fx-usdjpy-value">--</strong>
                 <div id="fx-usdjpy-change"></div>
                 <div class="color-control" data-fx-color-control="USDJPY"></div>
               </article>
-              <article class="metric-card fx-card active" data-fx-card="US_Japan_2Y_Spread" tabindex="0">
+              <article class="metric-card fx-card active" data-fx-card="US_Japan_2Y_Spread" data-glossary-id="US_JAPAN_2Y_SPREAD" tabindex="0">
                 <span>US-JP 2Y Spread</span>
                 <strong id="fx-spread-value">--</strong>
                 <div id="fx-spread-change"></div>
                 <div class="color-control" data-fx-color-control="US_Japan_2Y_Spread"></div>
               </article>
-              <article class="metric-card fx-card" data-fx-card="Japan_Core_CPI_YoY" tabindex="0">
+              <article class="metric-card fx-card" data-fx-card="Japan_Core_CPI_YoY" data-glossary-id="JAPAN_CORE_CPI_YOY" tabindex="0">
                 <span>Japan Core CPI YoY</span>
                 <strong id="fx-japan-core-cpi-value">--</strong>
                 <div id="fx-japan-core-cpi-change"></div>
                 <div class="color-control" data-fx-color-control="Japan_Core_CPI_YoY"></div>
               </article>
-              <article class="metric-card fx-card" data-fx-card="Tokyo_Core_CPI_YoY" tabindex="0">
+              <article class="metric-card fx-card" data-fx-card="Tokyo_Core_CPI_YoY" data-glossary-id="TOKYO_CORE_CPI_YOY" tabindex="0">
                 <span>Tokyo Core CPI YoY</span>
                 <strong id="fx-tokyo-core-cpi-value">--</strong>
                 <div id="fx-tokyo-core-cpi-change"></div>
@@ -197,6 +198,52 @@
             <button class="mobile-view-button" type="button" data-mobile-view-button="breadth" data-mobile-view="charts" aria-pressed="false">
               Charts
             </button>
+          </div>
+        </section>
+      </section>
+
+      <section class="tab-panel" data-tab-panel="flows">
+        <section class="dashboard-section" aria-labelledby="flows-chart-title">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Flows</p>
+              <h2 id="flows-chart-title">Loading indicators</h2>
+            </div>
+          </div>
+          <div class="mobile-swipe-track" data-mobile-track="flows">
+            <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="Flows indicator cards">
+              <section class="metric-grid indicator-grid" id="flows-indicator-grid" aria-label="Flows indicator cards">
+                <p class="loading-message">Loading CSV data...</p>
+              </section>
+            </section>
+            <section class="mobile-pane chart-pane" data-mobile-pane="charts" aria-label="Flows charts">
+              <div class="chart-toolbar">
+                <div class="range-selector" aria-label="Flows date range selector">
+                  <button class="range-button" type="button" data-comparison-range="flows" data-range="3M">3M</button>
+                  <button class="range-button" type="button" data-comparison-range="flows" data-range="6M">6M</button>
+                  <button class="range-button" type="button" data-comparison-range="flows" data-range="1Y">1Y</button>
+                  <button class="range-button" type="button" data-comparison-range="flows" data-range="3Y">3Y</button>
+                  <button class="range-button" type="button" data-comparison-range="flows" data-range="5Y">5Y</button>
+                  <button class="range-button" type="button" data-comparison-range="flows" data-range="10Y">10Y</button>
+                  <button class="range-button" type="button" data-comparison-range="flows" data-range="Max">Max</button>
+                </div>
+                <div class="chart-actions">
+                  <label class="toggle-pill">
+                    <input type="checkbox" id="flows-log-scale" />
+                    Log scale
+                  </label>
+                </div>
+              </div>
+              <div class="selection-notice" id="flows-selection-notice" hidden>
+                <span id="flows-selection-notice-text"></span>
+                <button class="notice-close" id="flows-selection-notice-close" type="button" aria-label="Dismiss notice">x</button>
+              </div>
+              <div class="comparison-chart" id="flows-chart" aria-label="Interactive flows chart"></div>
+            </section>
+          </div>
+          <div class="mobile-view-switch" aria-label="Flows mobile view">
+            <button class="mobile-view-button active" type="button" data-mobile-view-button="flows" data-mobile-view="cards" aria-pressed="true">Cards</button>
+            <button class="mobile-view-button" type="button" data-mobile-view-button="flows" data-mobile-view="charts" aria-pressed="false">Charts</button>
           </div>
         </section>
       </section>

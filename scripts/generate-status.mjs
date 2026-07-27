@@ -280,6 +280,69 @@ const indicatorDefinitions = [
     dailyLagDays: 5,
   },
   {
+    key: "SPY_TLT",
+    displayName: "SPDR S&P 500 ETF / iShares 20+ Year Treasury Bond ETF Ratio",
+    shortName: "SPY/TLT",
+    sourceName: "Alpaca Market Data API",
+    sourceUrl: "https://docs.alpaca.markets/docs/about-market-data-api",
+    sourceUrls: [
+      {
+        label: "Alpaca Market Data API",
+        url: "https://docs.alpaca.markets/docs/about-market-data-api",
+      },
+    ],
+    frequency: "Daily, US trading days",
+    unit: "Split-adjusted close ratio",
+    formula: "SPY split-adjusted close / TLT split-adjusted close on matching trading dates",
+    releaseNote:
+      "Uses matching Alpaca IEX daily bars only; no forward fill or estimated values are used.",
+    file: "data/spy-tlt.csv",
+    type: "single",
+    dailyLagDays: 5,
+  },
+  {
+    key: "XLY_XLP",
+    displayName: "Consumer Discretionary Select Sector SPDR / Consumer Staples Select Sector SPDR Ratio",
+    shortName: "XLY/XLP",
+    sourceName: "Alpaca Market Data API",
+    sourceUrl: "https://docs.alpaca.markets/docs/about-market-data-api",
+    sourceUrls: [
+      {
+        label: "Alpaca Market Data API",
+        url: "https://docs.alpaca.markets/docs/about-market-data-api",
+      },
+    ],
+    frequency: "Daily, US trading days",
+    unit: "Split-adjusted close ratio",
+    formula: "XLY split-adjusted close / XLP split-adjusted close on matching trading dates",
+    releaseNote:
+      "Uses matching Alpaca IEX daily bars only; no forward fill or estimated values are used.",
+    file: "data/xly-xlp.csv",
+    type: "single",
+    dailyLagDays: 5,
+  },
+  {
+    key: "IWM_SPY",
+    displayName: "iShares Russell 2000 ETF / SPDR S&P 500 ETF Ratio",
+    shortName: "IWM/SPY",
+    sourceName: "Alpaca Market Data API",
+    sourceUrl: "https://docs.alpaca.markets/docs/about-market-data-api",
+    sourceUrls: [
+      {
+        label: "Alpaca Market Data API",
+        url: "https://docs.alpaca.markets/docs/about-market-data-api",
+      },
+    ],
+    frequency: "Daily, US trading days",
+    unit: "Split-adjusted close ratio",
+    formula: "IWM split-adjusted close / SPY split-adjusted close on matching trading dates",
+    releaseNote:
+      "Uses matching Alpaca IEX daily bars only; no forward fill or estimated values are used.",
+    file: "data/iwm-spy.csv",
+    type: "single",
+    dailyLagDays: 5,
+  },
+  {
     key: "NEW_HIGH_LOW_BREADTH",
     displayName: "S&P 500 New High / New Low Breadth",
     shortName: "New High / New Low",

@@ -156,6 +156,64 @@ const breadthIndicators = [
   },
 ];
 
+const flowsIndicators = [
+  {
+    id: "flows-rsp-spy",
+    name: "RSP/SPY",
+    file: "data/rsp-spy.csv",
+    unitLabel: "Ratio",
+    valueSuffix: "",
+    category: "ratio",
+    color: "#d77d32",
+    decimals: 4,
+    changeFormat: "percent",
+  },
+  {
+    id: "flows-hyg-ief",
+    name: "HYG/IEF",
+    file: "data/hyg-ief.csv",
+    unitLabel: "Ratio",
+    valueSuffix: "",
+    category: "ratio",
+    color: "#218c83",
+    decimals: 4,
+    changeFormat: "percent",
+  },
+  {
+    id: "spy-tlt",
+    name: "SPY/TLT",
+    file: "data/spy-tlt.csv",
+    unitLabel: "Ratio",
+    valueSuffix: "",
+    category: "ratio",
+    color: "#3f6fcb",
+    decimals: 4,
+    changeFormat: "percent",
+  },
+  {
+    id: "xly-xlp",
+    name: "XLY/XLP",
+    file: "data/xly-xlp.csv",
+    unitLabel: "Ratio",
+    valueSuffix: "",
+    category: "ratio",
+    color: "#9254aa",
+    decimals: 4,
+    changeFormat: "percent",
+  },
+  {
+    id: "iwm-spy",
+    name: "IWM/SPY",
+    file: "data/iwm-spy.csv",
+    unitLabel: "Ratio",
+    valueSuffix: "",
+    category: "ratio",
+    color: "#d44d5c",
+    decimals: 4,
+    changeFormat: "percent",
+  },
+];
+
 const semiconductorIndicators = [
   {
     id: "sox",
@@ -444,6 +502,8 @@ const taiwanIndicators = [
 
 const indicatorColorAliases = {
   "breadth-sp500": "sp500",
+  "flows-rsp-spy": "rsp-spy",
+  "flows-hyg-ief": "hyg-ief",
   "us-rates-sp500": "sp500",
   "us-rates-move": "move",
   "jp-rates-topix": "topix",
@@ -465,6 +525,9 @@ const defaultIndicatorColors = {
   nfci: "#2b83ae",
   "ism-manufacturing-pmi": "#9254aa",
   "rsp-spy": "#d77d32",
+  "spy-tlt": "#3f6fcb",
+  "xly-xlp": "#9254aa",
+  "iwm-spy": "#d44d5c",
   "new-high-low-breadth": "#6559bd",
   "sp500-above-200dma": "#218c83",
   "fed-funds-rate": "#d77d32",
@@ -485,6 +548,7 @@ function getIndicatorColorKey(id) {
 [
   ...indicators,
   ...breadthIndicators,
+  ...flowsIndicators,
   ...semiconductorIndicators,
   ...usRatesIndicators,
   ...jpRatesIndicators,
@@ -613,6 +677,9 @@ const glossaryDisplayOrder = [
   "RSP_SPY",
   "NEW_HIGH_LOW_BREADTH",
   "SP500_ABOVE_200DMA",
+  "SPY_TLT",
+  "XLY_XLP",
+  "IWM_SPY",
   "SOX",
   "TSMC_REVENUE_YOY",
   "AI_CAPEX",
@@ -641,6 +708,120 @@ const glossaryDisplayRank = new Map(
   glossaryDisplayOrder.map((id, index) => [id, index]),
 );
 
+const indicatorGlossaryIds = {
+  sp500: "SP500",
+  "breadth-sp500": "SP500",
+  "us-rates-sp500": "SP500",
+  "high-yield-oas": "BAMLH0A0HYM2",
+  "hyg-ief": "HYG_IEF",
+  "flows-hyg-ief": "HYG_IEF",
+  vix: "VIXCLS",
+  move: "MOVE",
+  "us-rates-move": "MOVE",
+  skew: "SKEW",
+  "margin-debt-yoy": "FINRA_MARGIN_DEBT_YOY",
+  "fed-balance-sheet": "WALCL",
+  nfci: "NFCI",
+  "ism-manufacturing-pmi": "ISM_MANUFACTURING_PMI",
+  "rsp-spy": "RSP_SPY",
+  "flows-rsp-spy": "RSP_SPY",
+  "new-high-low-breadth": "NEW_HIGH_LOW_BREADTH",
+  "sp500-above-200dma": "SP500_ABOVE_200DMA",
+  "spy-tlt": "SPY_TLT",
+  "xly-xlp": "XLY_XLP",
+  "iwm-spy": "IWM_SPY",
+  sox: "SOX",
+  "tsmc-revenue-yoy": "TSMC_REVENUE_YOY",
+  "taiwan-tsmc-revenue-yoy": "TSMC_REVENUE_YOY",
+  "ai-capex": "AI_CAPEX",
+  "fed-funds-rate": "DFEDTARU",
+  "us-2y-yield": "DGS2",
+  "us-rates-10y-yield": "DGS10",
+  "us-rates-10y-2y-spread": "T10Y2Y",
+  "us-10y-term-premium": "ACMTP10",
+  "japan-2y-jgb-yield": "JAPAN_2Y_JGB",
+  "japan-10y-jgb-yield": "JAPAN_10Y_JGB",
+  "japan-tab-10y-jgb-yield": "JAPAN_10Y_JGB",
+  "japan-10y-2y-jgb-spread": "JAPAN_10Y_2Y_SPREAD",
+  topix: "TOPIX",
+  "jp-rates-topix": "TOPIX",
+  "nikkei-225": "NIKKEI_225",
+  "jp-rates-nikkei-225": "NIKKEI_225",
+  "japan-foreign-investor-net-buying": "JAPAN_FOREIGN_NET_BUYING",
+  "japan-tab-usdjpy": "DEXJPUS",
+  taiex: "TAIEX",
+  "taiwan-foreign-investor-net-buying": "TAIWAN_FOREIGN_NET_BUYING",
+  usdtwd: "USDTWD",
+  "taiwan-margin-financing-balance-yoy": "TAIWAN_MARGIN_FINANCING_BALANCE_YOY",
+  "taiwan-electronics-exports-yoy": "TAIWAN_ELECTRONICS_EXPORTS_YOY",
+};
+
+const glossaryDashboardTargets = {
+  SP500: { tab: "macro", selector: '[data-indicator="sp500"]' },
+  BAMLH0A0HYM2: { tab: "macro", selector: '[data-indicator="high-yield-oas"]' },
+  HYG_IEF: { tab: "flows", selector: '[data-flows-indicator="flows-hyg-ief"]' },
+  VIXCLS: { tab: "macro", selector: '[data-indicator="vix"]' },
+  MOVE: { tab: "macro", selector: '[data-indicator="move"]' },
+  SKEW: { tab: "macro", selector: '[data-indicator="skew"]' },
+  FINRA_MARGIN_DEBT_YOY: { tab: "macro", selector: '[data-indicator="margin-debt-yoy"]' },
+  WALCL: { tab: "macro", selector: '[data-indicator="fed-balance-sheet"]' },
+  NFCI: { tab: "macro", selector: '[data-indicator="nfci"]' },
+  ISM_MANUFACTURING_PMI: { tab: "macro", selector: '[data-indicator="ism-manufacturing-pmi"]' },
+  RSP_SPY: { tab: "flows", selector: '[data-flows-indicator="flows-rsp-spy"]' },
+  SPY_TLT: { tab: "flows", selector: '[data-flows-indicator="spy-tlt"]' },
+  XLY_XLP: { tab: "flows", selector: '[data-flows-indicator="xly-xlp"]' },
+  IWM_SPY: { tab: "flows", selector: '[data-flows-indicator="iwm-spy"]' },
+  NEW_HIGH_LOW_BREADTH: {
+    tab: "breadth",
+    selector: '[data-breadth-indicator="new-high-low-breadth"]',
+  },
+  SP500_ABOVE_200DMA: {
+    tab: "breadth",
+    selector: '[data-breadth-indicator="sp500-above-200dma"]',
+  },
+  SOX: { tab: "semiconductor", selector: '[data-semiconductor-indicator="sox"]' },
+  TSMC_REVENUE_YOY: {
+    tab: "semiconductor",
+    selector: '[data-semiconductor-indicator="tsmc-revenue-yoy"]',
+  },
+  AI_CAPEX: { tab: "semiconductor", selector: '[data-semiconductor-indicator="ai-capex"]' },
+  DFEDTARU: { tab: "us-rates", selector: '[data-us-rates-indicator="fed-funds-rate"]' },
+  DGS2: { tab: "us-rates", selector: '[data-us-rates-indicator="us-2y-yield"]' },
+  DGS10: { tab: "us-rates", selector: '[data-us-rates-indicator="us-rates-10y-yield"]' },
+  T10Y2Y: { tab: "us-rates", selector: '[data-us-rates-indicator="us-rates-10y-2y-spread"]' },
+  ACMTP10: { tab: "us-rates", selector: '[data-us-rates-indicator="us-10y-term-premium"]' },
+  JAPAN_2Y_JGB: { tab: "jp-rates", selector: '[data-jp-rates-indicator="japan-2y-jgb-yield"]' },
+  JAPAN_10Y_JGB: { tab: "jp-rates", selector: '[data-jp-rates-indicator="japan-10y-jgb-yield"]' },
+  JAPAN_10Y_2Y_SPREAD: {
+    tab: "jp-rates",
+    selector: '[data-jp-rates-indicator="japan-10y-2y-jgb-spread"]',
+  },
+  TOPIX: { tab: "japan", selector: '[data-japan-indicator="topix"]' },
+  NIKKEI_225: { tab: "japan", selector: '[data-japan-indicator="nikkei-225"]' },
+  JAPAN_FOREIGN_NET_BUYING: {
+    tab: "japan",
+    selector: '[data-japan-indicator="japan-foreign-investor-net-buying"]',
+  },
+  DEXJPUS: { tab: "fx", selector: '[data-fx-card="USDJPY"]' },
+  JAPAN_CORE_CPI_YOY: { tab: "fx", selector: '[data-fx-card="Japan_Core_CPI_YoY"]' },
+  TOKYO_CORE_CPI_YOY: { tab: "fx", selector: '[data-fx-card="Tokyo_Core_CPI_YoY"]' },
+  US_JAPAN_2Y_SPREAD: { tab: "fx", selector: '[data-fx-card="US_Japan_2Y_Spread"]' },
+  TAIEX: { tab: "taiwan", selector: '[data-taiwan-indicator="taiex"]' },
+  TAIWAN_FOREIGN_NET_BUYING: {
+    tab: "taiwan",
+    selector: '[data-taiwan-indicator="taiwan-foreign-investor-net-buying"]',
+  },
+  USDTWD: { tab: "taiwan", selector: '[data-taiwan-indicator="usdtwd"]' },
+  TAIWAN_MARGIN_FINANCING_BALANCE_YOY: {
+    tab: "taiwan",
+    selector: '[data-taiwan-indicator="taiwan-margin-financing-balance-yoy"]',
+  },
+  TAIWAN_ELECTRONICS_EXPORTS_YOY: {
+    tab: "taiwan",
+    selector: '[data-taiwan-indicator="taiwan-electronics-exports-yoy"]',
+  },
+};
+
 const ranges = {
   "1Y": 1,
   "3Y": 3,
@@ -653,6 +834,11 @@ const indicatorChangeFormatOverrides = {
   sp500: "percent",
   "breadth-sp500": "percent",
   "rsp-spy": "percent",
+  "flows-rsp-spy": "percent",
+  "flows-hyg-ief": "percent",
+  "spy-tlt": "percent",
+  "xly-xlp": "percent",
+  "iwm-spy": "percent",
   "us-rates-sp500": "percent",
   topix: "percent",
   "jp-rates-topix": "percent",
@@ -721,6 +907,7 @@ const sharedIndicatorColorDefaults = new Map([
   ...[
     ...indicators,
     ...breadthIndicators,
+    ...flowsIndicators,
     ...semiconductorIndicators,
     ...usRatesIndicators,
     ...jpRatesIndicators,
@@ -746,6 +933,97 @@ let glossarySearchText = "";
 let activeGlossaryLanguage = "zh";
 let expandedGlossaryId = null;
 const localTextRequests = new Map();
+
+function consumeLongPressClick(element) {
+  if (element.dataset.longPressActivated !== "true") {
+    return false;
+  }
+
+  delete element.dataset.longPressActivated;
+  return true;
+}
+
+function attachLongPress(element, callback) {
+  let timer = null;
+  let startX = 0;
+  let startY = 0;
+
+  function cancel() {
+    if (timer) {
+      window.clearTimeout(timer);
+      timer = null;
+    }
+  }
+
+  element.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0 || event.target.closest("[data-color-control], button, input, a")) {
+      return;
+    }
+
+    startX = event.clientX;
+    startY = event.clientY;
+    cancel();
+    timer = window.setTimeout(() => {
+      timer = null;
+      element.dataset.longPressActivated = "true";
+      callback();
+    }, longPressDelayMs);
+  });
+  element.addEventListener("pointermove", (event) => {
+    if (
+      Math.abs(event.clientX - startX) > longPressMoveLimit ||
+      Math.abs(event.clientY - startY) > longPressMoveLimit
+    ) {
+      cancel();
+    }
+  });
+  ["pointerup", "pointercancel", "pointerleave"].forEach((eventName) => {
+    element.addEventListener(eventName, cancel);
+  });
+}
+
+function openGlossaryEntry(id) {
+  if (!id) {
+    return;
+  }
+
+  expandedGlossaryId = id;
+  glossarySearchText = "";
+  if (glossarySearchInput) {
+    glossarySearchInput.value = "";
+  }
+  activateTab("glossary");
+  if (glossaryEntries.length > 0) {
+    renderGlossary({ indicators: glossaryEntries });
+    scrollGlossaryEntryIntoView(id);
+  }
+}
+
+function scrollDashboardCardIntoView(target, attempt = 0) {
+  const card = document.querySelector(target.selector);
+  if (!card && attempt < 8) {
+    window.setTimeout(() => scrollDashboardCardIntoView(target, attempt + 1), 80);
+    return;
+  }
+  if (!card) {
+    return;
+  }
+
+  card.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+  card.classList.remove("long-press-target");
+  requestAnimationFrame(() => card.classList.add("long-press-target"));
+  window.setTimeout(() => card.classList.remove("long-press-target"), 1500);
+}
+
+function openDashboardForGlossary(id) {
+  const target = glossaryDashboardTargets[id];
+  if (!target) {
+    return;
+  }
+
+  activateTab(target.tab);
+  scrollDashboardCardIntoView(target);
+}
 
 function fetchLocalText(file) {
   if (!localTextRequests.has(file)) {
@@ -2519,7 +2797,7 @@ function renderCards() {
       const isUnavailable = !latest;
 
       return `
-        <article class="metric-card indicator-card ${isActive ? "active" : ""} ${isUnavailable ? "unavailable" : ""}" data-indicator="${indicator.id}" tabindex="0" ${isUnavailable ? 'aria-disabled="true"' : ""}>
+        <article class="metric-card indicator-card ${isActive ? "active" : ""} ${isUnavailable ? "unavailable" : ""}" data-indicator="${indicator.id}" data-glossary-id="${indicatorGlossaryIds[indicator.id] || ""}" tabindex="0" ${isUnavailable ? 'aria-disabled="true"' : ""}>
           <span class="indicator-label">${indicator.name}</span>
           <strong>${latest ? formatValue(latest.value, indicator) : "--"}</strong>
           ${renderIndicatorChange(rows, indicator)}
@@ -2562,8 +2840,12 @@ function renderCards() {
 
   indicatorGrid.querySelectorAll("[data-indicator]").forEach((card) => {
     card.addEventListener("click", () => {
+      if (consumeLongPressClick(card)) {
+        return;
+      }
       toggleCard(card);
     });
+    attachLongPress(card, () => openGlossaryEntry(card.dataset.glossaryId));
     card.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
@@ -3532,7 +3814,7 @@ function createComparisonSection(config) {
         const isUnavailable = state.loaded && !latest;
 
         return `
-          <article class="metric-card indicator-card ${isActive ? "active" : ""} ${isUnavailable ? "unavailable" : ""}" data-${config.key}-indicator="${indicator.id}" tabindex="0" ${isUnavailable ? 'aria-disabled="true"' : ""}>
+          <article class="metric-card indicator-card ${isActive ? "active" : ""} ${isUnavailable ? "unavailable" : ""}" data-${config.key}-indicator="${indicator.id}" data-glossary-id="${indicatorGlossaryIds[indicator.id] || ""}" tabindex="0" ${isUnavailable ? 'aria-disabled="true"' : ""}>
             <span class="indicator-label">${indicator.name}</span>
             <strong>${latest ? formatValue(latest.value, indicator) : "--"}</strong>
             ${renderIndicatorChange(rows, indicator)}
@@ -3572,7 +3854,13 @@ function createComparisonSection(config) {
     }
 
     elements.grid.querySelectorAll(`[data-${config.key}-indicator]`).forEach((card) => {
-      card.addEventListener("click", () => toggleCard(card));
+      card.addEventListener("click", () => {
+        if (consumeLongPressClick(card)) {
+          return;
+        }
+        toggleCard(card);
+      });
+      attachLongPress(card, () => openGlossaryEntry(card.dataset.glossaryId));
       card.addEventListener("keydown", (event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
@@ -3851,6 +4139,14 @@ const comparisonSections = [
     defaultSelectedIds: ["breadth-sp500"],
     defaultRange: "5Y",
     storageKey: "breadthIndicatorColors",
+  }),
+  createComparisonSection({
+    key: "flows",
+    label: "Flows",
+    indicators: flowsIndicators,
+    defaultSelectedIds: ["flows-rsp-spy"],
+    defaultRange: "5Y",
+    storageKey: "flowsIndicatorColors",
   }),
   createComparisonSection({
     key: "semiconductor",
@@ -4212,7 +4508,8 @@ function renderGlossaryLinkedText(text, currentEntryId) {
 
   aliases.forEach(({ alias, id }) => {
     const escapedAlias = escapeHtml(alias);
-    const pattern = new RegExp(`(^|[^A-Za-z0-9_])(${escapeRegex(escapedAlias)})(?=$|[^A-Za-z0-9_])`, "g");
+    const flexibleAlias = escapeRegex(escapedAlias).replaceAll("/", "\\s*/\\s*");
+    const pattern = new RegExp(`(^|[^A-Za-z0-9_])(${flexibleAlias})(?=$|[^A-Za-z0-9_])`, "g");
 
     segments = segments.flatMap((segment) => {
       if (segment.type !== "text") {
@@ -4399,6 +4696,10 @@ function renderGlossary(glossary) {
       `;
     })
     .join("");
+
+  glossaryBody.querySelectorAll("[data-glossary-row]").forEach((row) => {
+    attachLongPress(row, () => openDashboardForGlossary(row.dataset.glossaryRow));
+  });
 }
 
 function renderGlossaryError(error) {
@@ -4428,31 +4729,31 @@ rangeButtons.forEach((button) => {
   });
 });
 
-tabButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    const tab = button.dataset.tab;
-
-    tabButtons.forEach((item) => {
-      const active = item.dataset.tab === tab;
-      item.classList.toggle("active", active);
-      item.setAttribute("aria-selected", String(active));
-    });
-
-    tabPanels.forEach((panel) => {
-      panel.classList.toggle("active", panel.dataset.tabPanel === tab);
-    });
-
-    if (tab === "fx" && fxData.length === 0) {
-      loadFxData().then(renderFx).catch((error) => setFxText("fx-updated", error.message));
-    }
-
-    const comparisonSection = comparisonSections.find((section) => section.key === tab);
-    comparisonSection?.load().catch((error) => comparisonSection.showError(error));
-
-    requestAnimationFrame(() => {
-      resizeVisibleCharts();
-    });
+function activateTab(tab) {
+  tabButtons.forEach((item) => {
+    const active = item.dataset.tab === tab;
+    item.classList.toggle("active", active);
+    item.setAttribute("aria-selected", String(active));
   });
+
+  tabPanels.forEach((panel) => {
+    panel.classList.toggle("active", panel.dataset.tabPanel === tab);
+  });
+
+  if (tab === "fx" && fxData.length === 0) {
+    loadFxData().then(renderFx).catch((error) => setFxText("fx-updated", error.message));
+  }
+
+  const comparisonSection = comparisonSections.find((section) => section.key === tab);
+  comparisonSection?.load().catch((error) => comparisonSection.showError(error));
+
+  requestAnimationFrame(() => {
+    resizeVisibleCharts();
+  });
+}
+
+tabButtons.forEach((button) => {
+  button.addEventListener("click", () => activateTab(button.dataset.tab));
 });
 
 mobileViewButtons.forEach((button) => {
@@ -4521,8 +4822,12 @@ fxSelectionNoticeClose?.addEventListener("click", clearFxNotice);
 
 fxCards.forEach((card) => {
   card.addEventListener("click", () => {
+    if (consumeLongPressClick(card)) {
+      return;
+    }
     toggleFxCard(card);
   });
+  attachLongPress(card, () => openGlossaryEntry(card.dataset.glossaryId));
   card.addEventListener("keydown", (event) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
@@ -4579,6 +4884,10 @@ if (glossaryBody) {
     const target = event.target.closest("[data-glossary-expand], [data-glossary-row]");
 
     if (target) {
+      const row = target.closest("[data-glossary-row]");
+      if (row && consumeLongPressClick(row)) {
+        return;
+      }
       const id = target.dataset.glossaryExpand || target.dataset.glossaryRow;
       const willExpand = expandedGlossaryId !== id;
       expandedGlossaryId = willExpand ? id : null;
