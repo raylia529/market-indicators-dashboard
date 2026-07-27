@@ -54,6 +54,12 @@ function daysBefore(dateText, days) {
   return isoDate(date);
 }
 
+function yearsBeforeToday(years) {
+  const date = new Date();
+  date.setUTCFullYear(date.getUTCFullYear() - years);
+  return isoDate(date);
+}
+
 function rollingStartDate() {
   const date = new Date();
   date.setUTCDate(date.getUTCDate() - rollingWindowCalendarDays);
@@ -281,8 +287,9 @@ async function updateRatios() {
     "RSP/SPY split-adjusted close ratio",
     6,
     {
-    earliestDate: "2016-01-05",
-    minimumRows: 200,
+      // Free Paper IEX currently exposes a rolling history of roughly six years.
+      earliestDate: yearsBeforeToday(5),
+      minimumRows: 1000,
     },
   );
   const hygIefTemporaryFile = prepareCsv(
