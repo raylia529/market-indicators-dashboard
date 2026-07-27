@@ -280,6 +280,7 @@ jobs:
           }
 
           run_asia_daily() {
+            run_update "Japan overnight call rate" "node scripts/update-boj-overnight-rate.mjs" "BOJ_OVERNIGHT_CALL_RATE" "daily" "asia" "boj"
             run_update "Japan 2Y and spread" "node scripts/update-fx.mjs --profile=asia --only=japan2y" "JAPAN_2Y_JGB,US_JAPAN_2Y_SPREAD" "daily" "asia" "japan-mof"
             run_update "Japan 10Y rates" "node scripts/update-japan-rates.mjs" "JAPAN_10Y_JGB,JAPAN_10Y_2Y_SPREAD" "daily" "asia" "japan-mof"
             run_update "Nikkei 225" "node scripts/update-regional-markets.mjs --only=nikkei" "NIKKEI_225" "daily" "asia" "yahoo"
@@ -292,6 +293,7 @@ jobs:
 
           run_asia_slow() {
             slow_mode="${1:-once}"
+            run_update "BOJ Policy Rate" "node scripts/update-boj-policy-rate.mjs" "BOJ_POLICY_RATE" "${slow_mode}" "asia" "bis"
             run_update "Japan core CPI" "node scripts/update-japan-cpi.mjs" "JAPAN_CORE_CPI_YOY,TOKYO_CORE_CPI_YOY" "${slow_mode}" "asia" "japan-statistics"
             run_update "TSMC Revenue YoY" "node scripts/update-extra-indicators.mjs --only=tsmc" "TSMC_REVENUE_YOY" "${slow_mode}" "asia" "mops"
             run_update "Japan foreign net buying" "python scripts/update-regional-official.py --only=japan-foreign" "JAPAN_FOREIGN_NET_BUYING" "${slow_mode}" "asia" "jpx"
@@ -338,6 +340,8 @@ jobs:
             run_update "FX series" "node scripts/update-fx.mjs --profile=full" "DEXJPUS,DGS2,JAPAN_2Y_JGB,US_JAPAN_2Y_SPREAD" "force" "full"
             run_update "US rates" "node scripts/update-us-rates.mjs" "ACMTP10" "force" "full"
             run_update "Japan rates" "node scripts/update-japan-rates.mjs" "JAPAN_10Y_JGB,JAPAN_10Y_2Y_SPREAD" "force" "full"
+            run_update "BOJ Policy Rate" "node scripts/update-boj-policy-rate.mjs" "BOJ_POLICY_RATE" "force" "full"
+            run_update "Japan overnight call rate" "node scripts/update-boj-overnight-rate.mjs" "BOJ_OVERNIGHT_CALL_RATE" "force" "full"
             run_update "Regional markets" "node scripts/update-regional-markets.mjs" "NIKKEI_225,TAIEX,USDTWD" "force" "full"
             run_update "Regional official indicators" "python scripts/update-regional-official.py" "TOPIX,JAPAN_FOREIGN_NET_BUYING,TAIWAN_FOREIGN_NET_BUYING,TAIWAN_ELECTRONICS_EXPORTS_YOY,TAIWAN_MARGIN_FINANCING_BALANCE_YOY" "force" "full"
             run_update "Japan core CPI" "node scripts/update-japan-cpi.mjs" "JAPAN_CORE_CPI_YOY,TOKYO_CORE_CPI_YOY" "force" "full"
@@ -368,6 +372,8 @@ jobs:
           node --check scripts/update-fx.mjs
           node --check scripts/update-us-rates.mjs
           node --check scripts/update-japan-rates.mjs
+          node --check scripts/update-boj-policy-rate.mjs
+          node --check scripts/update-boj-overnight-rate.mjs
           node --check scripts/update-japan-cpi.mjs
           node --check scripts/update-regional-markets.mjs
           node --check scripts/should-update.mjs

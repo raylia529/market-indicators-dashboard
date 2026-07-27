@@ -430,6 +430,59 @@ const indicatorDefinitions = [
     dailyLagDays: 4,
   },
   {
+    key: "BOJ_POLICY_RATE",
+    displayName: "Bank of Japan Policy Rate",
+    shortName: "BOJ Policy Rate",
+    sourceName: "BIS Central Bank Policy Rates / Bank of Japan",
+    sourceUrl: "https://data.bis.org/topics/CBPOL/BIS%2CWS_CBPOL%2C1.0/D.JP",
+    sourceUrls: [
+      {
+        label: "BIS Central Bank Policy Rates - Japan",
+        url: "https://data.bis.org/topics/CBPOL/BIS%2CWS_CBPOL%2C1.0/D.JP",
+      },
+      {
+        label: "BIS policy-rate methodology",
+        url: "https://www.bis.org/statistics/cbpol/cbpol_doc.pdf",
+      },
+      {
+        label: "Bank of Japan monetary policy decisions",
+        url: "https://www.boj.or.jp/en/mopo/mpmdeci/index.htm",
+      },
+    ],
+    frequency: "Daily observations, weekly BIS release",
+    unit: "Percent per annum",
+    expectedReleaseDelayDays: 9,
+    releaseNote:
+      "BIS long, spliced policy-rate series D.JP, compiled with the Bank of Japan. It uses the main policy target or instrument for each regime; target ranges are represented by their midpoint unless otherwise specified.",
+    file: "data/boj-policy-rate.csv",
+    type: "single",
+    dailyLagDays: 12,
+  },
+  {
+    key: "BOJ_OVERNIGHT_CALL_RATE",
+    displayName: "Japan Uncollateralized Overnight Call Rate",
+    shortName: "Japan Overnight Rate",
+    sourceName: "Bank of Japan Time-Series Data Search",
+    sourceUrl: "https://www.stat-search.boj.or.jp/index_en.html",
+    sourceUrls: [
+      {
+        label: "BOJ Time-Series Data Search",
+        url: "https://www.stat-search.boj.or.jp/index_en.html",
+      },
+      {
+        label: "BOJ Call Money Market Data",
+        url: "https://www.boj.or.jp/en/statistics/market/short/mutan/index.htm",
+      },
+    ],
+    frequency: "Daily, Japan business days",
+    unit: "Percent per annum",
+    releaseNote:
+      "Official FM01'STRDCLUCON daily average. This is the observed uncollateralized overnight market rate, not the BOJ policy target. Missing non-business days are not filled.",
+    file: "data/japan-overnight-call-rate.csv",
+    type: "single",
+    dailyLagDays: 4,
+  },
+  {
     key: "JAPAN_CORE_CPI_YOY",
     displayName: "Japan Core Consumer Price Index Year-over-Year",
     shortName: "Japan Core CPI YoY",

@@ -73,6 +73,7 @@ function latestPublishedJapanJgbDate(date = currentTime) {
 }
 
 const japanJgbKeys = new Set([
+  "BOJ_OVERNIGHT_CALL_RATE",
   "JAPAN_2Y_JGB",
   "US_JAPAN_2Y_SPREAD",
   "JAPAN_10Y_JGB",

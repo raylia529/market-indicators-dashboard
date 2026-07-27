@@ -289,6 +289,11 @@
       "id": "US_JAPAN_2Y_SPREAD",
       "short_name": "US-JP 2Y Spread",
       "full_name": "US-Japan 2-Year Government Bond Yield Spread",
+      "aliases": [
+        "US–Japan 2Y Spread",
+        "US–Japan 2-Year Yield Spread",
+        "U.S.–Japan 2-Year Yield Spread"
+      ],
       "headings": {
         "zh": "U.S.–Japan 2-Year Yield Spread",
         "en": "U.S.–Japan 2-Year Yield Spread",
@@ -301,9 +306,49 @@
       }
     },
     {
+      "id": "BOJ_POLICY_RATE",
+      "short_name": "BOJ Policy Rate",
+      "full_name": "Bank of Japan Policy Rate",
+      "headings": {
+        "zh": "日本銀行政策利率",
+        "en": "Bank of Japan Policy Rate",
+        "ja": "日本銀行政策金利"
+      },
+      "descriptions": {
+        "zh": "BOJ Policy Rate（日本銀行政策利率）是日本銀行（Bank of Japan, BOJ）用來執行貨幣政策的主要短期利率工具。目前 BOJ 以無擔保隔夜拆款利率（Uncollateralized Overnight Call Rate）的目標水準作為政策利率，並透過公開市場操作引導實際市場利率接近該目標。每當 BOJ 宣布升息或降息時，調整的就是這個政策利率，因此它是日本貨幣政策最重要的指標之一。\n\nBOJ Policy Rate 的重要性，在於它直接影響日本金融體系的資金成本。當 BOJ 提高政策利率時，銀行借貸成本上升，企業與家庭融資成本也會逐漸增加，有助於抑制通膨，但可能減緩經濟成長。反之，當政策利率下降時，市場流動性通常改善，有利於投資、消費及資產價格。因此，政策利率是 BOJ 平衡經濟成長與物價穩定的核心工具。\n\n市場通常不只觀察政策利率本身，更重視 BOJ 未來的政策方向。如果市場預期 BOJ 將持續升息，日本公債殖利率通常會提前上升，日圓可能走強，而股市則可能因資金成本提高而承受壓力。相反地，若市場預期 BOJ 將維持寬鬆政策，殖利率通常維持低檔，日圓偏弱，股票市場則較容易受惠於充裕流動性。因此，市場反應往往發生在預期形成時，而非政策正式公布之後。\n\nBOJ Policy Rate 最大的用途，是判斷日本貨幣政策是否正在轉向。若政策利率開始進入升息循環，通常代表 BOJ 認為通膨已逐漸穩定於目標附近，並開始退出超寬鬆政策。若政策利率長期維持低檔，則代表 BOJ 仍認為經濟復甦或物價壓力不足，需要維持寬鬆金融環境。\n\nBOJ Policy Rate 應與其他日本市場指標一起分析。如果 Japan 2Y Yield 同步上升，表示市場認同 BOJ 的政策方向；若 US–Japan 2Y Spread 同時縮小，日圓通常有升值壓力。另一方面，若政策利率維持不變，但 Japan 10Y Yield 持續上升，則代表市場可能預期未來將進一步升息。搭配 Japan Core CPI YoY 觀察，則可判斷 BOJ 是否仍有升息空間。\n\n2024 年是 BOJ Policy Rate 的重要轉折點。BOJ 結束長達多年的負利率政策，將政策利率由負值調升至正值，並逐步退出殖利率曲線控制（YCC）。雖然升息幅度相對溫和，但象徵日本正式結束超寬鬆貨幣政策，也使全球市場重新開始關注日本利率與日圓走勢。",
+        "en": "The BOJ Policy Rate is the primary short-term interest rate used by the Bank of Japan (BOJ) to implement monetary policy. Today, the BOJ defines its policy rate as the target level for the uncollateralized overnight call rate and conducts money market operations to keep the actual overnight rate close to that target. Whenever the BOJ announces a rate hike or rate cut, it is referring to this policy rate, making it the central benchmark of Japanese monetary policy.\n\nThe importance of the BOJ Policy Rate lies in its direct influence on funding costs throughout Japan’s financial system. When the BOJ raises the policy rate, borrowing costs for banks, businesses, and households gradually increase, helping to contain inflation but potentially slowing economic activity. Conversely, a lower policy rate generally supports liquidity, encourages lending, and stimulates investment and consumption. As a result, the policy rate is the BOJ’s primary tool for balancing price stability and economic growth.\n\nFinancial markets focus not only on the current policy rate but also on expectations for future policy. If investors expect additional rate hikes, Japanese government bond yields often rise before the BOJ acts, the Japanese yen may appreciate, and equities can face pressure from higher financing costs. Conversely, expectations of prolonged accommodative policy tend to support lower yields, a weaker yen, and stronger equity performance. Consequently, market pricing usually reflects expectations well before official policy decisions are announced.\n\nOne of the most valuable uses of the BOJ Policy Rate is identifying shifts in Japan’s monetary policy regime. A tightening cycle generally indicates that the BOJ believes inflation is becoming sustainably anchored near its target and that extraordinary monetary stimulus is no longer necessary. A prolonged period of very low policy rates, on the other hand, suggests the central bank still considers economic growth or inflation insufficient to justify tighter financial conditions.\n\nThe BOJ Policy Rate should be analyzed together with other Japanese market indicators. If Japan’s 2-Year Government Bond Yield rises alongside the policy rate, the market is validating the BOJ’s policy path. A narrowing U.S.–Japan 2-Year Yield Spread typically supports a stronger yen. If the policy rate remains unchanged while the Japan 10-Year Yield continues rising, investors may be anticipating future tightening. Comparing the policy rate with Japan Core CPI YoY also helps assess whether additional rate increases are likely.\n\nThe year 2024 marked a historic turning point for the BOJ. The central bank ended its negative interest rate policy, raised the policy rate back into positive territory, and began exiting Yield Curve Control (YCC). Although the pace of tightening remained gradual, the decision marked the end of Japan’s ultra-loose monetary policy and renewed global attention on Japanese interest rates and the yen.",
+        "ja": "BOJ政策金利は、日本銀行（BOJ）が金融政策を実施するための最も重要な短期金利です。現在、日本銀行は無担保コール翌日物金利の誘導目標を政策金利として設定し、市場操作を通じて実際の短期金利をその水準付近に維持しています。日本銀行が利上げや利下げを発表する際に調整するのはこの政策金利であり、日本の金融政策を最もよく表す指標です。\n\nBOJ政策金利の重要性は、日本の金融システム全体の資金調達コストに直接影響を与える点にあります。政策金利が引き上げられると、銀行の資金調達コストが上昇し、企業や家計の借入コストも徐々に高くなります。その結果、インフレ抑制には効果がありますが、景気には下押し圧力となる可能性があります。一方、政策金利が低く維持されれば、市場の流動性が高まり、投資や消費を支える効果が期待されます。そのため、政策金利は物価安定と経済成長のバランスを調整する日本銀行の中核的な政策手段となっています。\n\n市場参加者は現在の政策金利だけでなく、将来の金融政策の方向性にも注目しています。追加利上げが予想される場合、日本国債利回りは実際の政策変更前から上昇し、円高が進みやすくなります。一方、緩和的な政策が長期間続くとの見方が強まれば、国債利回りは低位にとどまり、円安や株式市場の支援材料となることが一般的です。そのため、市場は政策決定そのものよりも将来の政策見通しに先行して反応する傾向があります。\n\nBOJ政策金利は、日本の金融政策が転換点を迎えているかを判断するうえで非常に重要です。利上げ局面への移行は、日本銀行がインフレ率が目標付近で安定すると判断し、超金融緩和政策から正常化へ向かっていることを意味します。一方、政策金利が長期間低水準に維持されている場合は、景気や物価が依然として十分ではなく、金融緩和を継続する必要があると判断していることを示しています。\n\n分析では、Japan 2-Year Yield、Japan 10-Year Yield、US–Japan 2-Year Yield Spread、USD/JPY、Japan Core CPI YoY などと組み合わせることで、金融政策が市場へ与える影響をより包括的に把握できます。2024年には、日本銀行はマイナス金利政策を終了し、政策金利をプラス圏へ引き上げるとともに、イールドカーブ・コントロール（YCC）からの正常化を進めました。これは日本の金融政策における歴史的な転換点となり、世界の金融市場から再び日本の金利政策が大きな注目を集めるようになりました。"
+      }
+    },
+    {
+      "id": "BOJ_OVERNIGHT_CALL_RATE",
+      "short_name": "Japan Overnight Rate",
+      "full_name": "Japan Uncollateralized Overnight Call Rate",
+      "aliases": [
+        "Overnight Call Rate",
+        "Uncollateralized Overnight Call Rate"
+      ],
+      "headings": {
+        "zh": "日本無擔保隔夜拆款利率",
+        "en": "Japan Overnight Call Rate",
+        "ja": "無担保コール翌日物金利"
+      },
+      "descriptions": {
+        "zh": "Overnight Call Rate（無擔保隔夜拆款利率）是日本金融機構彼此之間進行無擔保隔夜資金借貸時的實際市場利率，也是日本貨幣市場最重要的短期利率指標。日本銀行（BOJ）目前以此利率作為貨幣政策的操作目標，透過公開市場操作調節市場流動性，使實際的 Overnight Call Rate 盡可能維持在 BOJ 所設定的政策利率附近。因此，它代表的是市場實際成交的隔夜利率，而非 BOJ 自行決定的政策利率。\n\nOvernight Call Rate 的重要性，在於它能反映日本短期資金市場的流動性狀況。如果實際利率持續高於政策利率，通常代表市場資金較為緊張，金融機構願意支付更高成本取得短期資金；反之，若實際利率低於政策利率，則表示市場資金相對充裕。BOJ 通常會透過買賣短期金融資產、附買回（Repo）等公開市場操作，使實際利率重新回到政策目標附近。\n\n市場通常不會因 Overnight Call Rate 每天的小幅變動而改變對日本經濟或日圓的看法。只要實際利率仍貼近 BOJ 的政策目標，就代表貨幣政策運作正常。只有當 Overnight Call Rate 持續明顯偏離政策利率時，才可能表示市場出現流動性壓力，或 BOJ 必須透過額外操作穩定貨幣市場。\n\nOvernight Call Rate 最大的用途，是觀察日本貨幣市場是否順利運作，而不是判斷 BOJ 的政策方向。若要分析日本利率、日圓或股票市場走勢，BOJ Policy Rate、Japan 2-Year Yield、Japan 10-Year Yield 及 US–Japan 2-Year Yield Spread 通常提供更多資訊；Overnight Call Rate 則主要反映政策是否有效傳導至貨幣市場。\n\n分析時，可將 Overnight Call Rate 與 BOJ Policy Rate 一起觀察。若兩者長期幾乎重疊，表示 BOJ 成功控制短期利率；若兩者出現持續偏離，則代表貨幣市場資金供需可能發生變化。由於日本長期維持充裕流動性，兩者通常只相差數個 basis points，因此 Overnight Call Rate 對一般投資人而言屬於輔助性指標，而對銀行資金部門及貨幣市場交易員則具有較高參考價值。",
+        "en": "The Overnight Call Rate is the actual overnight interest rate at which Japanese financial institutions lend unsecured funds to one another in the money market. It is the benchmark short-term market rate in Japan and serves as the Bank of Japan’s operational target for monetary policy. Through open market operations, the BOJ adjusts liquidity so that the actual Overnight Call Rate remains close to its policy rate target. Therefore, the Overnight Call Rate represents the market-determined overnight funding rate, rather than the policy rate itself.\n\nThe importance of the Overnight Call Rate lies in its ability to reflect liquidity conditions in Japan’s money market. When the market rate rises above the BOJ’s target, it usually indicates tighter funding conditions and stronger demand for short-term cash. Conversely, a rate below the target suggests abundant liquidity. The BOJ typically responds through liquidity operations such as repurchase agreements (repos) or short-term asset purchases to guide the market rate back toward its desired level.\n\nFinancial markets generally pay little attention to small day-to-day movements in the Overnight Call Rate. As long as it remains close to the BOJ Policy Rate, monetary policy is considered to be functioning as intended. Only persistent deviations from the policy target are viewed as signs of funding stress or unusual liquidity conditions that may require additional intervention by the central bank.\n\nThe Overnight Call Rate is primarily used to evaluate the effectiveness of monetary policy implementation rather than the direction of monetary policy itself. Investors seeking to assess the outlook for the Japanese yen, government bond yields, or equity markets typically rely more on the BOJ Policy Rate, Japan 2-Year Government Bond Yield, Japan 10-Year Government Bond Yield, and the U.S.–Japan 2-Year Yield Spread. The Overnight Call Rate mainly indicates whether policy is being transmitted effectively to the money market.\n\nWhen analyzed together with the BOJ Policy Rate, the Overnight Call Rate provides insight into the functioning of Japan’s financial system. If the two rates remain nearly identical, the BOJ is successfully controlling short-term interest rates. Persistent gaps between them may signal changes in liquidity conditions or funding stress. Because Japan’s money market has generally operated with abundant liquidity in recent years, the Overnight Call Rate usually differs from the policy rate by only a few basis points, making it a specialized indicator that is more valuable for money market participants than for long-term investors.",
+        "ja": "無担保コール翌日物金利（Overnight Call Rate）は、日本の金融機関が無担保で翌日返済の資金を貸し借りする際に成立する実際の市場金利です。日本の短期金融市場を代表する金利であり、日本銀行（BOJ）はこの金利を金融政策の操作目標として、市場操作を通じて実際の金利を政策金利の水準付近に誘導しています。そのため、Overnight Call Rate は市場で実際に成立した短期金利であり、日本銀行が決定する政策金利そのものではありません。\n\nこの金利の重要性は、日本の短期金融市場における資金需給を反映する点にあります。市場金利が政策金利を上回る場合は、金融機関が短期資金を確保するために高い金利を支払っていることを示し、資金需給が引き締まっている可能性があります。一方、市場金利が政策金利を下回る場合は、市場に十分な流動性が供給されていることを意味します。日本銀行は、レポ取引などの公開市場操作を通じて、市場金利を政策目標付近へ戻すよう調整を行います。\n\n通常、金融市場は無担保コール翌日物金利の日々の小さな変動にはあまり反応しません。市場金利が政策金利付近で推移している限り、日本銀行の金融政策は円滑に機能していると考えられます。一方、市場金利が政策金利から継続的に乖離する場合には、短期金融市場に流動性不足や資金調達ストレスが発生している可能性があり、日本銀行による追加の市場操作が必要になる場合があります。\n\n無担保コール翌日物金利は、日本銀行の金融政策の方向性を判断するためというよりも、金融政策が市場へ適切に伝達されているかを確認するための指標です。円相場や日本国債利回り、株式市場の動向を分析する際には、BOJ Policy Rate、Japan 2-Year Yield、Japan 10-Year Yield、US–Japan 2-Year Yield Spread などの方が一般的に重要視されます。\n\n分析では、BOJ Policy Rate と合わせて観察することで、日本銀行が短期金利をどの程度コントロールできているかを確認できます。両者がほぼ一致していれば金融政策は円滑に機能しており、継続的な乖離が生じる場合には、市場の流動性や資金需給に変化が生じている可能性があります。日本では流動性が比較的潤沢であるため、通常は両者の差は数ベーシスポイント程度にとどまり、この指標は一般投資家よりも銀行や短期金融市場の参加者にとって重要性の高い指標となっています。"
+      }
+    },
+    {
       "id": "JAPAN_2Y_JGB",
       "short_name": "Japan 2Y Yield",
       "full_name": "Japan 2-Year JGB Yield",
+      "aliases": [
+        "Japan 2-Year Yield",
+        "Japan 2-Year Government Bond Yield",
+        "Japan’s 2-Year Government Bond Yield",
+        "Japan's 2-Year Government Bond Yield"
+      ],
       "headings": {
         "zh": "Japan 2-Year Government Bond Yield",
         "en": "Japan 2-Year Government Bond Yield",
@@ -319,6 +364,13 @@
       "id": "JAPAN_10Y_JGB",
       "short_name": "Japan 10Y JGB",
       "full_name": "Japan 10-Year JGB Yield",
+      "aliases": [
+        "Japan 10Y Yield",
+        "Japan 10-Year Yield",
+        "Japan 10-Year Government Bond Yield",
+        "Japan’s 10-Year Government Bond Yield",
+        "Japan's 10-Year Government Bond Yield"
+      ],
       "headings": {
         "zh": "Japan 10-Year Government Bond Yield (Japan 10Y JGB)",
         "en": "Japan 10-Year Government Bond Yield (Japan 10Y JGB)",

@@ -62,7 +62,7 @@ Alpaca-powered ETF ratios and Breadth require two repository Actions secrets: `A
 - Indicator cards loaded from local CSV files.
 - Click cards to show or hide series.
 - Percentage series share the right Y-axis and can be compared together with one non-percentage series on the left. Two non-percentage series retain the existing independent left/right-axis comparison.
-- FX comparison supports USD/JPY, US-Japan 2Y yield spread, Japan Core CPI YoY, and Tokyo Core CPI YoY.
+- FX comparison supports USD/JPY and the US-Japan 2Y yield spread.
 - Interactive Plotly charts with zoom, pan, hover tooltips, and range controls.
 - Range controls:
   - Macro, Breadth, Flows, US Rates, JP Rates, Japan, Taiwan: 3M, 6M, 1Y, 3Y, 5Y, 10Y, Max
@@ -136,6 +136,8 @@ All dashboard data is stored in `data/`.
 | TSMC Revenue YoY | `data/tsmc-revenue-yoy.csv` | MOPSOV monthly operating revenue for TSMC `2330` | 2013-01-31 | Monthly |
 | USD/JPY | `data/fx.csv` | FRED `DEXJPUS`, with Yahoo Finance `JPY=X` filling only recent unpublished dates | 1971-01-04 | Daily/forex trading days |
 | US-JP 2Y Spread | `data/fx.csv` | FRED `DGS2` minus Japan MOF 2Y JGB yield | 1976-06-01 | Daily/business daily with forward-filled published yield observations |
+| BOJ Policy Rate | `data/boj-policy-rate.csv` | BIS Central Bank Policy Rates `D.JP`, reported with the Bank of Japan | 1946-01-01 | Daily observations, weekly BIS release |
+| Japan Overnight Call Rate | `data/japan-overnight-call-rate.csv` | Bank of Japan Time-Series Data Search `FM01'STRDCLUCON` | 1998-01-05 | Daily/Japan business days |
 | Japan Core CPI YoY | `data/japan-core-cpi-yoy.csv` | Statistics Bureau of Japan / e-Stat, all items less fresh food | 1971-01-31 | Monthly |
 | Tokyo Core CPI YoY | `data/tokyo-core-cpi-yoy.csv` | Statistics Bureau of Japan / e-Stat, Ku-area of Tokyo all items less fresh food | 1971-01-31 | Monthly, preliminary |
 | Japan 10-Year JGB Yield | `data/japan-10-year-jgb-yield.csv` | Japan Ministry of Finance JGB interest rate CSV | 1986-07-05 | Daily/Japan business days |
@@ -158,7 +160,7 @@ This is a personal dashboard built from publicly accessible sources. The reposit
 - HYG/IEF retains the existing pre-Alpaca archive and uses Alpaca split-adjusted HYG and IEF closes for new observations because FRED does not provide matching ETF price series. RSP/SPY, SPY/TLT, XLY/XLP, and IWM/SPY use the same Alpaca feed. All ratios use matching published dates only, with no forward fill or estimates.
 - Alpaca replaces Yahoo or FRED only where the dashboard needs the exact same U.S.-listed stock or ETF close. It does not replace macroeconomic series, FX, or exact index definitions with ETF proxies. S&P 500, VIX, HY OAS, Treasury yields, and other macro series therefore retain their canonical sources; MOVE and non-U.S. indices retain their current sources unless an exact validated replacement becomes available.
 - ISM Manufacturing PMI is parsed from the revised rolling 12-month table in ISM's official monthly press release distributed by PR Newswire. FRED removed ISM series from its services in 2016, so this repository does not label a proxy or an unverified third-party reconstruction as official history. The committed series begins in July 2025 and grows by monthly merge. ISM content and PMI trademarks remain subject to ISM's terms; review those terms before redistribution or commercial use.
-- Some sources may still be subject to provider terms, third-party data rights, rate limits, or redistribution restrictions. This is especially relevant for Alpaca/IEX market data, ICE-linked HY OAS data available through FRED, ISM PMI content, Yahoo Finance data, Cboe data, and New York Fed term premium data.
+- Some sources may still be subject to provider terms, third-party data rights, rate limits, or redistribution restrictions. This is especially relevant for Alpaca/IEX market data, ICE-linked HY OAS data available through FRED, ISM PMI content, Yahoo Finance data, Cboe data, New York Fed term premium data, and BIS statistics. BIS policy-rate data should retain BIS and Bank of Japan attribution.
 - For personal, low-traffic use, the current setup is intended to be practical and transparent. Before commercial use, broad redistribution, or presenting this as a data service, review the relevant provider terms and replace any source whose terms are not suitable.
 
 Each single-series CSV uses:
@@ -306,6 +308,10 @@ The Fed Funds Rate card uses the official target-rate series rather than the eff
 ### JP Rates
 
 - Visible section name is `JP Rates`.
+- BOJ Policy Rate uses the BIS long, spliced daily policy-rate series `D.JP`, selected in cooperation with the Bank of Japan. It follows the main policy target or instrument across changing monetary-policy regimes; where a target range is communicated, BIS normally records its midpoint.
+- The first update builds the full series from 1946-01-01. Later updates request only the latest 60-day window and merge it with the existing CSV.
+- Japan Overnight Call Rate uses the official Bank of Japan Time-Series Data Search API series `FM01'STRDCLUCON`. It is the observed uncollateralized overnight market rate, not the BOJ policy target.
+- The first download builds the complete official history from 1998-01-05. Later updates request only the latest and prior calendar month, then merge by date with the existing CSV.
 - Japan 2-Year JGB Yield reuses the canonical `Japan_2Y_Yield` column in `data/fx.csv`.
 - Japan 10-Year JGB Yield comes from the same official Japan Ministry of Finance JGB interest rate CSV family used for Japan 2Y.
 - The parser detects the `Date` and `10Y` headers dynamically.
@@ -316,6 +322,7 @@ Japan 10-Year JGB Yield - Japan 2-Year JGB Yield
 ```
 
 - The spread uses an outer join and forward-fills only previously published observations.
+- Japan Core CPI YoY and Tokyo Core CPI YoY are displayed in JP Rates alongside short-term and long-term Japanese rates; the FX tab remains focused on USD/JPY and the US-Japan 2Y spread.
 - S&P/JPX JGB VIX Index is intentionally not implemented. A stable, legal, public automated source suitable for GitHub Pages and committed CSV storage was not confirmed.
 
 ### Japan
@@ -371,6 +378,8 @@ node --check scripts/update-extra-indicators.mjs
 node --check scripts/update-fx.mjs
 node --check scripts/update-us-rates.mjs
 node --check scripts/update-japan-rates.mjs
+node --check scripts/update-boj-policy-rate.mjs
+node --check scripts/update-boj-overnight-rate.mjs
 node --check scripts/update-japan-cpi.mjs
 node --check scripts/update-regional-markets.mjs
 node --check scripts/should-update.mjs

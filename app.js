@@ -293,6 +293,28 @@ const usRatesIndicators = [
 
 const jpRatesIndicators = [
   {
+    id: "boj-policy-rate",
+    name: "BOJ Policy Rate",
+    file: "data/boj-policy-rate.csv",
+    unitLabel: "Percent",
+    valueSuffix: "%",
+    category: "rate",
+    color: "#111827",
+    decimals: 2,
+    cadence: "policy",
+    lineShape: "hv",
+  },
+  {
+    id: "japan-overnight-call-rate",
+    name: "Japan Overnight Call Rate",
+    file: "data/japan-overnight-call-rate.csv",
+    unitLabel: "Percent",
+    valueSuffix: "%",
+    category: "rate",
+    color: "#d77d32",
+    decimals: 3,
+  },
+  {
     id: "japan-2y-jgb-yield",
     name: "Japan 2-Year JGB Yield",
     file: "data/fx.csv",
@@ -322,6 +344,28 @@ const jpRatesIndicators = [
     category: "spread",
     color: "#8b5cf6",
     decimals: 3,
+  },
+  {
+    id: "japan-core-cpi-yoy",
+    name: "Japan Core CPI YoY",
+    file: "data/japan-core-cpi-yoy.csv",
+    unitLabel: "Percent YoY",
+    valueSuffix: "%",
+    category: "percentage",
+    color: "#9254aa",
+    decimals: 1,
+    cadence: "monthly",
+  },
+  {
+    id: "tokyo-core-cpi-yoy",
+    name: "Tokyo Core CPI YoY",
+    file: "data/tokyo-core-cpi-yoy.csv",
+    unitLabel: "Percent YoY",
+    valueSuffix: "%",
+    category: "percentage",
+    color: "#218c83",
+    decimals: 1,
+    cadence: "monthly",
   },
   {
     id: "jp-rates-topix",
@@ -496,10 +540,12 @@ const defaultIndicatorColors = {
   "new-high-low-breadth": "#6559bd",
   "sp500-above-200dma": "#218c83",
   "fed-funds-rate": "#d77d32",
+  "boj-policy-rate": "#111827",
+  "japan-overnight-call-rate": "#d77d32",
+  "japan-core-cpi-yoy": "#9254aa",
+  "tokyo-core-cpi-yoy": "#218c83",
   USDJPY: "#d77d32",
   US_Japan_2Y_Spread: "#3f6fcb",
-  Japan_Core_CPI_YoY: "#9254aa",
-  Tokyo_Core_CPI_YoY: "#218c83",
   topix: "#2b83ae",
   "nikkei-225": "#6559bd",
   "japan-10y-jgb-yield": "#218c83",
@@ -565,32 +611,6 @@ const fxSeriesDefinitions = [
     decimals: 2,
     suffix: " pp",
   },
-  {
-    id: "Japan_Core_CPI_YoY",
-    name: "Japan Core CPI YoY",
-    unitLabel: "Percent YoY",
-    field: "Japan_Core_CPI_YoY",
-    valueElementId: "fx-japan-core-cpi-value",
-    changeElementId: "fx-japan-core-cpi-change",
-    category: "percentage",
-    changeIndicatorId: "japan-core-cpi-yoy",
-    cadence: "monthly",
-    decimals: 1,
-    suffix: "%",
-  },
-  {
-    id: "Tokyo_Core_CPI_YoY",
-    name: "Tokyo Core CPI YoY",
-    unitLabel: "Percent YoY",
-    field: "Tokyo_Core_CPI_YoY",
-    valueElementId: "fx-tokyo-core-cpi-value",
-    changeElementId: "fx-tokyo-core-cpi-change",
-    category: "percentage",
-    changeIndicatorId: "tokyo-core-cpi-yoy",
-    cadence: "monthly",
-    decimals: 1,
-    suffix: "%",
-  },
 ];
 
 function usesPercentageAxis(indicator) {
@@ -649,15 +669,17 @@ const glossaryDisplayOrder = [
   "DGS10",
   "T10Y2Y",
   "ACMTP10",
+  "BOJ_POLICY_RATE",
+  "BOJ_OVERNIGHT_CALL_RATE",
   "JAPAN_2Y_JGB",
   "JAPAN_10Y_JGB",
   "JAPAN_10Y_2Y_SPREAD",
+  "JAPAN_CORE_CPI_YOY",
+  "TOKYO_CORE_CPI_YOY",
   "TOPIX",
   "NIKKEI_225",
   "JAPAN_FOREIGN_NET_BUYING",
   "DEXJPUS",
-  "JAPAN_CORE_CPI_YOY",
-  "TOKYO_CORE_CPI_YOY",
   "TAIEX",
   "TSMC_REVENUE_YOY",
   "TAIWAN_FOREIGN_NET_BUYING",
@@ -698,10 +720,14 @@ const indicatorGlossaryIds = {
   "us-rates-10y-yield": "DGS10",
   "us-rates-10y-2y-spread": "T10Y2Y",
   "us-10y-term-premium": "ACMTP10",
+  "boj-policy-rate": "BOJ_POLICY_RATE",
+  "japan-overnight-call-rate": "BOJ_OVERNIGHT_CALL_RATE",
   "japan-2y-jgb-yield": "JAPAN_2Y_JGB",
   "japan-10y-jgb-yield": "JAPAN_10Y_JGB",
   "japan-tab-10y-jgb-yield": "JAPAN_10Y_JGB",
   "japan-10y-2y-jgb-spread": "JAPAN_10Y_2Y_SPREAD",
+  "japan-core-cpi-yoy": "JAPAN_CORE_CPI_YOY",
+  "tokyo-core-cpi-yoy": "TOKYO_CORE_CPI_YOY",
   topix: "TOPIX",
   "jp-rates-topix": "TOPIX",
   "nikkei-225": "NIKKEI_225",
@@ -747,11 +773,27 @@ const glossaryDashboardTargets = {
   DGS10: { tab: "us-rates", selector: '[data-us-rates-indicator="us-rates-10y-yield"]' },
   T10Y2Y: { tab: "us-rates", selector: '[data-us-rates-indicator="us-rates-10y-2y-spread"]' },
   ACMTP10: { tab: "us-rates", selector: '[data-us-rates-indicator="us-10y-term-premium"]' },
+  BOJ_POLICY_RATE: {
+    tab: "jp-rates",
+    selector: '[data-jp-rates-indicator="boj-policy-rate"]',
+  },
+  BOJ_OVERNIGHT_CALL_RATE: {
+    tab: "jp-rates",
+    selector: '[data-jp-rates-indicator="japan-overnight-call-rate"]',
+  },
   JAPAN_2Y_JGB: { tab: "jp-rates", selector: '[data-jp-rates-indicator="japan-2y-jgb-yield"]' },
   JAPAN_10Y_JGB: { tab: "jp-rates", selector: '[data-jp-rates-indicator="japan-10y-jgb-yield"]' },
   JAPAN_10Y_2Y_SPREAD: {
     tab: "jp-rates",
     selector: '[data-jp-rates-indicator="japan-10y-2y-jgb-spread"]',
+  },
+  JAPAN_CORE_CPI_YOY: {
+    tab: "jp-rates",
+    selector: '[data-jp-rates-indicator="japan-core-cpi-yoy"]',
+  },
+  TOKYO_CORE_CPI_YOY: {
+    tab: "jp-rates",
+    selector: '[data-jp-rates-indicator="tokyo-core-cpi-yoy"]',
   },
   TOPIX: { tab: "japan", selector: '[data-japan-indicator="topix"]' },
   NIKKEI_225: { tab: "japan", selector: '[data-japan-indicator="nikkei-225"]' },
@@ -760,8 +802,6 @@ const glossaryDashboardTargets = {
     selector: '[data-japan-indicator="japan-foreign-investor-net-buying"]',
   },
   DEXJPUS: { tab: "fx", selector: '[data-fx-card="USDJPY"]' },
-  JAPAN_CORE_CPI_YOY: { tab: "fx", selector: '[data-fx-card="Japan_Core_CPI_YoY"]' },
-  TOKYO_CORE_CPI_YOY: { tab: "fx", selector: '[data-fx-card="Tokyo_Core_CPI_YoY"]' },
   US_JAPAN_2Y_SPREAD: { tab: "fx", selector: '[data-fx-card="US_Japan_2Y_Spread"]' },
   TAIEX: { tab: "taiwan", selector: '[data-taiwan-indicator="taiex"]' },
   TAIWAN_FOREIGN_NET_BUYING: {
@@ -807,6 +847,8 @@ const indicatorChangeFormatOverrides = {
   "us-2y-yield": "bps",
   "treasury-10y": "bps",
   "us-rates-10y-yield": "bps",
+  "boj-policy-rate": "bps",
+  "japan-overnight-call-rate": "bps",
   "japan-2y-jgb-yield": "bps",
   "japan-10y-jgb-yield": "bps",
   "japan-tab-10y-jgb-yield": "bps",
@@ -814,6 +856,8 @@ const indicatorChangeFormatOverrides = {
   "10y-2y-spread": "bps",
   "us-rates-10y-2y-spread": "bps",
   "japan-10y-2y-jgb-spread": "bps",
+  "japan-core-cpi-yoy": "pp",
+  "tokyo-core-cpi-yoy": "pp",
   "move": "percent",
   "us-rates-move": "percent",
   vix: "percent",
@@ -872,8 +916,6 @@ const sharedIndicatorColorDefaults = new Map([
   ].map((indicator) => [getIndicatorColorKey(indicator.id), indicator.color]),
   ["USDJPY", defaultIndicatorColors.USDJPY],
   ["US_Japan_2Y_Spread", defaultIndicatorColors.US_Japan_2Y_Spread],
-  ["Japan_Core_CPI_YoY", defaultIndicatorColors.Japan_Core_CPI_YoY],
-  ["Tokyo_Core_CPI_YoY", defaultIndicatorColors.Tokyo_Core_CPI_YoY],
 ]);
 let sharedIndicatorColors = loadSharedIndicatorColors(sharedIndicatorColorDefaults);
 let selectedIndicatorIds = ["sp500"];
@@ -1364,20 +1406,6 @@ function parseFxCsv(csvText) {
       return row;
     })
     .filter((row) => row.date);
-}
-
-function mergeFxSeries(baseRows, extraSeries) {
-  const rowsByDate = new Map(baseRows.map((row) => [row.date, { ...row }]));
-
-  extraSeries.forEach(({ field, rows }) => {
-    rows.forEach((row) => {
-      const existing = rowsByDate.get(row.date) || { date: row.date };
-      existing[field] = row.value;
-      rowsByDate.set(row.date, existing);
-    });
-  });
-
-  return [...rowsByDate.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
 
 function parseIndicatorRows(csvText, indicator) {
@@ -4312,16 +4340,7 @@ async function loadIndicatorData() {
 }
 
 async function loadFxData() {
-  const [fxCsv, japanCoreCpiCsv, tokyoCoreCpiCsv] = await Promise.all([
-    fetchLocalText("data/fx.csv"),
-    fetchLocalText("data/japan-core-cpi-yoy.csv"),
-    fetchLocalText("data/tokyo-core-cpi-yoy.csv"),
-  ]);
-
-  fxData = mergeFxSeries(parseFxCsv(fxCsv), [
-    { field: "Japan_Core_CPI_YoY", rows: parseCsv(japanCoreCpiCsv) },
-    { field: "Tokyo_Core_CPI_YoY", rows: parseCsv(tokyoCoreCpiCsv) },
-  ]);
+  fxData = parseFxCsv(await fetchLocalText("data/fx.csv"));
 }
 
 async function loadDataStatus() {
@@ -4490,6 +4509,7 @@ function getGlossaryLinkAliases(currentEntryId) {
 
     [
       entry.short_name,
+      ...(entry.aliases || []),
       ...Object.values(entry.headings || {}),
     ].forEach((alias) => {
       const normalized = normalizeGlossaryAlias(alias);

@@ -22,6 +22,11 @@ const sources = [
   { file: "sp500-above-200dma.csv", columns: { value: "SP500_ABOVE_200DMA" } },
   { file: "tsmc-revenue-yoy.csv", columns: { value: "TSMC_REVENUE_YOY" } },
   { file: "fed-funds-rate.csv", columns: { value: "FED_FUNDS_RATE" } },
+  { file: "boj-policy-rate.csv", columns: { value: "BOJ_POLICY_RATE" } },
+  {
+    file: "japan-overnight-call-rate.csv",
+    columns: { value: "JAPAN_OVERNIGHT_CALL_RATE" },
+  },
   {
     file: "fx.csv",
     columns: {

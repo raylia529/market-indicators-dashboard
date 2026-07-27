@@ -1,9 +1,9 @@
 {
-  "last_dashboard_refresh": "2026-07-27T12:00:16+09:00",
-  "last_dashboard_refresh_display": "2026-07-27 12:00 JST",
+  "last_dashboard_refresh": "2026-07-27T13:54:09+09:00",
+  "last_dashboard_refresh_display": "2026-07-27 13:54 JST",
   "update_duration_seconds": 0,
   "dashboard_version": "1.0.0",
-  "last_git_commit": "b26df48",
+  "last_git_commit": "1bf7867",
   "python_version": "Python 3.13.3",
   "indicators": {
     "SP500": {
@@ -521,6 +521,62 @@
       "error_message": null,
       "formula": null,
       "release_note": "FRED remains the official historical source. Yahoo Finance only fills recent dates that FRED has not published yet."
+    },
+    "BOJ_POLICY_RATE": {
+      "display_name": "Bank of Japan Policy Rate",
+      "short_name": "BOJ Policy Rate",
+      "source_name": "BIS Central Bank Policy Rates / Bank of Japan",
+      "source_url": "https://data.bis.org/topics/CBPOL/BIS%2CWS_CBPOL%2C1.0/D.JP",
+      "source_urls": [
+        {
+          "label": "BIS Central Bank Policy Rates - Japan",
+          "url": "https://data.bis.org/topics/CBPOL/BIS%2CWS_CBPOL%2C1.0/D.JP"
+        },
+        {
+          "label": "BIS policy-rate methodology",
+          "url": "https://www.bis.org/statistics/cbpol/cbpol_doc.pdf"
+        },
+        {
+          "label": "Bank of Japan monetary policy decisions",
+          "url": "https://www.boj.or.jp/en/mopo/mpmdeci/index.htm"
+        }
+      ],
+      "latest_available_date": "2026-07-21",
+      "next_expected_update_date": "2026-07-30",
+      "last_successful_refresh": "2026-07-27T13:54:09+09:00",
+      "last_successful_refresh_display": "2026-07-27 13:54 JST",
+      "frequency": "Daily observations, weekly BIS release",
+      "unit": "Percent per annum",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": "BIS long, spliced policy-rate series D.JP, compiled with the Bank of Japan. It uses the main policy target or instrument for each regime; target ranges are represented by their midpoint unless otherwise specified."
+    },
+    "BOJ_OVERNIGHT_CALL_RATE": {
+      "display_name": "Japan Uncollateralized Overnight Call Rate",
+      "short_name": "Japan Overnight Rate",
+      "source_name": "Bank of Japan Time-Series Data Search",
+      "source_url": "https://www.stat-search.boj.or.jp/index_en.html",
+      "source_urls": [
+        {
+          "label": "BOJ Time-Series Data Search",
+          "url": "https://www.stat-search.boj.or.jp/index_en.html"
+        },
+        {
+          "label": "BOJ Call Money Market Data",
+          "url": "https://www.boj.or.jp/en/statistics/market/short/mutan/index.htm"
+        }
+      ],
+      "latest_available_date": "2026-07-23",
+      "next_expected_update_date": "2026-07-24",
+      "last_successful_refresh": "2026-07-27T13:41:21+09:00",
+      "last_successful_refresh_display": "2026-07-27 13:41 JST",
+      "frequency": "Daily, Japan business days",
+      "unit": "Percent per annum",
+      "status": "Source lag",
+      "error_message": null,
+      "formula": null,
+      "release_note": "Official FM01'STRDCLUCON daily average. This is the observed uncollateralized overnight market rate, not the BOJ policy target. Missing non-business days are not filled."
     },
     "JAPAN_CORE_CPI_YOY": {
       "display_name": "Japan Core Consumer Price Index Year-over-Year",
