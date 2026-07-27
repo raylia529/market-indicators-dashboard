@@ -38,7 +38,7 @@ The repository includes `.github/workflows/pages.yml`, which:
 - treats Japan MOF JGB yields as next-business-day releases, so the 08:15 check does not request a reference date that is not scheduled for publication until 09:30;
 - skips each indicator after a successful source check on that JST date, so later retry slots contact only sources that failed or have not yet been checked;
 - uses source-aware expected release dates for slow data, so a successful download of unchanged official data does not permanently suppress later overdue retries;
-- refreshes the two S&P 500 Breadth indicators in an isolated daily job at 11:45 JST, Tuesday through Saturday;
+- refreshes the two S&P 500 Breadth indicators in an isolated daily job at 08:45 JST, Tuesday through Saturday;
 - can be run manually from the GitHub Actions tab for `full`, `us`, `us-fast`, `us-market`, `us-slow`, `asia`, `breadth`, or `alpaca` with `workflow_dispatch`;
 - deploys `index.html`, `style.css`, `app.js`, PWA assets, icons, and `data/` to Pages.
 
@@ -237,7 +237,7 @@ The Worker dispatches the existing workflow at these times:
 | Asia | 08:15 Tue-Sat | `15 23 * * 1-5` |
 | US | 09:15, 10:15, 12:15 Tue-Sat | `15 0,1,3 * * 2-6` |
 | US | 11:15 Tue-Sat | `15 2 * * 2-6` |
-| Breadth | 11:45 Tue-Sat | `45 2 * * 2-6` |
+| Breadth | 08:45 Tue-Sat | `45 23 * * 1-5` |
 | US + Asia | 18:15 Mon-Fri | `15 9 * * 1-5` |
 | US | 18:15 Sat | `15 9 * * 6` |
 | Asia | 19:15, 20:15, 22:15 Mon-Fri | `15 10,11,13 * * 1-5` |
@@ -348,7 +348,7 @@ Japan 10-Year JGB Yield - Japan 2-Year JGB Yield
 - Breadth contains the canonical S&P 500, RSP/SPY, New High / New Low, and % Above 200DMA.
 - RSP/SPY uses matching split-adjusted Alpaca IEX daily closes and is updated with the regular U.S. market group.
 - The two constituent-based indicators use the current S&P 500 list published by the `datasets/s-and-p-500-companies` GitHub dataset and Alpaca IEX daily bars.
-- Breadth is isolated from the normal U.S. market updater and runs once after each U.S. trading day at 11:45 JST, Tuesday through Saturday.
+- Breadth is isolated from the normal U.S. market updater and runs once after each U.S. trading day at 08:45 JST, Tuesday through Saturday.
 - The updater requests a rolling window sufficient for 200-day averages and 252-trading-day highs/lows, calculates aggregate series in memory, and saves only the derived CSVs. Raw constituent bars are not committed or deployed.
 - At least 95% of the current constituent list must have valid history before a new aggregate observation is accepted. Existing published Breadth history remains intact when coverage is insufficient.
 - `New High / New Low` is `(new 252-trading-day highs - new 252-trading-day lows) / valid constituents * 100`.
