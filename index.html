@@ -11,9 +11,9 @@
     <title>Market Indicators Dashboard</title>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2" />
-    <link rel="stylesheet" href="style.css?v=chart-controls-v20" />
+    <link rel="stylesheet" href="style.css?v=alpaca-breadth-v23" />
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
-    <script src="app.js?v=chart-controls-v20" defer></script>
+    <script src="app.js?v=alpaca-breadth-v23" defer></script>
   </head>
   <body>
     <main class="dashboard-shell">
@@ -107,6 +107,18 @@
                 <div id="fx-spread-change"></div>
                 <div class="color-control" data-fx-color-control="US_Japan_2Y_Spread"></div>
               </article>
+              <article class="metric-card fx-card" data-fx-card="Japan_Core_CPI_YoY" tabindex="0">
+                <span>Japan Core CPI YoY</span>
+                <strong id="fx-japan-core-cpi-value">--</strong>
+                <div id="fx-japan-core-cpi-change"></div>
+                <div class="color-control" data-fx-color-control="Japan_Core_CPI_YoY"></div>
+              </article>
+              <article class="metric-card fx-card" data-fx-card="Tokyo_Core_CPI_YoY" tabindex="0">
+                <span>Tokyo Core CPI YoY</span>
+                <strong id="fx-tokyo-core-cpi-value">--</strong>
+                <div id="fx-tokyo-core-cpi-change"></div>
+                <div class="color-control" data-fx-color-control="Tokyo_Core_CPI_YoY"></div>
+              </article>
             </div>
           </section>
           <section class="mobile-pane chart-pane" data-mobile-pane="charts" aria-label="FX charts">
@@ -120,6 +132,10 @@
                 <button class="range-button" type="button" data-fx-range="10Y">10Y</button>
                 <button class="range-button" type="button" data-fx-range="MAX">MAX</button>
               </div>
+            </div>
+            <div class="selection-notice" id="fx-selection-notice" role="status" hidden>
+              <span id="fx-selection-notice-text"></span>
+              <button class="notice-close" id="fx-selection-notice-close" type="button" aria-label="Dismiss notice">x</button>
             </div>
             <div id="fx-chart" aria-label="Interactive FX chart"></div>
           </section>

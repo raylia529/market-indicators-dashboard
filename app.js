@@ -122,14 +122,26 @@ const breadthIndicators = [
     decimals: 2,
   },
   {
-    id: "advance-decline-line",
-    name: "A/D Line (Proxy)",
-    file: "data/advance-decline-line.csv",
-    unitLabel: "Cumulative Net Advances",
+    id: "rsp-spy",
+    name: "RSP/SPY",
+    file: "data/rsp-spy.csv",
+    unitLabel: "Ratio",
     valueSuffix: "",
-    category: "breadth",
+    category: "ratio",
     color: "#10b981",
-    decimals: 0,
+    decimals: 4,
+    changeFormat: "percent",
+  },
+  {
+    id: "new-high-low-breadth",
+    name: "New High / New Low",
+    file: "data/new-high-low-breadth.csv",
+    unitLabel: "Percent",
+    valueSuffix: "%",
+    category: "percentage",
+    axisBounds: { min: -100, max: 100 },
+    color: "#6559bd",
+    decimals: 1,
   },
   {
     id: "sp500-above-200dma",
@@ -452,9 +464,14 @@ const defaultIndicatorColors = {
   "fed-balance-sheet": "#3f6fcb",
   nfci: "#2b83ae",
   "ism-manufacturing-pmi": "#9254aa",
+  "rsp-spy": "#d77d32",
+  "new-high-low-breadth": "#6559bd",
+  "sp500-above-200dma": "#218c83",
   "fed-funds-rate": "#d77d32",
   USDJPY: "#d77d32",
   US_Japan_2Y_Spread: "#3f6fcb",
+  Japan_Core_CPI_YoY: "#9254aa",
+  Tokyo_Core_CPI_YoY: "#218c83",
   topix: "#2b83ae",
   "nikkei-225": "#6559bd",
   "japan-10y-jgb-yield": "#218c83",
@@ -495,6 +512,93 @@ const colorPalette = [
   "#ff3cac",
 ];
 
+const fxSeriesDefinitions = [
+  {
+    id: "USDJPY",
+    name: "USD/JPY",
+    unitLabel: "JPY per USD",
+    field: "USDJPY",
+    valueElementId: "fx-usdjpy-value",
+    changeElementId: "fx-usdjpy-change",
+    category: "currency",
+    changeIndicatorId: "japan-tab-usdjpy",
+    decimals: 2,
+    suffix: "",
+  },
+  {
+    id: "US_Japan_2Y_Spread",
+    name: "US-JP 2Y Spread",
+    unitLabel: "Percentage Points",
+    field: "US_Japan_2Y_Spread",
+    valueElementId: "fx-spread-value",
+    changeElementId: "fx-spread-change",
+    category: "spread",
+    changeIndicatorId: "us-japan-2y-spread",
+    decimals: 2,
+    suffix: " pp",
+  },
+  {
+    id: "Japan_Core_CPI_YoY",
+    name: "Japan Core CPI YoY",
+    unitLabel: "Percent YoY",
+    field: "Japan_Core_CPI_YoY",
+    valueElementId: "fx-japan-core-cpi-value",
+    changeElementId: "fx-japan-core-cpi-change",
+    category: "percentage",
+    changeIndicatorId: "japan-core-cpi-yoy",
+    cadence: "monthly",
+    decimals: 1,
+    suffix: "%",
+  },
+  {
+    id: "Tokyo_Core_CPI_YoY",
+    name: "Tokyo Core CPI YoY",
+    unitLabel: "Percent YoY",
+    field: "Tokyo_Core_CPI_YoY",
+    valueElementId: "fx-tokyo-core-cpi-value",
+    changeElementId: "fx-tokyo-core-cpi-change",
+    category: "percentage",
+    changeIndicatorId: "tokyo-core-cpi-yoy",
+    cadence: "monthly",
+    decimals: 1,
+    suffix: "%",
+  },
+];
+
+function usesPercentageAxis(indicator) {
+  return (
+    indicator?.category === "percentage" ||
+    indicator?.category === "rate" ||
+    ["%", "Percent", "Percent YoY"].includes(indicator?.unitLabel)
+  );
+}
+
+function getAxisGroups(ids, getDefinition) {
+  const percentageIds = ids.filter((id) => usesPercentageAxis(getDefinition(id)));
+  const otherIds = ids.filter((id) => !percentageIds.includes(id));
+
+  if (percentageIds.length === 0 && otherIds.length === 2) {
+    return { leftIds: [otherIds[0]], rightIds: [otherIds[1]] };
+  }
+
+  return { leftIds: otherIds, rightIds: percentageIds };
+}
+
+function canShareComparisonAxes(ids, getDefinition) {
+  const percentageCount = ids.filter((id) => usesPercentageAxis(getDefinition(id))).length;
+  const otherCount = ids.length - percentageCount;
+
+  return otherCount <= 1 || (percentageCount === 0 && otherCount <= 2);
+}
+
+function comparisonLimitMessage() {
+  return "Percentage series share the right axis. Compare them with one non-percentage series, or compare two non-percentage series.";
+}
+
+function combineRows(ids, getRows) {
+  return ids.flatMap((id) => getRows(id));
+}
+
 const glossaryDisplayOrder = [
   "SP500",
   "BAMLH0A0HYM2",
@@ -506,7 +610,8 @@ const glossaryDisplayOrder = [
   "WALCL",
   "NFCI",
   "ISM_MANUFACTURING_PMI",
-  "ADVANCE_DECLINE_LINE",
+  "RSP_SPY",
+  "NEW_HIGH_LOW_BREADTH",
   "SP500_ABOVE_200DMA",
   "SOX",
   "TSMC_REVENUE_YOY",
@@ -523,6 +628,8 @@ const glossaryDisplayOrder = [
   "NIKKEI_225",
   "JAPAN_FOREIGN_NET_BUYING",
   "DEXJPUS",
+  "JAPAN_CORE_CPI_YOY",
+  "TOKYO_CORE_CPI_YOY",
   "TAIEX",
   "TAIWAN_FOREIGN_NET_BUYING",
   "USDTWD",
@@ -545,6 +652,7 @@ const ranges = {
 const indicatorChangeFormatOverrides = {
   sp500: "percent",
   "breadth-sp500": "percent",
+  "rsp-spy": "percent",
   "us-rates-sp500": "percent",
   topix: "percent",
   "jp-rates-topix": "percent",
@@ -589,6 +697,9 @@ const mobileViewButtons = Array.from(document.querySelectorAll("[data-mobile-vie
 const fxChartElement = document.getElementById("fx-chart");
 const fxRangeButtons = Array.from(document.querySelectorAll("[data-fx-range]"));
 const fxCards = Array.from(document.querySelectorAll("[data-fx-card]"));
+const fxSelectionNotice = document.getElementById("fx-selection-notice");
+const fxSelectionNoticeText = document.getElementById("fx-selection-notice-text");
+const fxSelectionNoticeClose = document.getElementById("fx-selection-notice-close");
 const dataStatusUpdated = document.getElementById("data-status-updated");
 const dataStatusBody = document.getElementById("data-status-body");
 const glossaryMeta = document.getElementById("glossary-meta");
@@ -618,6 +729,8 @@ const sharedIndicatorColorDefaults = new Map([
   ].map((indicator) => [getIndicatorColorKey(indicator.id), indicator.color]),
   ["USDJPY", defaultIndicatorColors.USDJPY],
   ["US_Japan_2Y_Spread", defaultIndicatorColors.US_Japan_2Y_Spread],
+  ["Japan_Core_CPI_YoY", defaultIndicatorColors.Japan_Core_CPI_YoY],
+  ["Tokyo_Core_CPI_YoY", defaultIndicatorColors.Tokyo_Core_CPI_YoY],
 ]);
 let sharedIndicatorColors = loadSharedIndicatorColors(sharedIndicatorColorDefaults);
 let selectedIndicatorIds = ["sp500"];
@@ -1003,6 +1116,20 @@ function parseFxCsv(csvText) {
     .filter((row) => row.date);
 }
 
+function mergeFxSeries(baseRows, extraSeries) {
+  const rowsByDate = new Map(baseRows.map((row) => [row.date, { ...row }]));
+
+  extraSeries.forEach(({ field, rows }) => {
+    rows.forEach((row) => {
+      const existing = rowsByDate.get(row.date) || { date: row.date };
+      existing[field] = row.value;
+      rowsByDate.set(row.date, existing);
+    });
+  });
+
+  return [...rowsByDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+
 function parseIndicatorRows(csvText, indicator) {
   const rows = !indicator.column
     ? parseCsv(csvText)
@@ -1258,7 +1385,7 @@ function shiftDateByRange(endDate, rangeKey) {
 }
 
 function getMacroXBounds() {
-  const selected = axisOrder.slice(0, 2);
+  const selected = axisOrder;
   const latestDateText = selected
     .flatMap((id) => indicatorData.get(id) || [])
     .map((row) => row.date)
@@ -1833,7 +1960,7 @@ function getDateFromChartPointer(chartNode, event) {
 }
 
 function buildMacroPrompt(dateText) {
-  const selected = axisOrder.slice(0, 2);
+  const selected = axisOrder;
   const analyses = selected.map((id) => {
     const indicator = getIndicator(id);
     return analyzeTurningPoints({
@@ -1870,24 +1997,9 @@ function buildMacroPrompt(dateText) {
 }
 
 function buildFxPrompt(dateText) {
-  const seriesDefinitions = [
-    {
-      id: "USDJPY",
-      name: "USD/JPY",
-      unit: "Exchange Rate",
-      field: "USDJPY",
-      decimals: 2,
-      suffix: "",
-    },
-    {
-      id: "US_Japan_2Y_Spread",
-      name: "US-JP 2Y Spread",
-      unit: "Percentage Points",
-      field: "US_Japan_2Y_Spread",
-      decimals: 2,
-      suffix: " pp",
-    },
-  ].filter((series) => visibleFxSeries.has(series.id));
+  const seriesDefinitions = fxSeriesDefinitions
+    .filter((series) => visibleFxSeries.has(series.id))
+    .map((series) => ({ ...series, unit: series.unitLabel }));
 
   const analyses = seriesDefinitions.map((series) =>
     analyzeTurningPoints({
@@ -1919,7 +2031,7 @@ function buildFxPrompt(dateText) {
     "",
     "Please explain what was happening around this date and why these indicators may have moved up or down.",
     "Pay attention to the detected turning points and any lead/lag between the selected indicators.",
-    "For USD/JPY and the US-JP 2Y spread, discuss rate differentials, central bank expectations, risk sentiment, and any major market events around the date.",
+    "Discuss relevant rate differentials, inflation trends, central bank expectations, risk sentiment, and major market events around the date.",
   ].join("\n");
 }
 
@@ -2395,7 +2507,7 @@ function canUseLog(rows) {
 }
 
 function selectedRowsAllowLog() {
-  return axisOrder.slice(0, 2).every((id) => canUseLog(getFilteredRows(id)));
+  return axisOrder.every((id) => canUseLog(getFilteredRows(id)));
 }
 
 function renderCards() {
@@ -2432,11 +2544,13 @@ function renderCards() {
 
       if (selectedIndicatorIds.includes(id)) {
         selectedIndicatorIds = selectedIndicatorIds.filter((selectedId) => selectedId !== id);
-      } else if (selectedIndicatorIds.length < 2) {
-        selectedIndicatorIds.push(id);
       } else {
-        showNotice("You can compare up to two indicators at a time.");
-        return;
+        const nextIds = [...selectedIndicatorIds, id];
+        if (!canShareComparisonAxes(nextIds, getIndicator)) {
+          showNotice(comparisonLimitMessage());
+          return;
+        }
+        selectedIndicatorIds = nextIds;
       }
 
       clearNotice();
@@ -2497,7 +2611,8 @@ function renderRangeButtons() {
 }
 
 const compactAxisNameOverrides = {
-  "advance-decline-line": "A/D Line",
+  "rsp-spy": "RSP/SPY",
+  "new-high-low-breadth": "New High-Low",
   "sp500-above-200dma": "% Above 200DMA",
   "us-10y-term-premium": "US 10Y Term Premium",
   "japan-2y-jgb-yield": "Japan 2Y Yield",
@@ -2629,20 +2744,49 @@ function getHorizontalAxisAnnotations(indicator, side, color) {
   ].filter(Boolean);
 }
 
-function getHorizontalAxisMargins(hasRightAxis) {
+function getAxisGroupAnnotations(ids, side, getDefinition, theme) {
+  if (ids.length === 0) {
+    return [];
+  }
+
+  if (ids.length === 1) {
+    return getHorizontalAxisAnnotations(getDefinition(ids[0]), side, theme.ink);
+  }
+
+  return [
+    {
+      text: "<b>%</b>",
+      xref: "paper",
+      yref: "paper",
+      x: side === "left" ? 0 : 1,
+      y: 1,
+      xanchor: side === "left" ? "right" : "left",
+      yanchor: "middle",
+      xshift: side === "left" ? -48 : 48,
+      showarrow: false,
+      font: { size: usesTouchChartMode() ? 10 : 11, color: theme.ink },
+    },
+  ];
+}
+
+function getHorizontalAxisMargins(hasRightAxis, hasLeftAxis = true) {
   const sideMargin = usesTouchChartMode() ? 100 : 110;
-  return { t: 24, r: hasRightAxis ? sideMargin : 22, b: 92, l: sideMargin };
+  return {
+    t: 24,
+    r: hasRightAxis ? sideMargin : 22,
+    b: 92,
+    l: hasLeftAxis ? sideMargin : 22,
+  };
 }
 
 function getYAxisLayout(side, indicator, rows, theme = getChartTheme()) {
-  const color = getChartSeriesColor(indicator.id);
   const scale = macroScale === "log" && canUseLog(rows) ? "log" : "linear";
   const range = getAutoRange(rows, scale, indicator.axisBounds);
   const axis = {
     gridcolor: side === "left" ? theme.grid : "rgba(0,0,0,0)",
     zeroline: true,
     zerolinecolor: theme.zero,
-    tickfont: { color, size: usesTouchChartMode() ? 10 : 11, weight: 700 },
+    tickfont: { color: theme.ink, size: usesTouchChartMode() ? 10 : 11, weight: 700 },
     type: scale,
   };
 
@@ -2740,7 +2884,7 @@ function getThresholdEdgeShapes(zone, yref, min, max) {
   return shapes;
 }
 
-function getThresholdZoneShapes(selected, layout) {
+function getThresholdZoneShapes(selected, layout, axisById = null) {
   return selected.flatMap((indicatorId, index) => {
     const zones = indicatorThresholdZones[indicatorId];
     const indicator = getChartIndicatorDefinition(indicatorId);
@@ -2749,8 +2893,9 @@ function getThresholdZoneShapes(selected, layout) {
       return [];
     }
 
-    const axisName = index === 0 ? "yaxis" : "yaxis2";
-    const yref = index === 0 ? "y" : "y2";
+    const assignedAxis = axisById?.get(indicatorId) || (index === 0 ? "y" : "y2");
+    const axisName = assignedAxis === "y" ? "yaxis" : "yaxis2";
+    const yref = assignedAxis;
     const range = getLinearAxisRange(layout[axisName]);
 
     if (!range) {
@@ -2774,8 +2919,13 @@ function getThresholdZoneShapes(selected, layout) {
 
 function renderChart() {
   validateMacroScale();
-  const selected = axisOrder.slice(0, 2);
-  const traces = selected.map((id, index) => {
+  const selected = axisOrder;
+  const { leftIds, rightIds } = getAxisGroups(selected, getIndicator);
+  const axisById = new Map([
+    ...leftIds.map((id) => [id, "y"]),
+    ...rightIds.map((id) => [id, "y2"]),
+  ]);
+  const traces = selected.map((id) => {
     const indicator = getIndicator(id);
     const rows = getFilteredRows(id);
 
@@ -2785,7 +2935,7 @@ function renderChart() {
       type: "scatter",
       mode: "lines",
       name: indicator.name,
-      yaxis: index === 0 ? "y" : "y2",
+      yaxis: axisById.get(id),
       line: {
         color: getChartSeriesColor(indicator.id),
         width: 1.5,
@@ -2797,27 +2947,24 @@ function renderChart() {
   });
 
   const title = selected.map((id) => getIndicator(id).name).join(" vs ");
-  chartTitle.textContent = title || "Select up to two indicators";
+  chartTitle.textContent = title || "Select indicators";
 
   const xBounds = getMacroXBounds();
-  const firstRows = selected[0] ? getFilteredRows(selected[0]) : [];
-  const secondRows = selected[1] ? getFilteredRows(selected[1]) : [];
-  const firstIndicator = selected[0] ? getIndicator(selected[0]) : null;
-  const secondIndicator = selected[1] ? getIndicator(selected[1]) : null;
+  const leftRows = combineRows(leftIds, getFilteredRows);
+  const rightRows = combineRows(rightIds, getFilteredRows);
+  const leftIndicator = leftIds[0] ? { ...getIndicator(leftIds[0]) } : null;
+  const rightIndicator = rightIds[0] ? { ...getIndicator(rightIds[0]) } : null;
+  if (rightIndicator && rightIds.length > 1) {
+    delete rightIndicator.axisBounds;
+  }
   const theme = getChartTheme();
-  const axisAnnotations = [firstIndicator, secondIndicator]
-    .flatMap((indicator, index) =>
-      indicator
-        ? getHorizontalAxisAnnotations(
-            indicator,
-            index === 0 ? "left" : "right",
-            getChartSeriesColor(indicator.id),
-          )
-        : [],
-    );
+  const axisAnnotations = [
+    ...getAxisGroupAnnotations(leftIds, "left", getIndicator, theme),
+    ...getAxisGroupAnnotations(rightIds, "right", getIndicator, theme),
+  ];
 
   const layout = {
-    margin: getHorizontalAxisMargins(selected.length === 2),
+    margin: getHorizontalAxisMargins(rightIds.length > 0, leftIds.length > 0),
     paper_bgcolor: "rgba(0,0,0,0)",
     plot_bgcolor: "rgba(0,0,0,0)",
     font: {
@@ -2851,15 +2998,17 @@ function renderChart() {
     dragmode: getChartDragMode(),
   };
 
-  if (firstIndicator) {
-    layout.yaxis = getYAxisLayout("left", firstIndicator, firstRows, theme);
+  if (leftIndicator) {
+    layout.yaxis = getYAxisLayout("left", leftIndicator, leftRows, theme);
+  } else {
+    layout.yaxis = { visible: false };
   }
 
-  if (secondIndicator) {
-    layout.yaxis2 = getYAxisLayout("right", secondIndicator, secondRows, theme);
+  if (rightIndicator) {
+    layout.yaxis2 = getYAxisLayout("right", rightIndicator, rightRows, theme);
   }
 
-  layout.shapes = getThresholdZoneShapes(selected, layout);
+  layout.shapes = getThresholdZoneShapes(selected, layout, axisById);
 
   if (chartElement && window.Plotly) {
     Plotly.react(chartElement, traces, layout, getPlotlyConfig()).then(() => {
@@ -2947,41 +3096,29 @@ function setFxHtml(id, html) {
 }
 
 function renderFxCards() {
-  const latestUsdJpy = latestWith("USDJPY");
-  const latestSpread = latestWith("US_Japan_2Y_Spread");
   const latestAny = fxData.at(-1);
 
-  setFxText("fx-usdjpy-value", latestUsdJpy ? latestUsdJpy.USDJPY.toFixed(2) : "--");
-  setFxText(
-    "fx-usdjpy-date",
-    latestUsdJpy ? `Latest observation ${formatFullDate(latestUsdJpy.date)}` : "Unavailable",
-  );
-  setFxText(
-    "fx-spread-value",
-    latestSpread ? `${latestSpread.US_Japan_2Y_Spread.toFixed(2)} pp` : "--",
-  );
-  setFxHtml(
-    "fx-usdjpy-change",
-    renderIndicatorChange(
-      fxData
-        .filter((row) => Number.isFinite(row.USDJPY))
-        .map((row) => ({ date: row.date, value: row.USDJPY })),
-      { id: "japan-tab-usdjpy", category: "currency", decimals: 2 },
-    ),
-  );
-  setFxHtml(
-    "fx-spread-change",
-    renderIndicatorChange(
-      fxData
-        .filter((row) => Number.isFinite(row.US_Japan_2Y_Spread))
-        .map((row) => ({ date: row.date, value: row.US_Japan_2Y_Spread })),
-      { id: "us-japan-2y-spread", category: "spread", decimals: 2 },
-    ),
-  );
-  setFxText(
-    "fx-spread-date",
-    latestSpread ? `Latest observation ${formatFullDate(latestSpread.date)}` : "Unavailable",
-  );
+  fxSeriesDefinitions.forEach((series) => {
+    const latest = latestWith(series.field);
+    const rows = fxData
+      .filter((row) => Number.isFinite(row[series.field]))
+      .map((row) => ({ date: row.date, value: row[series.field] }));
+
+    setFxText(
+      series.valueElementId,
+      latest ? `${latest[series.field].toFixed(series.decimals)}${series.suffix}` : "--",
+    );
+    setFxHtml(
+      series.changeElementId,
+      renderIndicatorChange(rows, {
+        id: series.changeIndicatorId,
+        category: series.category,
+        cadence: series.cadence,
+        decimals: series.decimals,
+      }),
+    );
+  });
+
   setFxText(
     "fx-updated",
     latestAny ? `Latest observation ${formatFullDate(latestAny.date)}` : "FX data unavailable",
@@ -3052,30 +3189,18 @@ function renderFxChart() {
   }
 
   const rows = getFilteredFxRows();
-  const usdJpyColor = getChartSeriesColor("USDJPY");
-  const spreadColor = getChartSeriesColor("US_Japan_2Y_Spread");
-  const fxSeries = [
-    {
-      id: "USDJPY",
-      name: "USD/JPY",
-      unitLabel: "JPY per USD",
-      field: "USDJPY",
-      color: usdJpyColor,
-      decimals: 2,
-      suffix: "",
-    },
-    {
-      id: "US_Japan_2Y_Spread",
-      name: "US-Japan 2Y Spread",
-      unitLabel: "Percentage Points",
-      field: "US_Japan_2Y_Spread",
-      color: spreadColor,
-      decimals: 2,
-      suffix: " pp",
-    },
-  ].filter((series) => visibleFxSeries.has(series.id));
+  const fxSeries = fxSeriesDefinitions
+    .filter((series) => visibleFxSeries.has(series.id))
+    .map((series) => ({ ...series, color: getChartSeriesColor(series.id) }));
+  const getFxDefinition = (id) => fxSeriesDefinitions.find((series) => series.id === id);
+  const selectedIds = fxSeries.map((series) => series.id);
+  const { leftIds, rightIds } = getAxisGroups(selectedIds, getFxDefinition);
+  const axisById = new Map([
+    ...leftIds.map((id) => [id, "y"]),
+    ...rightIds.map((id) => [id, "y2"]),
+  ]);
 
-  const traces = fxSeries.map((series, index) => {
+  const traces = fxSeries.map((series) => {
     const seriesRows = rows.filter((row) => Number.isFinite(row[series.field]));
 
     return {
@@ -3084,32 +3209,36 @@ function renderFxChart() {
       type: "scatter",
       mode: "lines",
       name: series.name,
-      yaxis: index === 0 ? "y" : "y2",
+      yaxis: axisById.get(series.id),
       line: { color: series.color, width: 1.5 },
       hovertemplate: `<b>${series.name}</b><br>%{y:.${series.decimals}f}${series.suffix}<extra></extra>`,
     };
   });
 
-  const primarySeries = fxSeries[0];
-  const secondarySeries = fxSeries[1];
-  const primaryValues = primarySeries ? rows.map((row) => row[primarySeries.field]) : [];
-  const secondaryValues = secondarySeries ? rows.map((row) => row[secondarySeries.field]) : [];
+  const leftValues = leftIds.flatMap((id) => {
+    const series = getFxDefinition(id);
+    return rows.map((row) => row[series.field]);
+  });
+  const rightValues = rightIds.flatMap((id) => {
+    const series = getFxDefinition(id);
+    return rows.map((row) => row[series.field]);
+  });
   const xBounds = getFxXBounds();
   const theme = getChartTheme();
-  const yaxis = primarySeries
+  const yaxis = leftIds.length
     ? {
-        range: fxAxisRange(primaryValues),
-        tickfont: { color: primarySeries.color, size: usesTouchChartMode() ? 10 : 11, weight: 700 },
+        range: fxAxisRange(leftValues),
+        tickfont: { color: theme.ink, size: usesTouchChartMode() ? 10 : 11, weight: 700 },
         gridcolor: theme.grid,
         zeroline: false,
       }
     : {
         visible: false,
       };
-  const yaxis2 = secondarySeries
+  const yaxis2 = rightIds.length
     ? {
-        range: fxAxisRange(secondaryValues),
-        tickfont: { color: secondarySeries.color, size: usesTouchChartMode() ? 10 : 11, weight: 700 },
+        range: fxAxisRange(rightValues),
+        tickfont: { color: theme.ink, size: usesTouchChartMode() ? 10 : 11, weight: 700 },
         overlaying: "y",
         side: "right",
         showgrid: false,
@@ -3122,26 +3251,16 @@ function renderFxChart() {
         showgrid: false,
       };
 
-  const fxAxisAnnotations = [primarySeries, secondarySeries]
-    .flatMap((series, index) =>
-      series
-        ? getHorizontalAxisAnnotations(
-            {
-              id: series.id,
-              name: series.name,
-              unitLabel: series.unitLabel,
-            },
-            index === 0 ? "left" : "right",
-            series.color,
-          )
-        : [],
-    );
+  const fxAxisAnnotations = [
+    ...getAxisGroupAnnotations(leftIds, "left", getFxDefinition, theme),
+    ...getAxisGroupAnnotations(rightIds, "right", getFxDefinition, theme),
+  ];
 
   Plotly.react(
     fxChartElement,
     traces,
     {
-      margin: getHorizontalAxisMargins(Boolean(secondarySeries)),
+      margin: getHorizontalAxisMargins(rightIds.length > 0, leftIds.length > 0),
       paper_bgcolor: "rgba(0,0,0,0)",
       plot_bgcolor: "rgba(0,0,0,0)",
       font: {
@@ -3241,7 +3360,7 @@ function createComparisonSection(config) {
   }
 
   function getXBounds() {
-    const selected = state.axisOrder.slice(0, 2);
+    const selected = state.axisOrder;
     const latestDateText = selected
       .flatMap((id) => state.data.get(id) || [])
       .map((row) => row.date)
@@ -3356,7 +3475,7 @@ function createComparisonSection(config) {
   }
 
   function selectedRowsAllowLocalLog() {
-    return state.axisOrder.slice(0, 2).every((id) => canUseLocalLog(getFilteredRows(id)));
+    return state.axisOrder.every((id) => canUseLocalLog(getFilteredRows(id)));
   }
 
   function validateLocalScale() {
@@ -3368,14 +3487,13 @@ function createComparisonSection(config) {
   }
 
   function getLocalYAxisLayout(side, indicator, rows, theme = getChartTheme()) {
-    const color = getChartSeriesColor(indicator.id);
     const scale = state.scale === "log" && canUseLocalLog(rows) ? "log" : "linear";
     const range = getAutoRange(rows, scale, indicator.axisBounds);
     const axis = {
       gridcolor: side === "left" ? theme.grid : "rgba(0,0,0,0)",
       zeroline: true,
       zerolinecolor: theme.zero,
-      tickfont: { color, size: usesTouchChartMode() ? 10 : 11, weight: 700 },
+      tickfont: { color: theme.ink, size: usesTouchChartMode() ? 10 : 11, weight: 700 },
       type: scale,
     };
 
@@ -3439,11 +3557,13 @@ function createComparisonSection(config) {
 
       if (state.selectedIds.includes(id)) {
         state.selectedIds = state.selectedIds.filter((selectedId) => selectedId !== id);
-      } else if (state.selectedIds.length < 2) {
-        state.selectedIds.push(id);
       } else {
-        showLocalNotice("You can compare up to two indicators at a time.");
-        return;
+        const nextIds = [...state.selectedIds, id];
+        if (!canShareComparisonAxes(nextIds, getLocalIndicator)) {
+          showLocalNotice(comparisonLimitMessage());
+          return;
+        }
+        state.selectedIds = nextIds;
       }
 
       clearLocalNotice();
@@ -3490,8 +3610,13 @@ function createComparisonSection(config) {
 
   function renderLocalChart() {
     validateLocalScale();
-    const selected = state.axisOrder.slice(0, 2);
-    const traces = selected.map((id, index) => {
+    const selected = state.axisOrder;
+    const { leftIds, rightIds } = getAxisGroups(selected, getLocalIndicator);
+    const axisById = new Map([
+      ...leftIds.map((id) => [id, "y"]),
+      ...rightIds.map((id) => [id, "y2"]),
+    ]);
+    const traces = selected.map((id) => {
       const indicator = getLocalIndicator(id);
       const rows = getFilteredRows(id);
 
@@ -3501,7 +3626,7 @@ function createComparisonSection(config) {
         type: "scatter",
         mode: "lines",
         name: indicator.name,
-        yaxis: index === 0 ? "y" : "y2",
+        yaxis: axisById.get(id),
         line: {
           color: getChartSeriesColor(indicator.id),
           width: 1.5,
@@ -3513,28 +3638,25 @@ function createComparisonSection(config) {
     });
 
     const title = selected.map((id) => getLocalIndicator(id).name).join(" vs ");
-    elements.title.textContent = title || "Select up to two indicators";
+    elements.title.textContent = title || "Select indicators";
 
     const xBounds = getDisplayXBounds(selected);
     const requestedBounds = getXBounds();
     const includesTrendAnchor = Boolean(
       xBounds && requestedBounds && xBounds.start < requestedBounds.start,
     );
-    const firstRows = selected[0] ? getFilteredRows(selected[0]) : [];
-    const secondRows = selected[1] ? getFilteredRows(selected[1]) : [];
-    const firstIndicator = selected[0] ? getLocalIndicator(selected[0]) : null;
-    const secondIndicator = selected[1] ? getLocalIndicator(selected[1]) : null;
+    const leftRows = combineRows(leftIds, getFilteredRows);
+    const rightRows = combineRows(rightIds, getFilteredRows);
+    const leftIndicator = leftIds[0] ? { ...getLocalIndicator(leftIds[0]) } : null;
+    const rightIndicator = rightIds[0] ? { ...getLocalIndicator(rightIds[0]) } : null;
+    if (rightIndicator && rightIds.length > 1) {
+      delete rightIndicator.axisBounds;
+    }
     const theme = getChartTheme();
-    const horizontalAxisAnnotations = [firstIndicator, secondIndicator]
-      .flatMap((indicator, index) =>
-        indicator
-          ? getHorizontalAxisAnnotations(
-              indicator,
-              index === 0 ? "left" : "right",
-              getChartSeriesColor(indicator.id),
-            )
-          : [],
-      );
+    const horizontalAxisAnnotations = [
+      ...getAxisGroupAnnotations(leftIds, "left", getLocalIndicator, theme),
+      ...getAxisGroupAnnotations(rightIds, "right", getLocalIndicator, theme),
+    ];
     const trendAnnotations = includesTrendAnchor
       ? [
           {
@@ -3552,7 +3674,7 @@ function createComparisonSection(config) {
         ]
       : [];
     const layout = {
-      margin: getHorizontalAxisMargins(selected.length === 2),
+      margin: getHorizontalAxisMargins(rightIds.length > 0, leftIds.length > 0),
       paper_bgcolor: "rgba(0,0,0,0)",
       plot_bgcolor: "rgba(0,0,0,0)",
       font: {
@@ -3586,15 +3708,17 @@ function createComparisonSection(config) {
       dragmode: getChartDragMode(),
     };
 
-    if (firstIndicator) {
-      layout.yaxis = getLocalYAxisLayout("left", firstIndicator, firstRows, theme);
+    if (leftIndicator) {
+      layout.yaxis = getLocalYAxisLayout("left", leftIndicator, leftRows, theme);
+    } else {
+      layout.yaxis = { visible: false };
     }
 
-    if (secondIndicator) {
-      layout.yaxis2 = getLocalYAxisLayout("right", secondIndicator, secondRows, theme);
+    if (rightIndicator) {
+      layout.yaxis2 = getLocalYAxisLayout("right", rightIndicator, rightRows, theme);
     }
 
-    layout.shapes = getThresholdZoneShapes(selected, layout);
+    layout.shapes = getThresholdZoneShapes(selected, layout, axisById);
 
     if (elements.chart && window.Plotly) {
       Plotly.react(elements.chart, traces, layout, getPlotlyConfig()).then(() => {
@@ -3605,7 +3729,7 @@ function createComparisonSection(config) {
           elements.chart.dataset.promptEnd = xBounds.end;
         }
 
-        setupBoundedXAxis(elements.chart, () => getDisplayXBounds(state.axisOrder.slice(0, 2)));
+        setupBoundedXAxis(elements.chart, () => getDisplayXBounds(state.axisOrder));
         setupMobileYAxisGestures(elements.chart);
         setupPromptCopy(elements.chart, (dateText) => buildComparisonPrompt(config.label, state, config.indicators, dateText));
       });
@@ -3684,7 +3808,7 @@ function createComparisonSection(config) {
 }
 
 function buildComparisonPrompt(sectionLabel, state, definitions, dateText) {
-  const selected = state.axisOrder.slice(0, 2);
+  const selected = state.axisOrder;
   const analyses = selected.map((id) => {
     const indicator = definitions.find((item) => item.id === id);
     return analyzeTurningPoints({
@@ -3863,7 +3987,16 @@ async function loadIndicatorData() {
 }
 
 async function loadFxData() {
-  fxData = parseFxCsv(await fetchLocalText("data/fx.csv"));
+  const [fxCsv, japanCoreCpiCsv, tokyoCoreCpiCsv] = await Promise.all([
+    fetchLocalText("data/fx.csv"),
+    fetchLocalText("data/japan-core-cpi-yoy.csv"),
+    fetchLocalText("data/tokyo-core-cpi-yoy.csv"),
+  ]);
+
+  fxData = mergeFxSeries(parseFxCsv(fxCsv), [
+    { field: "Japan_Core_CPI_YoY", rows: parseCsv(japanCoreCpiCsv) },
+    { field: "Tokyo_Core_CPI_YoY", rows: parseCsv(tokyoCoreCpiCsv) },
+  ]);
 }
 
 async function loadDataStatus() {
@@ -4350,18 +4483,41 @@ fxRangeButtons.forEach((button) => {
   });
 });
 
+function showFxNotice(message) {
+  if (fxSelectionNotice && fxSelectionNoticeText) {
+    fxSelectionNoticeText.textContent = message;
+    fxSelectionNotice.hidden = false;
+  }
+}
+
+function clearFxNotice() {
+  if (fxSelectionNotice && fxSelectionNoticeText) {
+    fxSelectionNotice.hidden = true;
+    fxSelectionNoticeText.textContent = "";
+  }
+}
+
 function toggleFxCard(card) {
   const series = card.dataset.fxCard;
 
   if (visibleFxSeries.has(series)) {
     visibleFxSeries.delete(series);
   } else {
+    const nextIds = [...visibleFxSeries, series];
+    const getDefinition = (id) => fxSeriesDefinitions.find((item) => item.id === id);
+    if (!canShareComparisonAxes(nextIds, getDefinition)) {
+      showFxNotice(comparisonLimitMessage());
+      return;
+    }
     visibleFxSeries.add(series);
   }
 
+  clearFxNotice();
   renderFxCards();
   renderFxChart();
 }
+
+fxSelectionNoticeClose?.addEventListener("click", clearFxNotice);
 
 fxCards.forEach((card) => {
   card.addEventListener("click", () => {

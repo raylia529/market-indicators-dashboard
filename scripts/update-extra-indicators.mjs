@@ -9,12 +9,8 @@ const retryBackoffMs = [];
 
 const files = {
   move: path.join("data", "move.csv"),
-  hygIef: path.join("data", "hyg-ief.csv"),
   skew: path.join("data", "skew.csv"),
   sox: path.join("data", "sox.csv"),
-  adLine: path.join("data", "advance-decline-line.csv"),
-  above200: path.join("data", "sp500-above-200dma.csv"),
-  breadthPricesDir: path.join("data", "internal", "breadth-prices"),
   tsmcRevenueYoy: path.join("data", "tsmc-revenue-yoy.csv"),
   aiCapex: path.join("data", "ai-capex.csv"),
   ismManufacturingPmi: path.join("data", "ism-manufacturing-pmi.csv"),
@@ -245,38 +241,6 @@ async function updateYahooIndex({ symbol, label, file, decimals = 2 }) {
   console.log(`Valid observations: ${rows.length}`);
   console.log(`Downloaded observations: ${downloadedRows.length}`);
   console.log(`Request mode: ${latestDate ? "latest 5 days" : "full bootstrap"}`);
-}
-
-async function updateHygIef() {
-  const existingRows = loadSingleCsv(files.hygIef);
-  const latestExistingDate = existingRows.at(-1)?.date;
-  const requestWindow = latestExistingDate ? { range: "5d" } : { period1: 0 };
-  const hygText = await downloadYahooChart("HYG", "HYG", requestWindow);
-  await wait(2500);
-  const iefText = await downloadYahooChart("IEF", "IEF", requestWindow);
-  const hygRows = parseYahooChart(hygText, "HYG", { adjusted: true });
-  const iefRows = parseYahooChart(iefText, "IEF", { adjusted: true });
-  const iefByDate = new Map(iefRows.map((row) => [row.date, row.value]));
-  const downloadedRatioRows = hygRows
-    .filter((row) => Number.isFinite(iefByDate.get(row.date)) && iefByDate.get(row.date) > 0)
-    .map((row) => ({ date: row.date, value: row.value / iefByDate.get(row.date) }));
-  const ratioRows = mergeRowsByDate(existingRows, downloadedRatioRows);
-
-  if (ratioRows[0]?.date > "2007-04-12") {
-    throw new Error(`HYG/IEF history starts unexpectedly late at ${ratioRows[0]?.date}.`);
-  }
-
-  if (existingRows.length > 0 && ratioRows.length < existingRows.length) {
-    throw new Error("Refusing to shorten existing HYG/IEF history.");
-  }
-
-  atomicWriteCsv(files.hygIef, ratioRows, "HYG/IEF adjusted-close ratio", 6);
-  console.log("HYG/IEF validation");
-  console.log("Source: Yahoo Finance HYG and IEF adjusted close");
-  console.log(`Earliest date: ${ratioRows[0].date}`);
-  console.log(`Latest date: ${ratioRows.at(-1).date}`);
-  console.log(`Valid observations: ${ratioRows.length}`);
-  console.log(`Downloaded matching observations: ${downloadedRatioRows.length}`);
 }
 
 const prNewswireUserAgent =
@@ -691,205 +655,6 @@ async function updateAiCapex() {
   console.log(`Valid observations: ${yoyRows.length}`);
 }
 
-async function getSp500Constituents() {
-  const url = "https://raw.githubusercontent.com/datasets/s-and-p-500-companies/master/data/constituents.csv";
-  const text = await download(url);
-  return text
-    .trim()
-    .split(/\r?\n/)
-    .slice(1)
-    .map((line) => splitCsvLine(line)[0])
-    .filter(Boolean)
-    .map((symbol) => symbol.replaceAll(".", "-"));
-}
-
-async function withConcurrency(items, limit, worker) {
-  const results = [];
-  let index = 0;
-
-  async function run() {
-    while (index < items.length) {
-      const itemIndex = index;
-      index += 1;
-      results[itemIndex] = await worker(items[itemIndex], itemIndex);
-    }
-  }
-
-  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, run));
-  return results;
-}
-
-function movingAverage(values, index, windowSize) {
-  if (index + 1 < windowSize) {
-    return null;
-  }
-
-  let total = 0;
-  for (let offset = index - windowSize + 1; offset <= index; offset += 1) {
-    total += values[offset];
-  }
-  return total / windowSize;
-}
-
-async function updateBreadth() {
-  const symbols = await getSp500Constituents();
-  const minimumCoverage = Math.ceil(symbols.length * 0.95);
-  const retainedTradingDays = 260;
-  const advancesByDate = new Map();
-  const declinesByDate = new Map();
-  const participationByDate = new Map();
-  const aboveByDate = new Map();
-  const totalByDate = new Map();
-  const pricesBySymbol = new Map();
-  let downloadSuccessCount = 0;
-  let yahooRateLimited = false;
-  const breadthStart = new Date();
-  breadthStart.setUTCDate(breadthStart.getUTCDate() - 420);
-  const breadthPeriod1 = Math.floor(breadthStart.getTime() / 1000);
-
-  fs.mkdirSync(files.breadthPricesDir, { recursive: true });
-
-  await withConcurrency(symbols, 2, async (symbol) => {
-    const cacheFile = path.join(files.breadthPricesDir, `${symbol}.csv`);
-    const existingRows = loadSingleCsv(cacheFile);
-    if (existingRows.length > 0) {
-      pricesBySymbol.set(symbol, existingRows);
-    }
-
-    if (yahooRateLimited) {
-      return;
-    }
-
-    try {
-      const downloadedRows = parseYahooChart(
-        await downloadYahooChart(
-          symbol,
-          symbol,
-          existingRows.length >= 200 ? { range: "5d" } : { period1: breadthPeriod1 },
-        ),
-        symbol,
-      );
-      const cachedRows = mergeRowsByDate(existingRows, downloadedRows).slice(-retainedTradingDays);
-      atomicWriteCsv(cacheFile, cachedRows, `${symbol} breadth price cache`, 6);
-      pricesBySymbol.set(symbol, cachedRows);
-      downloadSuccessCount += 1;
-      await wait(750);
-    } catch (error) {
-      console.warn(`WARNING: ${symbol} breadth download failed. ${error.message}`);
-      if (/\(429\)|HTTP 429|status code 429/i.test(error.message)) {
-        yahooRateLimited = true;
-        console.warn("WARNING: Yahoo rate limit detected; stopping the remaining breadth requests.");
-      }
-    }
-  });
-
-  const readyCacheCount = Array.from(pricesBySymbol.values()).filter(
-    (rows) => rows.length >= 200,
-  ).length;
-
-  if (readyCacheCount < minimumCoverage) {
-    throw new Error(
-      `Breadth cache is ready for only ${readyCacheCount}/${symbols.length} constituents; ` +
-        `at least ${minimumCoverage} are required. Partial cache progress was preserved.`,
-    );
-  }
-
-  for (const rows of pricesBySymbol.values()) {
-    if (rows.length < 200) {
-      continue;
-    }
-
-    const closes = rows.map((row) => row.value);
-    for (let index = 1; index < rows.length; index += 1) {
-      const previous = closes[index - 1];
-      const current = closes[index];
-      const date = rows[index].date;
-      participationByDate.set(date, (participationByDate.get(date) || 0) + 1);
-
-      if (current > previous) {
-        advancesByDate.set(date, (advancesByDate.get(date) || 0) + 1);
-      } else if (current < previous) {
-        declinesByDate.set(date, (declinesByDate.get(date) || 0) + 1);
-      }
-
-      const average200 = movingAverage(closes, index, 200);
-      if (average200) {
-        totalByDate.set(date, (totalByDate.get(date) || 0) + 1);
-        if (current > average200) {
-          aboveByDate.set(date, (aboveByDate.get(date) || 0) + 1);
-        }
-      }
-    }
-  }
-
-  const dates = Array.from(new Set([...advancesByDate.keys(), ...totalByDate.keys()])).sort();
-  let cumulative = 0;
-  const adLineRows = [];
-  const above200Rows = [];
-
-  for (const date of dates) {
-    if ((participationByDate.get(date) || 0) < minimumCoverage) {
-      continue;
-    }
-
-    const advances = advancesByDate.get(date) || 0;
-    const declines = declinesByDate.get(date) || 0;
-    cumulative += advances - declines;
-    adLineRows.push({ date, value: cumulative });
-
-    const total = totalByDate.get(date) || 0;
-    if (total >= minimumCoverage) {
-      above200Rows.push({
-        date,
-        value: ((aboveByDate.get(date) || 0) / total) * 100,
-      });
-    }
-  }
-
-  const existingAdLine = loadSingleCsv(files.adLine);
-  const existingAbove200 = loadSingleCsv(files.above200);
-  const latestExistingAdDate = existingAdLine.at(-1)?.date;
-  let finalAdLineRows = adLineRows;
-
-  if (latestExistingAdDate) {
-    const newByDate = new Map(adLineRows.map((row) => [row.date, row.value]));
-    const anchor = [...existingAdLine].reverse().find((row) => newByDate.has(row.date));
-    if (!anchor) {
-      throw new Error("Breadth update has no overlap with the existing A/D Line history.");
-    }
-
-    const offset = anchor.value - newByDate.get(anchor.date);
-    const appended = adLineRows
-      .filter((row) => row.date > latestExistingAdDate)
-      .map((row) => ({ date: row.date, value: row.value + offset }));
-    finalAdLineRows = mergeRowsByDate(existingAdLine, appended);
-  }
-
-  const latestExistingAboveDate = existingAbove200.at(-1)?.date;
-  const appendedAbove200 = latestExistingAboveDate
-    ? above200Rows.filter((row) => row.date > latestExistingAboveDate)
-    : above200Rows;
-  const finalAbove200Rows = mergeRowsByDate(existingAbove200, appendedAbove200);
-
-  atomicWriteCsv(files.adLine, finalAdLineRows, "Advance / Decline Line (current-constituent proxy)", 0);
-  atomicWriteCsv(files.above200, finalAbove200Rows, "% Stocks Above 200-Day Moving Average (current-constituent proxy)", 1);
-  console.log("Breadth validation");
-  console.log(`S&P 500 constituents requested successfully: ${downloadSuccessCount}/${symbols.length}`);
-  console.log(`Price caches with at least 200 trading days: ${readyCacheCount}/${symbols.length}`);
-  console.log(`Minimum calculation coverage: ${minimumCoverage}/${symbols.length} (95%)`);
-  console.log(`Cached trading days per constituent: ${retainedTradingDays}`);
-  console.log("Method: current S&P 500 constituent proxy; existing history is preserved and only new dates are appended");
-  console.log(`Advance/Decline latest date: ${finalAdLineRows.at(-1).date}`);
-  console.log(`Above 200DMA latest date: ${finalAbove200Rows.at(-1).date}`);
-
-  if (downloadSuccessCount < minimumCoverage) {
-    throw new Error(
-      `Only ${downloadSuccessCount}/${symbols.length} constituent downloads succeeded; ` +
-        "existing breadth results and successful cache updates were preserved.",
-    );
-  }
-}
-
 async function runStep(label, fn) {
   try {
     await fn();
@@ -907,7 +672,6 @@ async function main() {
       label: "MOVE Index",
       update: () => updateYahooIndex({ symbol: "^MOVE", label: "MOVE Index", file: files.move }),
     },
-    { key: "hyg-ief", label: "HYG/IEF", update: updateHygIef },
     { key: "skew", label: "CBOE SKEW Index", update: updateSkew },
     {
       key: "sox",
@@ -921,7 +685,6 @@ async function main() {
       label: "ISM Manufacturing PMI",
       update: updateIsmManufacturingPmi,
     },
-    { key: "breadth", label: "Breadth indicators", update: updateBreadth },
   ];
   const selectedSteps = requestedUpdates
     ? steps.filter((step) => requestedUpdates.has(step.key))
