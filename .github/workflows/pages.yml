@@ -16,8 +16,10 @@ on:
     - cron: "15 9 * * 6"
     # Japan/Taiwan pending-only checks: 19:15, 20:15, and 22:15 JST Mon-Fri.
     - cron: "15 10,11,13 * * 1-5"
-    # 08:45 JST Tue-Sat: isolated daily S&P 500 breadth refresh.
+    # 08:45 JST Tue-Sat: primary isolated daily S&P 500 breadth refresh.
     - cron: "45 23 * * 1-5"
+    # 09:45 and 10:45 JST Tue-Sat: pending-only Breadth backups.
+    - cron: "45 0,1 * * 2-6"
   workflow_dispatch:
     inputs:
       update_profile:
@@ -87,6 +89,7 @@ jobs:
               "15 9 * * 6") profile=us ;;
               "15 10,11,13 * * 1-5") profile=asia-retry ;;
               "45 23 * * 1-5") profile=breadth ;;
+              "45 0,1 * * 2-6") profile=breadth ;;
               *) profile=full ;;
             esac
           fi

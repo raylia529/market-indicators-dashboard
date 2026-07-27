@@ -38,7 +38,7 @@ The repository includes `.github/workflows/pages.yml`, which:
 - treats Japan MOF JGB yields as next-business-day releases, so the 08:15 check does not request a reference date that is not scheduled for publication until 09:30;
 - skips each indicator after a successful source check on that JST date, so later retry slots contact only sources that failed or have not yet been checked;
 - uses source-aware expected release dates for slow data, so a successful download of unchanged official data does not permanently suppress later overdue retries;
-- refreshes the two S&P 500 Breadth indicators in an isolated daily job at 08:45 JST, Tuesday through Saturday;
+- refreshes the two S&P 500 Breadth indicators in isolated jobs at 08:45, 09:45, and 10:45 JST, Tuesday through Saturday; successful data is skipped before the later backup slots contact Alpaca;
 - can be run manually from the GitHub Actions tab for `full`, `us`, `us-fast`, `us-market`, `us-slow`, `asia`, `breadth`, or `alpaca` with `workflow_dispatch`;
 - deploys `index.html`, `style.css`, `app.js`, PWA assets, icons, and `data/` to Pages.
 
@@ -240,6 +240,7 @@ The Worker dispatches the existing workflow at these times:
 | US | 09:15, 10:15, 12:15 Tue-Sat | `15 0,1,3 * * 2-6` |
 | US | 11:15 Tue-Sat | `15 2 * * 2-6` |
 | Breadth | 08:45 Tue-Sat | `45 23 * * 1-5` |
+| Breadth backup | 09:45, 10:45 Tue-Sat | `45 0,1 * * 2-6` |
 | US + Asia | 18:15 Mon-Fri | `15 9 * * 1-5` |
 | US | 18:15 Sat | `15 9 * * 6` |
 | Asia | 19:15, 20:15, 22:15 Mon-Fri | `15 10,11,13 * * 1-5` |

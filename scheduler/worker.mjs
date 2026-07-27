@@ -6,6 +6,7 @@ const scheduleProfiles = new Map([
   ["15 0,1,3 * * 2-6", "us"],
   ["15 2 * * 2-6", "us"],
   ["45 23 * * 1-5", "breadth"],
+  ["45 0,1 * * 2-6", "breadth"],
   ["15 9 * * 1-5", "combined"],
   ["15 9 * * 6", "us"],
   ["15 10,11,13 * * 1-5", "asia-retry"],
