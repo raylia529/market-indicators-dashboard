@@ -725,6 +725,7 @@ h2 {
   font-size: 10px;
   font-weight: 800;
   line-height: 1;
+  text-align: center;
   white-space: nowrap;
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03);
 }
@@ -749,7 +750,7 @@ h2 {
   white-space: nowrap;
 }
 
-.js-plotly-plot .plotly .modebar-log-control {
+.js-plotly-plot .plotly .modebar-toggle-control {
   display: inline-flex;
   position: relative;
   align-items: center;
@@ -768,11 +769,12 @@ h2 {
   font-size: 10px;
   font-weight: 800;
   line-height: 1;
+  text-align: center;
   white-space: nowrap;
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03);
 }
 
-.js-plotly-plot .plotly .modebar-log-control input {
+.js-plotly-plot .plotly .modebar-toggle-control input {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -780,16 +782,21 @@ h2 {
   pointer-events: none;
 }
 
-.js-plotly-plot .plotly .modebar-log-control::before,
-.js-plotly-plot .plotly .modebar-log-control::after {
+.js-plotly-plot .plotly .modebar-toggle-control::before,
+.js-plotly-plot .plotly .modebar-toggle-control::after {
   display: none !important;
   content: none !important;
 }
 
-.js-plotly-plot .plotly .modebar-log-control:has(input:checked) {
+.js-plotly-plot .plotly .modebar-toggle-control:has(input:checked) {
   border-color: rgba(37, 99, 235, 0.52);
   background: var(--blue-soft);
   color: var(--blue-strong);
+}
+
+.js-plotly-plot .plotly .modebar-toggle-control:has(input:disabled) {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .js-plotly-plot .plotly .modebar-btn:hover,

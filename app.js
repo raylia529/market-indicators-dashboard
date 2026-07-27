@@ -1181,7 +1181,7 @@ function resetChartToInitialRanges(chartNode) {
   Plotly.relayout(chartNode, update);
 }
 
-function setupChartModebar(chartNode, logScaleInput = null) {
+function setupChartModebar(chartNode, logScaleInput = null, normalizedInput = null) {
   if (!chartNode) {
     return;
   }
@@ -1217,8 +1217,14 @@ function setupChartModebar(chartNode, logScaleInput = null) {
 
   const control = logScaleInput?.closest(".toggle-pill");
   if (control) {
-    control.classList.add("modebar-log-control");
+    control.classList.add("modebar-toggle-control", "modebar-log-control");
     modebarGroup.append(control);
+  }
+
+  const normalizedControl = normalizedInput?.closest(".toggle-pill");
+  if (normalizedControl) {
+    normalizedControl.classList.add("modebar-toggle-control", "modebar-normalized-control");
+    modebarGroup.append(normalizedControl);
   }
 
   modebar.replaceChildren(modebarGroup);
@@ -3641,6 +3647,8 @@ function createComparisonSection(config) {
     manualAxisOrder: false,
     activeRange: config.defaultRange || "5Y",
     scale: "linear",
+    normalized: false,
+    selectionBeforeNormalized: null,
   };
 
   const elements = {
@@ -3651,6 +3659,7 @@ function createComparisonSection(config) {
     noticeText: document.getElementById(`${config.key}-selection-notice-text`),
     noticeClose: document.getElementById(`${config.key}-selection-notice-close`),
     logScaleInput: document.getElementById(`${config.key}-log-scale`),
+    normalizedInput: document.getElementById(`${config.key}-normalized`),
     rangeButtons: Array.from(document.querySelectorAll(`[data-comparison-range="${config.key}"]`)),
   };
 
@@ -3698,6 +3707,37 @@ function createComparisonSection(config) {
     return displayRows;
   }
 
+  function getNormalizedRows(indicatorId) {
+    const bounds = getXBounds();
+    const rows = state.data.get(indicatorId) || [];
+    const visibleRows = bounds
+      ? rows.filter((row) => row.date >= bounds.start && row.date <= bounds.end)
+      : rows;
+    const baseRow = visibleRows.find(
+      (row) => Number.isFinite(row.value) && row.value !== 0,
+    );
+
+    if (!baseRow) {
+      return [];
+    }
+
+    const denominator = Math.abs(baseRow.value);
+    return visibleRows
+      .filter((row) => row.date >= baseRow.date && Number.isFinite(row.value))
+      .map((row) => ({
+        ...row,
+        originalValue: row.value,
+        baseDate: baseRow.date,
+        value: ((row.value - baseRow.value) / denominator) * 100,
+      }));
+  }
+
+  function getChartRows(indicatorId) {
+    return state.normalized
+      ? getNormalizedRows(indicatorId)
+      : getFilteredRows(indicatorId);
+  }
+
   function getDisplayRows(rows, bounds) {
     if (rows.length === 0) {
       return [];
@@ -3730,6 +3770,13 @@ function createComparisonSection(config) {
 
     if (!baseBounds) {
       return null;
+    }
+
+    if (state.normalized) {
+      return {
+        ...baseBounds,
+        minallowed: baseBounds.start,
+      };
     }
 
     const displayStart = selected
@@ -3874,7 +3921,7 @@ function createComparisonSection(config) {
         state.selectedIds = state.selectedIds.filter((selectedId) => selectedId !== id);
       } else {
         const nextIds = [...state.selectedIds, id];
-        if (!canShareComparisonAxes(nextIds, getLocalIndicator)) {
+        if (!state.normalized && !canShareComparisonAxes(nextIds, getLocalIndicator)) {
           showLocalNotice(comparisonLimitMessage());
           return;
         }
@@ -3932,18 +3979,24 @@ function createComparisonSection(config) {
   function renderLocalChart() {
     validateLocalScale();
     const selected = state.axisOrder;
-    const { leftIds, rightIds } = getAxisGroups(selected, getLocalIndicator);
+    const { leftIds, rightIds } = state.normalized
+      ? { leftIds: selected, rightIds: [] }
+      : getAxisGroups(selected, getLocalIndicator);
     const axisById = new Map([
       ...leftIds.map((id) => [id, "y"]),
       ...rightIds.map((id) => [id, "y2"]),
     ]);
     const traces = selected.map((id) => {
       const indicator = getLocalIndicator(id);
-      const rows = getFilteredRows(id);
+      const rows = getChartRows(id);
+      const normalizedHover = state.normalized
+        ? `<b>${indicator.name}</b><br>Change from base: %{y:.2f}%<br>Original: %{customdata[0]:.${indicator.decimals}f} ${indicator.unitLabel}<br>Base date: %{customdata[1]}<extra></extra>`
+        : `<b>${indicator.name}</b><br>%{y:.${indicator.decimals}f} ${indicator.unitLabel}<extra></extra>`;
 
       return {
         x: rows.map((row) => row.date),
         y: rows.map((row) => row.value),
+        customdata: rows.map((row) => [row.originalValue ?? row.value, row.baseDate ?? ""]),
         type: "scatter",
         mode: "lines",
         name: indicator.name,
@@ -3954,7 +4007,7 @@ function createComparisonSection(config) {
           dash: "solid",
           shape: indicator.lineShape || "linear",
         },
-        hovertemplate: `<b>${indicator.name}</b><br>%{y:.${indicator.decimals}f} ${indicator.unitLabel}<extra></extra>`,
+        hovertemplate: normalizedHover,
       };
     });
 
@@ -3966,18 +4019,30 @@ function createComparisonSection(config) {
     const includesTrendAnchor = Boolean(
       xBounds && requestedBounds && xBounds.start < requestedBounds.start,
     );
-    const leftRows = combineRows(leftIds, getFilteredRows);
-    const rightRows = combineRows(rightIds, getFilteredRows);
-    const leftIndicator = leftIds[0] ? { ...getLocalIndicator(leftIds[0]) } : null;
+    const leftRows = combineRows(leftIds, getChartRows);
+    const rightRows = combineRows(rightIds, getChartRows);
+    const normalizedIndicator = {
+      id: "normalized-change",
+      name: "Change from base",
+      unitLabel: "Percent",
+      decimals: 2,
+    };
+    const leftIndicator = state.normalized
+      ? normalizedIndicator
+      : leftIds[0]
+        ? { ...getLocalIndicator(leftIds[0]) }
+        : null;
     const rightIndicator = rightIds[0] ? { ...getLocalIndicator(rightIds[0]) } : null;
     if (rightIndicator && rightIds.length > 1) {
       delete rightIndicator.axisBounds;
     }
     const theme = getChartTheme();
-    const horizontalAxisAnnotations = [
-      ...getAxisGroupAnnotations(leftIds, "left", getLocalIndicator, theme),
-      ...getAxisGroupAnnotations(rightIds, "right", getLocalIndicator, theme),
-    ];
+    const horizontalAxisAnnotations = state.normalized
+      ? getHorizontalAxisAnnotations(normalizedIndicator, "left", theme.ink)
+      : [
+          ...getAxisGroupAnnotations(leftIds, "left", getLocalIndicator, theme),
+          ...getAxisGroupAnnotations(rightIds, "right", getLocalIndicator, theme),
+        ];
     const trendAnnotations = includesTrendAnchor
       ? [
           {
@@ -4035,7 +4100,7 @@ function createComparisonSection(config) {
         leftIndicator,
         leftRows,
         theme,
-        getAxisGroupColor(leftIds, theme),
+        state.normalized ? theme.ink : getAxisGroupColor(leftIds, theme),
       );
     } else {
       layout.yaxis = { visible: false };
@@ -4051,11 +4116,17 @@ function createComparisonSection(config) {
       );
     }
 
-    layout.shapes = getThresholdZoneShapes(selected, layout, axisById);
+    layout.shapes = state.normalized
+      ? []
+      : getThresholdZoneShapes(selected, layout, axisById);
 
     if (elements.chart && window.Plotly) {
       Plotly.react(elements.chart, traces, layout, getPlotlyConfig()).then(() => {
-        setupChartModebar(elements.chart, elements.logScaleInput);
+        setupChartModebar(
+          elements.chart,
+          elements.logScaleInput,
+          config.allowNormalized ? elements.normalizedInput : null,
+        );
 
         if (xBounds) {
           elements.chart.dataset.promptStart = xBounds.start;
@@ -4085,6 +4156,11 @@ function createComparisonSection(config) {
   });
 
   elements.logScaleInput.addEventListener("change", () => {
+    if (state.normalized) {
+      elements.logScaleInput.checked = false;
+      return;
+    }
+
     if (elements.logScaleInput.checked && !selectedRowsAllowLocalLog()) {
       elements.logScaleInput.checked = false;
       state.scale = "linear";
@@ -4097,6 +4173,34 @@ function createComparisonSection(config) {
     clearLocalNotice();
     renderLocalChart();
   });
+
+  if (config.allowNormalized && elements.normalizedInput) {
+    elements.normalizedInput.addEventListener("change", () => {
+      state.normalized = elements.normalizedInput.checked;
+
+      if (state.normalized) {
+        state.selectionBeforeNormalized = [...state.selectedIds];
+        state.scale = "linear";
+        elements.logScaleInput.checked = false;
+        elements.logScaleInput.disabled = true;
+        state.selectedIds = config.indicators
+          .filter((indicator) => (state.data.get(indicator.id) || []).length > 0)
+          .map((indicator) => indicator.id);
+        state.axisOrder = [...state.selectedIds];
+      } else {
+        elements.logScaleInput.disabled = false;
+        if (state.selectionBeforeNormalized?.length) {
+          state.selectedIds = [...state.selectionBeforeNormalized];
+          state.axisOrder = [...state.selectionBeforeNormalized];
+        }
+        state.selectionBeforeNormalized = null;
+      }
+
+      state.manualAxisOrder = false;
+      clearLocalNotice();
+      renderLocalAll();
+    });
+  }
 
   elements.noticeClose.addEventListener("click", clearLocalNotice);
 
@@ -4184,6 +4288,7 @@ const comparisonSections = [
     defaultSelectedIds: ["breadth-sp500"],
     defaultRange: "5Y",
     storageKey: "breadthIndicatorColors",
+    allowNormalized: true,
   }),
   createComparisonSection({
     key: "flows",
@@ -4192,6 +4297,7 @@ const comparisonSections = [
     defaultSelectedIds: ["flows-rsp-spy"],
     defaultRange: "5Y",
     storageKey: "flowsIndicatorColors",
+    allowNormalized: true,
   }),
   createComparisonSection({
     key: "us-rates",

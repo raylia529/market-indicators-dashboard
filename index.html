@@ -11,9 +11,9 @@
     <title>Market Indicators Dashboard</title>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2" />
-    <link rel="stylesheet" href="style.css?v=glossary-policy-v29" />
+    <link rel="stylesheet" href="style.css?v=normalized-v31" />
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
-    <script src="app.js?v=glossary-policy-v29" defer></script>
+    <script src="app.js?v=normalized-v31" defer></script>
   </head>
   <body>
     <main class="dashboard-shell">
@@ -169,6 +169,10 @@
                     <input type="checkbox" id="breadth-log-scale" />
                     Log scale
                   </label>
+                  <label class="toggle-pill">
+                    <input type="checkbox" id="breadth-normalized" />
+                    Normalized
+                  </label>
                 </div>
               </div>
               <div class="selection-notice" id="breadth-selection-notice" hidden>
@@ -218,6 +222,10 @@
                   <label class="toggle-pill">
                     <input type="checkbox" id="flows-log-scale" />
                     Log scale
+                  </label>
+                  <label class="toggle-pill">
+                    <input type="checkbox" id="flows-normalized" />
+                    Normalized
                   </label>
                 </div>
               </div>

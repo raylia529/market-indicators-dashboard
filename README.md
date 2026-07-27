@@ -68,7 +68,8 @@ Alpaca-powered ETF ratios and Breadth require two repository Actions secrets: `A
   - Macro, Breadth, Flows, US Rates, JP Rates, Japan, Taiwan: 3M, 6M, 1Y, 3Y, 5Y, 10Y, Max
   - FX: 3M, 6M, 1Y, 2Y, 5Y, 10Y, MAX
 - Macro Max display starts at 1997/1.
-- Comparisons use original units without normalization. Shared percentage series use the right Y-axis; other valid two-series comparisons retain independent axes.
+- Comparisons use original units by default. Shared percentage series use the right Y-axis; other valid two-series comparisons retain independent axes.
+- Breadth and Flows also provide an optional `Normalized` view. It selects all available cards when enabled and plots each selected series as percentage change from its first non-zero actual observation inside the chosen period. Shorter histories begin at their own first valid date; no interpolation or forward fill is used. Turning Normalized off restores the prior card selection.
 - Data is not normalized.
 - Log scale is available only when the selected range contains positive values.
 - Line colors can be adjusted from the cards.
@@ -356,7 +357,7 @@ Japan 10-Year JGB Yield - Japan 2-Year JGB Yield
 - Breadth contains the canonical S&P 500, RSP/SPY, New High / New Low, and % Above 200DMA.
 - RSP/SPY uses matching split-adjusted Alpaca IEX daily closes and is updated with the regular U.S. market group.
 - The two constituent-based indicators use the current S&P 500 list published by the `datasets/s-and-p-500-companies` GitHub dataset and Alpaca IEX daily bars.
-- Breadth is isolated from the normal U.S. market updater and runs once after each U.S. trading day at 08:45 JST, Tuesday through Saturday.
+- Breadth is isolated from the normal U.S. market updater and is checked at 08:45, 09:45, and 10:45 JST after each U.S. trading day, Tuesday through Saturday. Later checks skip Alpaca when the first run has already produced the target observation.
 - The updater requests a rolling window sufficient for 200-day averages and 252-trading-day highs/lows, calculates aggregate series in memory, and saves only the derived CSVs. Raw constituent bars are not committed or deployed.
 - At least 95% of the current constituent list must have valid history before a new aggregate observation is accepted. Existing published Breadth history remains intact when coverage is insufficient.
 - `New High / New Low` is `(new 252-trading-day highs - new 252-trading-day lows) / valid constituents * 100`.
