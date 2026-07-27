@@ -1,0 +1,39 @@
+name: Build Alpaca indicator CSVs
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Generate Alpaca indicators
+        env:
+          ALPACA_API_KEY_ID: ${{ secrets.ALPACA_API_KEY_ID }}
+          ALPACA_API_SECRET_KEY: ${{ secrets.ALPACA_API_SECRET_KEY }}
+        run: node scripts/update-alpaca-indicators.mjs
+
+      - name: Upload generated CSVs
+        uses: actions/upload-artifact@v4
+        with:
+          name: alpaca-indicator-csvs
+          if-no-files-found: error
+          retention-days: 3
+          path: |
+            data/hyg-ief.csv
+            data/rsp-spy.csv
+            data/sp500-above-200dma.csv
+            data/new-high-low-breadth.csv
