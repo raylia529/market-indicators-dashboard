@@ -1,10 +1,10 @@
 {
-  "last_dashboard_refresh": "2026-07-27T13:54:09+09:00",
-  "last_dashboard_refresh_display": "2026-07-27 13:54 JST",
-  "update_duration_seconds": 0,
+  "last_dashboard_refresh": "2026-07-28T01:54:15+09:00",
+  "last_dashboard_refresh_display": "2026-07-28 01:54 JST",
+  "update_duration_seconds": 199,
   "dashboard_version": "1.0.0",
-  "last_git_commit": "1bf7867",
-  "python_version": "Python 3.13.3",
+  "last_git_commit": "a6408ee",
+  "python_version": "Python 3.12.13",
   "indicators": {
     "SP500": {
       "display_name": "S&P 500 Index",
@@ -23,7 +23,7 @@
       "last_successful_refresh_display": "2026-07-25 09:18 JST",
       "frequency": "Daily, US trading days",
       "unit": "Index",
-      "status": "Up to date",
+      "status": "Update not run",
       "error_message": null,
       "formula": null,
       "release_note": null
@@ -89,7 +89,7 @@
       "last_successful_refresh_display": "2026-07-27 10:59 JST",
       "frequency": "Daily, US trading days",
       "unit": "Split-adjusted close ratio",
-      "status": "Up to date",
+      "status": "Source lag",
       "error_message": null,
       "formula": "HYG split-adjusted close / IEF split-adjusted close on matching trading dates",
       "release_note": "The pre-Alpaca archive is retained. New observations use Alpaca free IEX daily bars on matching dates only; no forward fill or estimated values are used."
@@ -159,7 +159,7 @@
       "last_successful_refresh_display": "2026-07-25 09:18 JST",
       "frequency": "Daily",
       "unit": "Percentage Points",
-      "status": "Up to date",
+      "status": "Update not run",
       "error_message": null,
       "formula": null,
       "release_note": null
@@ -177,8 +177,8 @@
       ],
       "latest_available_date": "2026-06-30",
       "next_expected_update_date": "2026-07-24",
-      "last_successful_refresh": "2026-07-25T21:15:47+09:00",
-      "last_successful_refresh_display": "2026-07-25 21:15 JST",
+      "last_successful_refresh": "2026-07-28T01:54:15+09:00",
+      "last_successful_refresh_display": "2026-07-28 01:54 JST",
       "frequency": "Monthly",
       "unit": "Percent YoY",
       "status": "Source lag",
@@ -204,7 +204,7 @@
       "frequency": "Daily, US trading days",
       "unit": "Index",
       "status": "Failed",
-      "error_message": "Yahoo Finance returned HTTP 429; existing history was preserved.",
+      "error_message": "WARNING: MOVE Index failed. Download failed: https://query2.finance.yahoo.com/v8/finance/chart/%5EMOVE?range=5d&interval=1d&events=history (429)",
       "formula": null,
       "release_note": null
     },
@@ -225,8 +225,8 @@
       ],
       "latest_available_date": "2026-07-23",
       "next_expected_update_date": "2026-07-24",
-      "last_successful_refresh": "2026-07-25T21:15:47+09:00",
-      "last_successful_refresh_display": "2026-07-25 21:15 JST",
+      "last_successful_refresh": "2026-07-28T01:54:15+09:00",
+      "last_successful_refresh_display": "2026-07-28 01:54 JST",
       "frequency": "Daily, business days",
       "unit": "Percentage Points",
       "status": "Source lag",
@@ -325,7 +325,7 @@
       "last_successful_refresh_display": "2026-07-25 16:33 JST",
       "frequency": "Daily, US trading days",
       "unit": "Index",
-      "status": "Up to date",
+      "status": "Update not run",
       "error_message": null,
       "formula": null,
       "release_note": null
@@ -347,7 +347,7 @@
       "last_successful_refresh_display": "2026-07-27 10:59 JST",
       "frequency": "Daily, US trading days",
       "unit": "Split-adjusted close ratio",
-      "status": "Up to date",
+      "status": "Source lag",
       "error_message": null,
       "formula": "RSP split-adjusted close / SPY split-adjusted close on matching trading dates",
       "release_note": "Uses matching Alpaca IEX daily bars only; no forward fill or estimated values are used."
@@ -369,7 +369,7 @@
       "last_successful_refresh_display": "2026-07-27 11:28 JST",
       "frequency": "Daily, US trading days",
       "unit": "Split-adjusted close ratio",
-      "status": "Up to date",
+      "status": "Source lag",
       "error_message": null,
       "formula": "SPY split-adjusted close / TLT split-adjusted close on matching trading dates",
       "release_note": "Uses matching Alpaca IEX daily bars only; no forward fill or estimated values are used."
@@ -391,7 +391,7 @@
       "last_successful_refresh_display": "2026-07-27 11:28 JST",
       "frequency": "Daily, US trading days",
       "unit": "Split-adjusted close ratio",
-      "status": "Up to date",
+      "status": "Source lag",
       "error_message": null,
       "formula": "XLY split-adjusted close / XLP split-adjusted close on matching trading dates",
       "release_note": "Uses matching Alpaca IEX daily bars only; no forward fill or estimated values are used."
@@ -413,7 +413,7 @@
       "last_successful_refresh_display": "2026-07-27 11:28 JST",
       "frequency": "Daily, US trading days",
       "unit": "Split-adjusted close ratio",
-      "status": "Up to date",
+      "status": "Source lag",
       "error_message": null,
       "formula": "IWM split-adjusted close / SPY split-adjusted close on matching trading dates",
       "release_note": "Uses matching Alpaca IEX daily bars only; no forward fill or estimated values are used."
@@ -439,7 +439,7 @@
       "last_successful_refresh_display": "2026-07-27 10:59 JST",
       "frequency": "Daily, US trading days",
       "unit": "Percent",
-      "status": "Up to date",
+      "status": "Source lag",
       "error_message": null,
       "formula": "(Stocks at a 252-trading-day high - stocks at a 252-trading-day low) / valid constituents * 100",
       "release_note": "Current-constituent proxy refreshed after each US trading day. Historical membership changes are not reconstructed; at least 95% constituent coverage is required."
@@ -465,7 +465,7 @@
       "last_successful_refresh_display": "2026-07-27 10:59 JST",
       "frequency": "Daily, US trading days",
       "unit": "Percent",
-      "status": "Up to date",
+      "status": "Source lag",
       "error_message": null,
       "formula": null,
       "release_note": "Calculated from current S&P 500 constituents and refreshed after each US trading day. Historical membership changes are not reconstructed; at least 95% constituent coverage is required."
@@ -517,7 +517,7 @@
       "last_successful_refresh_display": "2026-07-25 09:18 JST",
       "frequency": "Daily forex trading days",
       "unit": "JPY per USD",
-      "status": "Up to date",
+      "status": "Update not run",
       "error_message": null,
       "formula": null,
       "release_note": "FRED remains the official historical source. Yahoo Finance only fills recent dates that FRED has not published yet."
@@ -569,8 +569,8 @@
       ],
       "latest_available_date": "2026-07-23",
       "next_expected_update_date": "2026-07-24",
-      "last_successful_refresh": "2026-07-27T13:41:21+09:00",
-      "last_successful_refresh_display": "2026-07-27 13:41 JST",
+      "last_successful_refresh": "2026-07-28T01:54:15+09:00",
+      "last_successful_refresh_display": "2026-07-28 01:54 JST",
       "frequency": "Daily, Japan business days",
       "unit": "Percent per annum",
       "status": "Source lag",
@@ -647,7 +647,7 @@
       "last_successful_refresh_display": "2026-07-25 09:18 JST",
       "frequency": "Daily",
       "unit": "Percent",
-      "status": "Up to date",
+      "status": "Update not run",
       "error_message": null,
       "formula": null,
       "release_note": null
@@ -669,7 +669,7 @@
       "last_successful_refresh_display": "2026-07-25 09:18 JST",
       "frequency": "Daily, Japan business days",
       "unit": "Percent",
-      "status": "Up to date",
+      "status": "Update not run",
       "error_message": null,
       "formula": null,
       "release_note": null
@@ -695,7 +695,7 @@
       "last_successful_refresh_display": "2026-07-25 09:18 JST",
       "frequency": "Daily",
       "unit": "Percentage Points",
-      "status": "Up to date",
+      "status": "Update not run",
       "error_message": null,
       "formula": "US 2-Year Treasury Yield - Japan 2-Year JGB Yield",
       "release_note": null
@@ -717,7 +717,7 @@
       "last_successful_refresh_display": "2026-07-25 16:33 JST",
       "frequency": "Daily, Japan business days",
       "unit": "Percent",
-      "status": "Up to date",
+      "status": "Update not run",
       "error_message": null,
       "formula": null,
       "release_note": null
@@ -739,7 +739,7 @@
       "last_successful_refresh_display": "2026-07-25 16:33 JST",
       "frequency": "Daily, Japan business days",
       "unit": "Percentage Points",
-      "status": "Up to date",
+      "status": "Update not run",
       "error_message": null,
       "formula": "Japan 10-Year JGB Yield - Japan 2-Year JGB Yield",
       "release_note": null
@@ -787,11 +787,11 @@
       ],
       "latest_available_date": "2026-07-24",
       "next_expected_update_date": "2026-07-27",
-      "last_successful_refresh": "2026-07-25T09:18:06+09:00",
-      "last_successful_refresh_display": "2026-07-25 09:18 JST",
+      "last_successful_refresh": "2026-07-28T01:54:15+09:00",
+      "last_successful_refresh_display": "2026-07-28 01:54 JST",
       "frequency": "Daily, Japan trading days",
       "unit": "Index",
-      "status": "Up to date",
+      "status": "Source lag",
       "error_message": null,
       "formula": null,
       "release_note": "Official daily closes are parsed from JPX monthly statistics PDFs from 2016 onward; Yahoo Japan fills recent dates when available."
@@ -835,7 +835,7 @@
       "last_successful_refresh_display": "2026-07-25 09:18 JST",
       "frequency": "Daily, Taiwan trading days",
       "unit": "Index",
-      "status": "Up to date",
+      "status": "Update not run",
       "error_message": null,
       "formula": null,
       "release_note": null
@@ -855,10 +855,10 @@
           "url": "https://finmind.github.io/en/tutor/TaiwanMarket/Chip/"
         }
       ],
-      "latest_available_date": "2026-07-24",
-      "next_expected_update_date": "2026-07-27",
-      "last_successful_refresh": "2026-07-25T09:18:06+09:00",
-      "last_successful_refresh_display": "2026-07-25 09:18 JST",
+      "latest_available_date": "2026-07-27",
+      "next_expected_update_date": "2026-07-28",
+      "last_successful_refresh": "2026-07-28T01:54:15+09:00",
+      "last_successful_refresh_display": "2026-07-28 01:54 JST",
       "frequency": "Daily, Taiwan trading days",
       "unit": "TWD Millions",
       "status": "Up to date",
@@ -933,10 +933,10 @@
           "url": "https://finmind.github.io/en/tutor/TaiwanMarket/Chip/"
         }
       ],
-      "latest_available_date": "2026-07-24",
-      "next_expected_update_date": "2026-07-27",
-      "last_successful_refresh": "2026-07-25T09:18:06+09:00",
-      "last_successful_refresh_display": "2026-07-25 09:18 JST",
+      "latest_available_date": "2026-07-27",
+      "next_expected_update_date": "2026-07-28",
+      "last_successful_refresh": "2026-07-28T01:54:15+09:00",
+      "last_successful_refresh_display": "2026-07-28 01:54 JST",
       "frequency": "Daily, Taiwan trading days",
       "unit": "Percent YoY",
       "status": "Up to date",
