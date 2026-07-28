@@ -2,16 +2,19 @@ const workflowDispatchUrl =
   "https://api.github.com/repos/raylia529/market-indicators-dashboard/actions/workflows/pages.yml/dispatches";
 
 const scheduleProfiles = new Map([
-  ["15 23 * * 1-5", "combined"],
-  ["45 23 * * 1-5", "breadth"],
-  ["15 3 * * 2-6", "us"],
-  ["15 9 * * 1-5", "asia"],
-  ["15 11 * * 1-5", "asia-retry"],
-  ["15 13 * * 1-5", "combined"],
+  ["15 23 * * 1-5", ["combined", "breadth"]],
+  ["15 3 * * 2-6", ["us"]],
+  ["15 9 * * 1-5", ["asia"]],
+  ["15 11 * * 1-5", ["asia-retry"]],
+  ["15 13 * * 1-5", ["combined"]],
 ]);
 
 export function profileForCron(cron) {
-  return scheduleProfiles.get(cron) || null;
+  return scheduleProfiles.get(cron)?.[0] || null;
+}
+
+export function profilesForCron(cron) {
+  return scheduleProfiles.get(cron) || [];
 }
 
 async function dispatchWorkflow(profile, token) {
@@ -42,12 +45,12 @@ async function dispatchWorkflow(profile, token) {
 
 export default {
   async scheduled(controller, env, context) {
-    const profile = profileForCron(controller.cron);
+    const profiles = profilesForCron(controller.cron);
 
-    if (!profile) {
+    if (profiles.length === 0) {
       throw new Error(`No update profile is configured for cron ${controller.cron}.`);
     }
 
-    context.waitUntil(dispatchWorkflow(profile, env.GITHUB_ACTIONS_TOKEN));
+    context.waitUntil(Promise.all(profiles.map((profile) => dispatchWorkflow(profile, env.GITHUB_ACTIONS_TOKEN))));
   },
 };
