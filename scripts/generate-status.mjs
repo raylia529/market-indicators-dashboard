@@ -1119,6 +1119,7 @@ function buildMetadata() {
   const todayText = finishedAt.slice(0, 10);
   const updateResults = loadUpdateResults();
   const previousMetadata = loadPreviousMetadata();
+  const hasUpdateResults = Object.keys(updateResults).length > 0;
   const indicators = {};
 
   for (const definition of indicatorDefinitions) {
@@ -1134,8 +1135,16 @@ function buildMetadata() {
       errorMessage = error.message;
     }
 
+    const dataAdvancedWithoutCurrentResult =
+      !updateResult &&
+      latestAvailableDate &&
+      previousIndicator?.source_available_date &&
+      latestAvailableDate > previousIndicator.source_available_date;
+    if (dataAdvancedWithoutCurrentResult) {
+      errorMessage = null;
+    }
     const status =
-      !updateResult && previousIndicator?.status === "Failed"
+      !updateResult && previousIndicator?.status === "Failed" && !dataAdvancedWithoutCurrentResult
         ? "Failed"
         : calculateStatus(
             definition,
@@ -1150,6 +1159,7 @@ function buildMetadata() {
       nextExpectedUpdate,
     );
     let lastSuccessfulRefresh = previousIndicator?.last_successful_refresh || null;
+    let sourceCheckedAt = previousIndicator?.source_checked_at || null;
     let sourceAvailableDate =
       previousIndicator?.source_available_date ||
       previousIndicator?.dashboard_latest_date ||
@@ -1158,9 +1168,14 @@ function buildMetadata() {
     if (updateResult?.status === "success") {
       lastSuccessfulRefresh = finishedAt;
       sourceAvailableDate = latestAvailableDate;
+    } else if (dataAdvancedWithoutCurrentResult) {
+      sourceAvailableDate = latestAvailableDate;
     } else if (!lastSuccessfulRefresh && status !== "Failed") {
       lastSuccessfulRefresh = finishedAt;
       sourceAvailableDate = latestAvailableDate;
+    }
+    if (updateResult?.source_checked_at) {
+      sourceCheckedAt = updateResult.source_checked_at;
     }
 
     indicators[definition.key] = {
@@ -1179,6 +1194,8 @@ function buildMetadata() {
         ? formatJstDisplay(expectedSourceUpdate).slice(0, 10)
         : null,
       expected_source_update_display: formatJstDisplay(expectedSourceUpdate),
+      source_checked_at: sourceCheckedAt,
+      source_checked_display: formatJstDisplay(sourceCheckedAt),
       last_successful_refresh: lastSuccessfulRefresh,
       last_successful_refresh_display: formatJstDisplay(lastSuccessfulRefresh),
       frequency: definition.frequency,
@@ -1191,9 +1208,15 @@ function buildMetadata() {
   }
 
   return {
-    last_dashboard_refresh: finishedAt,
-    last_dashboard_refresh_display: formatJstDisplay(finishedAt),
-    update_duration_seconds: updateDurationSeconds,
+    last_dashboard_refresh: hasUpdateResults
+      ? finishedAt
+      : previousMetadata.last_dashboard_refresh || finishedAt,
+    last_dashboard_refresh_display: formatJstDisplay(
+      hasUpdateResults ? finishedAt : previousMetadata.last_dashboard_refresh || finishedAt,
+    ),
+    update_duration_seconds: hasUpdateResults
+      ? updateDurationSeconds
+      : previousMetadata.update_duration_seconds ?? updateDurationSeconds,
     dashboard_version: dashboardVersion,
     last_git_commit: process.env.GITHUB_SHA ? process.env.GITHUB_SHA.slice(0, 7) : readGitCommit(),
     python_version: readPythonVersion(),

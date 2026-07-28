@@ -4512,7 +4512,8 @@ function renderStatusBadge(status) {
 
 function renderStatusExpandedDetails(indicator) {
   const sourceAvailableDate = indicator.source_available_date || "--";
-  const sourceCheckedAt = indicator.last_successful_refresh_display || "--";
+  const sourceCheckedAt =
+    indicator.source_checked_display || indicator.last_successful_refresh_display || "--";
   const sourceDueDate =
     indicator.expected_source_update_date ||
     indicator.expected_source_update_display?.slice(0, 10);

@@ -237,11 +237,11 @@ The Worker dispatches the existing workflow at these primary times:
 
 | Profile | JST | UTC cron |
 | --- | --- | --- |
-| US + prior pending Asia; Breadth | 08:15 Tue-Sat | `15 23 * * 1-5` |
-| US | 12:15 Tue-Sat | `15 3 * * 2-6` |
-| Asia | 18:15 Mon-Fri | `15 9 * * 1-5` |
-| Asia retry | 20:15 Mon-Fri | `15 11 * * 1-5` |
-| US + Asia pending | 22:15 Mon-Fri | `15 13 * * 1-5` |
+| US + prior pending Asia; Breadth | 08:15 Tue-Sat | `15 23 * * MON-FRI` |
+| US | 12:15 Tue-Sat | `15 3 * * TUE-SAT` |
+| Asia | 18:15 Mon-Fri | `15 9 * * MON-FRI` |
+| Asia retry | 20:15 Mon-Fri | `15 11 * * MON-FRI` |
+| US + Asia pending | 22:15 Mon-Fri | `15 13 * * MON-FRI` |
 
 Native GitHub schedules remain enabled only as fallbacks: combined at 09:37 JST Tuesday through Saturday and 21:37 JST Monday through Friday, plus an isolated Breadth backup at 09:47 JST Tuesday through Saturday. Duplicate dispatches do not duplicate provider downloads because `scripts/should-update.mjs` skips indicators already complete for the current market cycle.
 
@@ -258,7 +258,7 @@ npx wrangler@latest secret put GITHUB_ACTIONS_TOKEN
 npx wrangler@latest deploy
 ```
 
-Cloudflare runs the UTC cron expressions from `scheduler/wrangler.jsonc`. The Worker only calls GitHub's workflow-dispatch API; it never contacts FRED, Yahoo Finance, or another market-data provider.
+Cloudflare runs the UTC cron expressions from `scheduler/wrangler.jsonc`. Weekdays are written as names because Cloudflare numbers Sunday as day 1. The Worker only calls GitHub's workflow-dispatch API; it never contacts FRED, Yahoo Finance, or another market-data provider. After uploading a Worker version, confirm that the Cron Triggers are visible under the Worker's **Settings > Triggers** page; a deployed script version by itself does not prove that schedules were attached.
 
 The Fed Funds Rate card uses the official target-rate series rather than the effective overnight rate. Its daily as-of observations are drawn as a step line so unchanged policy periods remain hoverable at every observation. Card change is measured against the previous distinct policy setting and labeled `Last change`; this avoids implying that an unchanged FOMC decision was itself a rate move. Data Status uses the published FOMC decision calendar for the next expected update; unscheduled policy decisions may occur before that date.
 

@@ -49,6 +49,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -127,8 +129,9 @@ jobs:
           for (const key of keys) {
             data[key] = {
               status,
+              source_checked_at: ["success", "failed"].includes(status) ? timestamp : null,
               last_successful_refresh: status === "success" ? timestamp : null,
-              error_message: status === "failed" ? errorMessage : null,
+              error_message: status === "success" ? null : errorMessage,
             };
           }
 
@@ -178,7 +181,7 @@ jobs:
               attempted=1
               output="${source_group} circuit breaker is open after two consecutive connection failures; deferred to the next scheduled run."
               echo "::warning::${name} skipped. ${output}"
-              record_update_result "${keys}" "failed" "${output}"
+              record_update_result "${keys}" "deferred" "${output}"
               failures=1
               return
             fi
@@ -341,7 +344,7 @@ jobs:
           echo "ANY_UPDATE_ATTEMPTED=${attempted}" >> "${GITHUB_ENV}"
 
       - name: Generate data status metadata
-        if: github.event_name == 'push' || env.ANY_UPDATE_ATTEMPTED == '1'
+        if: env.ANY_UPDATE_ATTEMPTED == '1'
         run: node scripts/generate-status.mjs
 
       - name: Generate consolidated data

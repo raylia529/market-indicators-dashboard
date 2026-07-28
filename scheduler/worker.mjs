@@ -2,11 +2,11 @@ const workflowDispatchUrl =
   "https://api.github.com/repos/raylia529/market-indicators-dashboard/actions/workflows/pages.yml/dispatches";
 
 const scheduleProfiles = new Map([
-  ["15 23 * * 1-5", ["combined", "breadth"]],
-  ["15 3 * * 2-6", ["us"]],
-  ["15 9 * * 1-5", ["asia"]],
-  ["15 11 * * 1-5", ["asia-retry"]],
-  ["15 13 * * 1-5", ["combined"]],
+  ["15 23 * * MON-FRI", ["combined", "breadth"]],
+  ["15 3 * * TUE-SAT", ["us"]],
+  ["15 9 * * MON-FRI", ["asia"]],
+  ["15 11 * * MON-FRI", ["asia-retry"]],
+  ["15 13 * * MON-FRI", ["combined"]],
 ]);
 
 export function profileForCron(cron) {
