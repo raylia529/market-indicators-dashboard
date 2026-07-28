@@ -3,9 +3,7 @@ import https from "node:https";
 import path from "node:path";
 
 const userAgent = "market-indicators-dashboard/1.0 raylia529";
-const recentOverlapDays = 90;
 const downloadTimeoutMs = 20_000;
-const fredDownloadTimeoutMs = 60_000;
 const retryBackoffMs = [];
 const files = {
   nikkei225: path.join("data", "nikkei-225.csv"),
@@ -170,6 +168,9 @@ function parseYahooChart(text, label) {
   }
 
   const timeZone = result.meta?.exchangeTimezoneName || "UTC";
+  const regularMarketTime = result.meta?.regularMarketTime;
+  const regularMarketEnd = result.meta?.currentTradingPeriod?.regular?.end;
+  const marketIsOpen = Number.isFinite(regularMarketEnd) && Date.now() / 1000 < regularMarketEnd;
   const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone,
     year: "numeric",
@@ -180,55 +181,26 @@ function parseYahooChart(text, label) {
   return timestamps
     .map((timestamp, index) => ({
       date: formatter.format(new Date(timestamp * 1000)),
+      timestamp,
       value: Number(closes[index]),
     }))
-    .filter((row) => row.date && Number.isFinite(row.value) && row.value !== 0)
-    .sort((a, b) => a.date.localeCompare(b.date));
-}
-
-function parseFredCsv(text, seriesId) {
-  const [headerLine, ...lines] = text.trim().split(/\r?\n/);
-  const headers = headerLine.split(",").map((header) => header.trim());
-  const dateIndex = headers.indexOf("observation_date");
-  const valueIndex = headers.indexOf(seriesId);
-
-  if (dateIndex < 0 || valueIndex < 0) {
-    throw new Error(`Unexpected ${seriesId} header: ${headers.join(",")}`);
-  }
-
-  return lines
-    .map((line) => {
-      const columns = line.split(",");
-      const rawValue = columns[valueIndex]?.trim();
-      return {
-        date: columns[dateIndex]?.trim(),
-        rawValue,
-        value: Number(rawValue),
-      };
-    })
     .filter(
       (row) =>
         row.date &&
-        row.rawValue !== "" &&
-        row.rawValue !== "." &&
-        Number.isFinite(row.value),
+        Number.isFinite(row.value) &&
+        row.value !== 0 &&
+        !(marketIsOpen && row.timestamp === regularMarketTime),
     )
-    .map(({ date, value }) => ({ date, value }))
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
 async function updateYahooSeries({ symbol, label, file, decimals = 2 }) {
   const existingRows = loadSingleCsv(file);
   const latestDate = existingRows.at(-1)?.date;
-  const startDate = latestDate ? new Date(`${latestDate}T00:00:00Z`) : null;
-  if (startDate) {
-    startDate.setUTCDate(startDate.getUTCDate() - recentOverlapDays);
-  }
-  const period1 = startDate ? Math.floor(startDate.getTime() / 1000) : 0;
-  const period2 = Math.floor(Date.now() / 1000) + 86400;
-  const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(
+  const windowQuery = latestDate ? "range=5d" : "period1=0";
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(
     symbol,
-  )}?period1=${period1}&period2=${period2}&interval=1d&events=history`;
+  )}?${windowQuery}&interval=1d&events=history`;
   const downloadedRows = parseYahooChart(await download(url, { "User-Agent": "Mozilla/5.0" }), label);
   const rows = mergeRows(existingRows, downloadedRows);
   validateRows(rows, label, existingRows);
@@ -239,7 +211,7 @@ async function updateYahooSeries({ symbol, label, file, decimals = 2 }) {
   console.log(`Latest date: ${rows.at(-1).date}`);
   console.log(`Valid observations: ${rows.length}`);
   console.log(`Downloaded observations: ${downloadedRows.length}`);
-  console.log(`Request mode: ${startDate ? `incremental from ${startDate.toISOString().slice(0, 10)}` : "full bootstrap"}`);
+  console.log(`Request mode: ${latestDate ? "latest 5 days" : "full bootstrap"}`);
 }
 
 async function updateUsdTwd() {
@@ -248,58 +220,25 @@ async function updateUsdTwd() {
     (row) => row.value >= 10 && row.value <= 100,
   );
   const removedInvalidRows = loadSingleCsv(files.usdTwd).length - existingRows.length;
-  const latestDate = existingRows.at(-1)?.date;
-  const startDate = latestDate && removedInvalidRows === 0
-    ? new Date(`${latestDate}T00:00:00Z`)
-    : null;
-  if (startDate) {
-    startDate.setUTCDate(startDate.getUTCDate() - recentOverlapDays);
-  }
-
-  const fredUrl = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=DEXTAUS${
-    startDate ? `&cosd=${startDate.toISOString().slice(0, 10)}` : ""
-  }`;
-  const fredRows = parseFredCsv(
-    await downloadWithRetry(fredUrl, {}, retryBackoffMs, fredDownloadTimeoutMs),
-    "DEXTAUS",
-  ).filter(
-    (row) => row.value >= 10 && row.value <= 100,
-  );
-  const latestFredDate = fredRows.at(-1)?.date;
-  if (!latestFredDate) {
-    throw new Error("FRED DEXTAUS returned no valid observations.");
-  }
-
-  const yahooStart = new Date(`${latestFredDate}T00:00:00Z`);
-  yahooStart.setUTCDate(yahooStart.getUTCDate() - 7);
-  const period1 = Math.floor(yahooStart.getTime() / 1000);
-  const period2 = Math.floor(Date.now() / 1000) + 86400;
-  const yahooUrl = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(
+  const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(
     "TWD=X",
-  )}?period1=${period1}&period2=${period2}&interval=1d&events=history`;
-  let yahooRows = [];
-  try {
-    yahooRows = parseYahooChart(
-      await download(yahooUrl, { "User-Agent": "Mozilla/5.0" }),
-      label,
-    ).filter(
-      (row) => row.date > latestFredDate && row.value >= 10 && row.value <= 100,
-    );
-  } catch (error) {
-    console.warn(`WARNING: Yahoo USD/TWD recent gap fill unavailable: ${error.message}`);
-  }
+  )}?range=5d&interval=1d&events=history`;
+  const yahooRows = parseYahooChart(
+    await download(yahooUrl, { "User-Agent": "Mozilla/5.0" }),
+    label,
+  ).filter((row) => row.value >= 10 && row.value <= 100);
 
-  const rows = mergeRows(mergeRows(existingRows, fredRows), yahooRows);
+  const rows = mergeRows(existingRows, yahooRows);
   validateRows(rows, label, existingRows);
   atomicWriteCsv(files.usdTwd, rows, label, 4);
   console.log(`${label} validation`);
-  console.log("Source: FRED DEXTAUS full history, with Yahoo Finance TWD=X recent gap fill");
+  console.log("Source: Yahoo Finance TWD=X recent daily closes");
   console.log(`Earliest date: ${rows[0].date}`);
   console.log(`Latest date: ${rows.at(-1).date}`);
   console.log(`Valid observations: ${rows.length}`);
   console.log(`Invalid existing observations removed: ${removedInvalidRows}`);
-  console.log(`FRED observations downloaded: ${fredRows.length}`);
-  console.log(`Yahoo gap-fill observations: ${yahooRows.length}`);
+  console.log(`Yahoo observations downloaded: ${yahooRows.length}`);
+  console.log("Request mode: latest 5 days");
 }
 
 async function main() {

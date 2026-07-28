@@ -5,21 +5,12 @@ on:
     branches:
       - main
   schedule:
-    # 08:15 JST Tue-Sat: pending Japan/Taiwan data from the prior session.
-    - cron: "15 23 * * 1-5"
-    # U.S. pending-only checks: 09:15, 10:15, and 12:15 JST Tue-Sat.
-    - cron: "15 0,1,3 * * 2-6"
-    # 11:15 JST Tue-Sat: U.S. pending-only check.
-    - cron: "15 2 * * 2-6"
-    # 18:15 JST: combined on local weekdays, U.S.-only on Saturday.
-    - cron: "15 9 * * 1-5"
-    - cron: "15 9 * * 6"
-    # Japan/Taiwan pending-only checks: 19:15, 20:15, and 22:15 JST Mon-Fri.
-    - cron: "15 10,11,13 * * 1-5"
-    # 08:45 JST Tue-Sat: primary isolated daily S&P 500 breadth refresh.
-    - cron: "45 23 * * 1-5"
-    # 09:45 and 10:45 JST Tue-Sat: pending-only Breadth backups.
-    - cron: "45 0,1 * * 2-6"
+    # 09:37 JST Tue-Sat: combined backup for the Cloudflare morning checks.
+    - cron: "37 0 * * 2-6"
+    # 09:47 JST Tue-Sat: isolated Breadth backup.
+    - cron: "47 0 * * 2-6"
+    # 21:37 JST Mon-Fri: combined backup for the Cloudflare evening checks.
+    - cron: "37 12 * * 1-5"
   workflow_dispatch:
     inputs:
       update_profile:
@@ -82,14 +73,9 @@ jobs:
 
           if [ "${{ github.event_name }}" = "schedule" ]; then
             case "${{ github.event.schedule }}" in
-              "15 23 * * 1-5") profile=asia-retry ;;
-              "15 0,1,3 * * 2-6") profile=us ;;
-              "15 2 * * 2-6") profile=us ;;
-              "15 9 * * 1-5") profile=combined ;;
-              "15 9 * * 6") profile=us ;;
-              "15 10,11,13 * * 1-5") profile=asia-retry ;;
-              "45 23 * * 1-5") profile=breadth ;;
-              "45 0,1 * * 2-6") profile=breadth ;;
+              "37 0 * * 2-6") profile=combined ;;
+              "47 0 * * 2-6") profile=breadth ;;
+              "37 12 * * 1-5") profile=combined ;;
               *) profile=full ;;
             esac
           fi
@@ -264,7 +250,7 @@ jobs:
             run_update "MOVE Index" "node scripts/update-extra-indicators.mjs --only=move" "MOVE" "daily" "us" "yahoo"
             run_update "Alpaca ETF ratios" "node scripts/update-alpaca-indicators.mjs --only=ratios" "HYG_IEF,RSP_SPY,SPY_TLT,XLY_XLP,IWM_SPY" "daily" "us" "alpaca"
             run_update "CBOE SKEW Index" "node scripts/update-extra-indicators.mjs --only=skew" "SKEW" "daily" "us" "cboe"
-            run_update "USD/JPY" "node scripts/update-fx.mjs --profile=us --only=usdjpy" "DEXJPUS" "daily" "us" "fx-market"
+            run_update "USD/JPY" "node scripts/update-fx.mjs --profile=us --only=usdjpy" "DEXJPUS" "daily" "us" "yahoo"
           }
 
           run_breadth() {
@@ -291,7 +277,7 @@ jobs:
             run_update "Taiwan foreign net buying" "python scripts/update-regional-official.py --only=taiwan-foreign" "TAIWAN_FOREIGN_NET_BUYING" "daily" "asia" "twse"
             run_update "Taiwan margin financing YoY" "python scripts/update-regional-official.py --only=taiwan-margin" "TAIWAN_MARGIN_FINANCING_BALANCE_YOY" "daily" "asia" "twse"
             run_update "TAIEX" "node scripts/update-regional-markets.mjs --only=taiex" "TAIEX" "daily" "asia" "yahoo"
-            run_update "USD/TWD" "node scripts/update-regional-markets.mjs --only=usdtwd" "USDTWD" "daily" "asia" "fx-market"
+            run_update "USD/TWD" "node scripts/update-regional-markets.mjs --only=usdtwd" "USDTWD" "daily" "asia" "yahoo"
           }
 
           run_asia_slow() {

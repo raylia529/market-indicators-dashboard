@@ -219,7 +219,7 @@ async function downloadYahooChart(symbol, label, { period1 = 0, range = null } =
     "User-Agent":
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/126 Safari/537.36",
   };
-  return downloadWithRetry(`https://query2.finance.yahoo.com${chartPath}`, headers);
+  return downloadWithRetry(`https://query1.finance.yahoo.com${chartPath}`, headers);
 }
 
 async function updateYahooIndex({ symbol, label, file, decimals = 2 }) {

@@ -245,15 +245,6 @@ h2 {
     font-size: clamp(1.05rem, 1.45vw, 1.38rem);
   }
 
-  .indicator-label,
-  .fx-card span {
-    font-size: 0.74rem;
-  }
-
-  .indicator-change {
-    margin-bottom: 3px;
-    font-size: 0.7rem;
-  }
 }
 
 .secondary-button {
@@ -426,11 +417,50 @@ h2 {
 }
 
 .indicator-label,
-.fx-card span {
+.fx-card > .indicator-label {
   display: block;
+  min-width: 0;
   color: var(--muted);
   font-size: 0.86rem;
   font-weight: 800;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.indicator-title-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.indicator-title-row .indicator-label {
+  min-width: 0;
+}
+
+.indicator-label-detail {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 761px) {
+  .indicator-label,
+  .fx-card > .indicator-label,
+  .indicator-label-detail {
+    min-width: 0;
+    font-size: 0.78rem;
+    line-height: 1.18;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+  }
+
 }
 
 .metric-card strong {
@@ -457,6 +487,22 @@ h2 {
   white-space: nowrap;
 }
 
+.change-value {
+  margin-left: 4px;
+}
+
+.policy-change {
+  display: grid;
+  justify-items: start;
+  row-gap: 1px;
+  white-space: normal;
+}
+
+.policy-change .change-value {
+  margin-left: 0;
+  white-space: nowrap;
+}
+
 .change-period b {
   font-weight: 900;
 }
@@ -471,6 +517,13 @@ h2 {
 
 .change-period.flat {
   color: var(--muted);
+}
+
+@media (min-width: 761px) {
+  .indicator-change {
+    margin-bottom: 3px;
+    font-size: 0.7rem;
+  }
 }
 
 .color-control {
@@ -570,7 +623,7 @@ h2 {
 }
 
 .indicator-date,
-.fx-card small {
+.fx-card > small {
   display: block;
   color: var(--muted);
   font-size: 0.8rem;
@@ -901,35 +954,133 @@ h2 {
 }
 
 .status-name-short,
-.status-mobile-meta,
-.status-mobile-badge {
+.status-mobile-meta {
   display: none;
 }
 
-.status-summary-meta {
+.tab-panel[data-tab-panel="data-status"] .data-status-table-wrap {
+  overflow: visible;
+  border: 0;
+  background: transparent;
+}
+
+.tab-panel[data-tab-panel="data-status"] .data-status-table {
+  display: block;
+  min-width: 0;
+}
+
+.tab-panel[data-tab-panel="data-status"] .data-status-table colgroup,
+.tab-panel[data-tab-panel="data-status"] .data-status-table thead {
+  display: none;
+}
+
+.tab-panel[data-tab-panel="data-status"] .data-status-table tbody {
+  display: grid;
+  gap: 8px;
+}
+
+.tab-panel[data-tab-panel="data-status"] .data-status-table tr {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.tab-panel[data-tab-panel="data-status"] .data-status-table td {
+  display: block;
+  border: 0;
+  padding: 14px;
+}
+
+.data-status-table tr[data-status-row] {
+  cursor: pointer;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.data-status-table tr[data-status-row]:hover {
+  background: var(--surface-soft);
+}
+
+.data-status-table tr[data-status-row]:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.18);
+  outline-offset: -3px;
+}
+
+.status-card-head,
+.status-card-actions {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 7px;
 }
 
-.status-date-stack {
-  display: grid;
-  gap: 4px;
+.status-card-head {
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.status-card-summary {
+  min-width: 0;
+}
+
+.status-card-actions {
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-dashboard-date {
+  display: block;
+  margin-top: 7px;
   color: var(--muted);
   font-size: 0.8rem;
-  font-weight: 750;
-  line-height: 1.35;
+  font-weight: 400;
 }
 
-.status-date-stack span {
-  white-space: nowrap;
-}
-
-.status-date-stack strong {
+.status-dashboard-date strong,
+.status-expanded-grid strong {
   color: var(--ink);
-  font-weight: 900;
+  font-weight: 400;
+}
+
+.status-expanded-content {
+  margin-top: 13px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  cursor: default;
+  -webkit-touch-callout: text;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.status-expanded-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.status-expanded-grid span {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+}
+
+.status-expanded-content .status-detail-line:last-child {
+  margin-top: 11px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.status-row-expanded .glossary-expand-button {
+  transform: rotate(180deg);
+  border-color: rgba(37, 99, 235, 0.55);
+  background: var(--blue-soft);
+  color: var(--blue);
 }
 
 .glossary-name-short {
@@ -1198,7 +1349,7 @@ h2 {
   border-radius: 999px;
   padding: 6px 10px;
   font-size: 0.78rem;
-  font-weight: 900;
+  font-weight: 400;
   white-space: nowrap;
 }
 
@@ -1226,8 +1377,12 @@ h2 {
   margin: 7px 0 0;
   color: var(--muted);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1.4;
+}
+
+.formula-text strong {
+  font-weight: 400;
 }
 
 .status-details {
@@ -1256,12 +1411,13 @@ h2 {
   margin: 5px 0 0;
   color: var(--muted);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1.45;
 }
 
 .status-detail-line strong {
   color: var(--ink);
+  font-weight: 400;
 }
 
 .status-detail-line a {
@@ -1390,7 +1546,6 @@ h2 {
     font-size: 1rem;
   }
 
-  .status-summary-meta,
   .status-mobile-meta {
     display: flex;
     align-items: center;
@@ -1401,12 +1556,22 @@ h2 {
     font-size: 0.78rem;
   }
 
-  .status-summary-meta .status-date-stack {
-    flex: 1 1 auto;
+  .status-card-head {
+    gap: 10px;
   }
 
-  .status-mobile-badge {
-    display: inline;
+  .status-card-actions {
+    gap: 7px;
+  }
+
+  .status-expanded-grid {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .status-expanded-grid span {
+    grid-template-columns: 122px minmax(0, 1fr);
+    gap: 8px;
   }
 
   .glossary-mobile-meta > span:first-child {

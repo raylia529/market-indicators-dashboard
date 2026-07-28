@@ -160,6 +160,7 @@ const flowsIndicators = [
   {
     id: "flows-rsp-spy",
     name: "RSP/SPY",
+    descriptor: "Market Breadth",
     file: "data/rsp-spy.csv",
     unitLabel: "Ratio",
     valueSuffix: "",
@@ -171,6 +172,7 @@ const flowsIndicators = [
   {
     id: "flows-hyg-ief",
     name: "HYG/IEF",
+    descriptor: "Credit Risk",
     file: "data/hyg-ief.csv",
     unitLabel: "Ratio",
     valueSuffix: "",
@@ -182,6 +184,7 @@ const flowsIndicators = [
   {
     id: "spy-tlt",
     name: "SPY/TLT",
+    descriptor: "Stocks vs Bonds",
     file: "data/spy-tlt.csv",
     unitLabel: "Ratio",
     valueSuffix: "",
@@ -193,6 +196,7 @@ const flowsIndicators = [
   {
     id: "xly-xlp",
     name: "XLY/XLP",
+    descriptor: "Cyclical vs Defensive",
     file: "data/xly-xlp.csv",
     unitLabel: "Ratio",
     valueSuffix: "",
@@ -204,6 +208,7 @@ const flowsIndicators = [
   {
     id: "iwm-spy",
     name: "IWM/SPY",
+    descriptor: "Risk Appetite",
     file: "data/iwm-spy.csv",
     unitLabel: "Ratio",
     valueSuffix: "",
@@ -930,6 +935,8 @@ let glossaryEntries = [];
 let glossarySearchText = "";
 let activeGlossaryLanguage = "zh";
 let expandedGlossaryId = null;
+let dataStatusMetadata = null;
+let expandedStatusKey = null;
 const localTextRequests = new Map();
 
 function consumeLongPressClick(element) {
@@ -1616,7 +1623,7 @@ function renderIndicatorChange(rows, indicator) {
   return `<small class="indicator-change">${changes
     .map(
       ({ label, change }) =>
-        `<span class="change-period ${change.direction}"><b>${label}</b> ${change.text}</span>`,
+        `<span class="change-period ${change.direction} ${label === "Last change" ? "policy-change" : ""}"><b>${label}</b><span class="change-value">${change.text}</span></span>`,
     )
     .join("")}</small>`;
 }
@@ -3895,7 +3902,10 @@ function createComparisonSection(config) {
 
         return `
           <article class="metric-card indicator-card ${isActive ? "active" : ""} ${isUnavailable ? "unavailable" : ""}" data-${config.key}-indicator="${indicator.id}" data-glossary-id="${indicatorGlossaryIds[indicator.id] || ""}" tabindex="0" ${isUnavailable ? 'aria-disabled="true"' : ""}>
-            <span class="indicator-label">${indicator.name}</span>
+            <div class="indicator-title-row">
+              <span class="indicator-label">${indicator.name}</span>
+              ${indicator.descriptor ? `<span class="indicator-label-detail">${indicator.descriptor}</span>` : ""}
+            </div>
             <strong>${latest ? formatValue(latest.value, indicator) : "--"}</strong>
             ${renderIndicatorChange(rows, indicator)}
             ${latest ? "" : `<small class="indicator-date">${state.loaded ? "Unavailable" : "Loading"}</small>`}
@@ -4470,27 +4480,11 @@ async function loadGlossary() {
 }
 
 function renderIndicatorLinks(indicator) {
-  const sourceUrls =
-    Array.isArray(indicator.source_urls) && indicator.source_urls.length > 0
-      ? indicator.source_urls
-      : [{ label: indicator.source_name, url: indicator.source_url }];
-
-  const validSources = sourceUrls.filter((source) => source?.url);
-
-  if (validSources.length === 0) {
-    return `<strong>
+  return `
+    <strong>
       <span class="status-name-full">${escapeHtml(indicator.display_name)}</span>
       <span class="status-name-short">${escapeHtml(indicator.short_name || indicator.display_name)}</span>
-    </strong>`;
-  }
-
-  return `
-    <a class="indicator-source-link" href="${escapeHtml(validSources[0].url)}" target="_blank" rel="noopener noreferrer">
-      <strong>
-        <span class="status-name-full">${escapeHtml(indicator.display_name)}</span>
-        <span class="status-name-short">${escapeHtml(indicator.short_name || indicator.display_name)}</span>
-      </strong>
-    </a>
+    </strong>
   `;
 }
 
@@ -4516,11 +4510,23 @@ function renderStatusBadge(status) {
   return `<span class="data-status-badge ${className}">${escapeHtml(status || "Unknown")}</span>`;
 }
 
-function renderStatusDates(indicator) {
+function renderStatusExpandedDetails(indicator) {
+  const sourceAvailableDate = indicator.source_available_date || "--";
+  const sourceCheckedAt = indicator.last_successful_refresh_display || "--";
+  const sourceDueDate =
+    indicator.expected_source_update_date ||
+    indicator.expected_source_update_display?.slice(0, 10);
+  const sourceDue = sourceDueDate
+    ? `<span><strong>Source due</strong> ${escapeHtml(sourceDueDate)}</span>`
+    : "";
+
   return `
-    <div class="status-date-stack">
-      <span><strong>Latest observation</strong> ${escapeHtml(indicator.latest_available_date || "--")}</span>
-      <span><strong>Next expected update</strong> ${escapeHtml(indicator.next_expected_update_date || "--")}</span>
+    <div class="status-expanded-grid">
+      <span><strong>Source available</strong> ${escapeHtml(sourceAvailableDate)}</span>
+      <span><strong>Next observation</strong> ${escapeHtml(indicator.next_expected_observation_date || indicator.next_expected_update_date || "--")}</span>
+      ${sourceDue}
+      <span><strong>Source checked</strong> ${escapeHtml(sourceCheckedAt)}</span>
+      <span><strong>Update frequency</strong> ${escapeHtml(indicator.frequency || "--")}</span>
     </div>
   `;
 }
@@ -4530,7 +4536,8 @@ function renderDataStatus(metadata) {
     throw new Error("Data status metadata is missing indicators.");
   }
 
-  const indicators = Object.values(metadata.indicators);
+  dataStatusMetadata = metadata;
+  const indicators = Object.entries(metadata.indicators);
   if (dataStatusUpdated) {
     dataStatusUpdated.textContent = metadata.last_dashboard_refresh_display
       ? `Last dashboard refresh ${metadata.last_dashboard_refresh_display}`
@@ -4539,7 +4546,10 @@ function renderDataStatus(metadata) {
 
   if (dataStatusBody) {
     dataStatusBody.innerHTML = indicators
-      .map((indicator) => {
+      .map(([key, indicator]) => {
+        const expanded = expandedStatusKey === key;
+        const dashboardLatestDate =
+          indicator.dashboard_latest_date || indicator.latest_available_date || "--";
         const formula = indicator.formula
           ? `<p class="formula-text"><strong>Formula:</strong> ${escapeHtml(indicator.formula)}</p>`
           : "";
@@ -4549,28 +4559,46 @@ function renderDataStatus(metadata) {
         const errorDetails = indicator.error_message
           ? `<p class="formula-text"><strong>Error:</strong> ${escapeHtml(indicator.error_message)}</p>`
           : "";
-        const details = `
-          <details class="status-details">
-            <summary>Details</summary>
-            <div class="status-details-content">
-              ${renderStatusSourceNote(indicator)}
-              <p class="status-detail-line"><strong>Update frequency:</strong> ${escapeHtml(indicator.frequency || "--")}</p>
+        const details = expanded
+          ? `
+            <div class="status-expanded-content">
+              ${renderStatusExpandedDetails(indicator)}
               ${formula}${releaseNote}${errorDetails}
+              ${renderStatusSourceNote(indicator)}
             </div>
-          </details>
-        `;
+          `
+          : "";
 
         return `
-          <tr>
+          <tr
+            class="${expanded ? "status-row-expanded" : ""}"
+            data-status-row="${escapeHtml(key)}"
+            tabindex="0"
+            aria-expanded="${expanded}"
+          >
             <td>
-              <div class="indicator-source-links">${renderIndicatorLinks(indicator)}</div>
-              <div class="status-summary-meta">
-                ${renderStatusDates(indicator)}
-                <span class="status-mobile-badge">${renderStatusBadge(indicator.status)}</span>
+              <div class="status-card-head">
+                <div class="status-card-summary">
+                  <div class="indicator-source-links">${renderIndicatorLinks(indicator)}</div>
+                  <span class="status-dashboard-date">
+                    <strong>Dashboard latest</strong> ${escapeHtml(dashboardLatestDate)}
+                  </span>
+                </div>
+                <div class="status-card-actions">
+                  ${renderStatusBadge(indicator.status)}
+                  <button
+                    class="glossary-expand-button"
+                    type="button"
+                    data-status-expand="${escapeHtml(key)}"
+                    aria-label="${expanded ? "Collapse" : "Expand"} ${escapeHtml(indicator.short_name || indicator.display_name)} data status"
+                    aria-expanded="${expanded}"
+                  >
+                    ▾
+                  </button>
+                </div>
               </div>
               ${details}
             </td>
-            <td>${renderStatusBadge(indicator.status)}</td>
           </tr>
         `;
       })
@@ -5079,6 +5107,44 @@ if (glossaryBody) {
     if (willExpand) {
       scrollGlossaryEntryIntoView(id);
     }
+  });
+}
+
+if (dataStatusBody) {
+  dataStatusBody.addEventListener("click", (event) => {
+    if (event.target.closest("a")) {
+      return;
+    }
+
+    const target = event.target.closest("[data-status-expand], [data-status-row]");
+    if (!target) {
+      return;
+    }
+
+    const row = target.closest("[data-status-row]");
+    const key = target.dataset.statusExpand || row?.dataset.statusRow;
+    if (!key) {
+      return;
+    }
+
+    expandedStatusKey = expandedStatusKey === key ? null : key;
+    renderDataStatus(dataStatusMetadata);
+  });
+
+  dataStatusBody.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    const row = event.target.closest("[data-status-row]");
+    if (!row || event.target.closest("a, button")) {
+      return;
+    }
+
+    event.preventDefault();
+    const key = row.dataset.statusRow;
+    expandedStatusKey = expandedStatusKey === key ? null : key;
+    renderDataStatus(dataStatusMetadata);
   });
 }
 

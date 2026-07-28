@@ -8,9 +8,8 @@ const defaultRetryBackoffMs = [];
 const fredRetryBackoffMs = [];
 
 const sources = {
-  usdJpy: "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DEXJPUS",
   usdJpyYahoo:
-    "https://query2.finance.yahoo.com/v8/finance/chart/JPY%3DX?range=1mo&interval=1d&events=history",
+    "https://query1.finance.yahoo.com/v8/finance/chart/JPY%3DX?range=5d&interval=1d&events=history",
   us2y: "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2",
   japan2yHistorical:
     "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/historical/jgbcme_all.csv",
@@ -398,7 +397,6 @@ async function main() {
   const existingJapan2y = existingRows
     .filter((row) => Number.isFinite(row.Japan_2Y_Yield))
     .map((row) => ({ date: row.date, value: row.Japan_2Y_Yield }));
-  let usdJpyRows = [];
   let yahooUsdJpyRows = [];
   let us2yRows = [];
   let japan2yRows = [];
@@ -410,27 +408,12 @@ async function main() {
 
   if (requestedSources.has("usdjpy")) {
     try {
-      usdJpyRows = parseFred(
-        await downloadWithRetry(
-          incrementalFredUrl(sources.usdJpy, existingUsdJpy, "1971-01-04"),
-          {},
-          fredRetryBackoffMs,
-          fredDownloadTimeoutMs,
-        ),
-        "DEXJPUS",
-      );
-      usdJpySourceSucceeded = true;
-    } catch (error) {
-      warnings.push(`WARNING: USDJPY download/parse failed. ${error.message}`);
-    }
-
-    try {
       yahooUsdJpyRows = parseYahooUsdJpy(
         await downloadWithRetry(sources.usdJpyYahoo, { "User-Agent": "Mozilla/5.0" }),
       );
       usdJpySourceSucceeded = true;
     } catch (error) {
-      warnings.push(`WARNING: Yahoo USDJPY gap-fill download/parse failed. ${error.message}`);
+      warnings.push(`WARNING: Yahoo USDJPY download/parse failed. ${error.message}`);
     }
 
   }
@@ -472,9 +455,9 @@ async function main() {
     console.warn(warning);
   }
 
-  // Existing values survive download failures. Yahoo fills recent gaps, while FRED
-  // is merged last so its official observations always take precedence by date.
-  const combinedUsdJpy = mergeSeries([...existingUsdJpy, ...yahooUsdJpyRows, ...usdJpyRows]);
+  // Existing historical values survive download failures. Yahoo only adds or
+  // replaces observations from its recent five-day response.
+  const combinedUsdJpy = mergeSeries([...existingUsdJpy, ...yahooUsdJpyRows]);
   const combinedUs2y = mergeSeries([...existingUs2y, ...us2yRows]);
   const combinedJapan2y = mergeSeries([...existingJapan2y, ...japan2yRows]);
   const finalRows = consolidate({
@@ -499,8 +482,8 @@ async function main() {
   console.log(`Earliest date: ${finalRows[0].date}`);
   console.log(`Latest date: ${finalRows.at(-1).date}`);
   console.log(`Valid USDJPY observations: ${validation.validUsdJpyRows.length}`);
-  console.log(`Yahoo USDJPY gap-fill observations downloaded: ${yahooUsdJpyRows.length}`);
-  console.log("USDJPY merge priority: existing < Yahoo gap fill < FRED official");
+  console.log(`Yahoo USDJPY observations downloaded: ${yahooUsdJpyRows.length}`);
+  console.log("USDJPY merge priority: existing history < recent Yahoo daily closes");
   console.log(`Valid spread observations: ${validation.validSpreadRows.length}`);
   console.log(`Duplicate dates: ${validation.duplicateDates}`);
   console.log(`Latest USDJPY: ${latestUsdJpy.date} ${latestUsdJpy.USDJPY.toFixed(4)}`);

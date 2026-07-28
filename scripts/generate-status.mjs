@@ -117,6 +117,9 @@ const indicatorDefinitions = [
     file: "data/us-10-year-treasury-yield.csv",
     type: "single",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 1,
+    sourceReleaseTime: "16:15",
+    sourceReleaseTimeZone: "America/New_York",
   },
   {
     key: "T10Y2Y",
@@ -130,6 +133,9 @@ const indicatorDefinitions = [
     file: "data/us-10y-minus-2y-spread.csv",
     type: "single",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 1,
+    sourceReleaseTime: "16:15",
+    sourceReleaseTimeZone: "America/New_York",
   },
   {
     key: "FINRA_MARGIN_DEBT_YOY",
@@ -415,15 +421,15 @@ const indicatorDefinitions = [
     key: "DEXJPUS",
     displayName: "USD/JPY Exchange Rate",
     shortName: "USD/JPY",
-    sourceName: "FRED + Yahoo Finance gap fill",
-    sourceUrl: "https://fred.stlouisfed.org/series/DEXJPUS",
+    sourceName: "Yahoo Finance",
+    sourceUrl: "https://finance.yahoo.com/quote/JPY%3DX/history/",
     sourceUrls: [
-      { label: "FRED DEXJPUS", url: "https://fred.stlouisfed.org/series/DEXJPUS" },
       { label: "Yahoo Finance JPY=X", url: "https://finance.yahoo.com/quote/JPY%3DX/history/" },
     ],
     frequency: "Daily forex trading days",
     unit: "JPY per USD",
-    releaseNote: "FRED remains the official historical source. Yahoo Finance only fills recent dates that FRED has not published yet.",
+    releaseNote:
+      "The existing CSV retains its complete historical archive. Ongoing incremental updates use recent Yahoo Finance JPY=X daily closes and do not redownload the archive.",
     file: "data/fx.csv",
     type: "fx",
     column: "USDJPY",
@@ -543,6 +549,9 @@ const indicatorDefinitions = [
     type: "fx",
     column: "US_2Y_Yield",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 1,
+    sourceReleaseTime: "16:15",
+    sourceReleaseTimeZone: "America/New_York",
   },
   {
     key: "JAPAN_2Y_JGB",
@@ -722,16 +731,15 @@ const indicatorDefinitions = [
     key: "USDTWD",
     displayName: "USD/TWD Exchange Rate",
     shortName: "USD/TWD",
-    sourceName: "FRED, with Yahoo Finance recent gap fill",
-    sourceUrl: "https://fred.stlouisfed.org/series/DEXTAUS",
+    sourceName: "Yahoo Finance",
+    sourceUrl: "https://finance.yahoo.com/quote/TWD%3DX/",
     sourceUrls: [
-      { label: "FRED DEXTAUS", url: "https://fred.stlouisfed.org/series/DEXTAUS" },
-      { label: "Yahoo Finance TWD=X recent gap fill", url: "https://finance.yahoo.com/quote/TWD%3DX/" },
+      { label: "Yahoo Finance TWD=X", url: "https://finance.yahoo.com/quote/TWD%3DX/" },
     ],
     frequency: "Daily forex trading days",
     unit: "TWD per USD",
     releaseNote:
-      "Definition: 1 USD = X TWD. FRED H.10 provides the canonical history; Yahoo is used only for dates newer than FRED's latest published observation. Values outside 10–100 are rejected as invalid source observations.",
+      "Definition: 1 USD = X TWD. The existing CSV retains its complete historical archive. Ongoing incremental updates use recent Yahoo Finance TWD=X completed daily closes; values outside 10–100 are rejected.",
     file: "data/usdtwd.csv",
     type: "single",
     dailyLagDays: 4,
@@ -939,6 +947,53 @@ function calculateNextExpectedUpdate(definition, latestAvailableDate) {
   return null;
 }
 
+function zonedDateTimeToIso(dateText, timeText, timeZone) {
+  const [year, month, day] = dateText.split("-").map(Number);
+  const [hour, minute] = timeText.split(":").map(Number);
+  const intendedUtc = Date.UTC(year, month - 1, day, hour, minute);
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  });
+  const parts = Object.fromEntries(
+    formatter
+      .formatToParts(new Date(intendedUtc))
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, Number(part.value)]),
+  );
+  const representedUtc = Date.UTC(
+    parts.year,
+    parts.month - 1,
+    parts.day,
+    parts.hour,
+    parts.minute,
+  );
+  const zoneOffset = representedUtc - intendedUtc;
+
+  return new Date(intendedUtc - zoneOffset).toISOString();
+}
+
+function calculateExpectedSourceUpdate(definition, nextExpectedObservation) {
+  if (!nextExpectedObservation || !Number.isInteger(definition.sourceReleaseBusinessDays)) {
+    return null;
+  }
+
+  const sourceDate = addBusinessDays(
+    nextExpectedObservation,
+    definition.sourceReleaseBusinessDays,
+  );
+  return zonedDateTimeToIso(
+    sourceDate,
+    definition.sourceReleaseTime || "00:00",
+    definition.sourceReleaseTimeZone || "UTC",
+  );
+}
+
 function loadUpdateResults() {
   if (!fs.existsSync(updateResultsFile)) {
     return {};
@@ -984,7 +1039,7 @@ function calculateStatus(
   latestAvailableDate,
   updateResult,
   previousSuccessfulRefresh,
-  todayText,
+  finishedAt,
 ) {
   if (definition.statusOverride) {
     return definition.statusOverride;
@@ -994,16 +1049,41 @@ function calculateStatus(
     return "Failed";
   }
 
+  if (updateResult?.status === "source_lag") {
+    return "Source lag";
+  }
+
   if (!latestAvailableDate) {
     return "Failed";
   }
 
+  if (updateResult?.status === "success") {
+    return "Up to date";
+  }
+
+  const todayText = finishedAt.slice(0, 10);
   const nextExpectedUpdate = calculateNextExpectedUpdate(definition, latestAvailableDate);
   if (nextExpectedUpdate) {
-    const successfulRefreshDate =
-      updateResult?.status === "success"
-        ? todayText
-        : previousSuccessfulRefresh?.slice(0, 10) || "";
+    const expectedSourceUpdate = calculateExpectedSourceUpdate(
+      definition,
+      nextExpectedUpdate,
+    );
+    const successfulRefreshAt =
+      updateResult?.status === "success" ? finishedAt : previousSuccessfulRefresh || "";
+
+    if (expectedSourceUpdate) {
+      if (Date.parse(finishedAt) < Date.parse(expectedSourceUpdate)) {
+        return "Up to date";
+      }
+
+      if (!successfulRefreshAt || Date.parse(successfulRefreshAt) < Date.parse(expectedSourceUpdate)) {
+        return "Update not run";
+      }
+
+      return "Up to date";
+    }
+
+    const successfulRefreshDate = successfulRefreshAt.slice(0, 10);
 
     if (nextExpectedUpdate >= todayText) {
       return "Up to date";
@@ -1013,16 +1093,18 @@ function calculateStatus(
       return "Update not run";
     }
 
-    return "Source lag";
-  }
-
-  if (updateResult?.status === "success") {
     return "Up to date";
   }
 
   const lagDays = dateDiffDays(latestAvailableDate, todayText);
   const fallbackLagDays = definition.dailyLagDays ?? definition.expectedReleaseDelayDays ?? 5;
-  return lagDays <= fallbackLagDays ? "Up to date" : "Source lag";
+  if (lagDays <= fallbackLagDays) {
+    return "Up to date";
+  }
+
+  return previousSuccessfulRefresh?.slice(0, 10) === todayText
+    ? "Up to date"
+    : "Update not run";
 }
 
 function buildMetadata() {
@@ -1060,14 +1142,25 @@ function buildMetadata() {
             latestAvailableDate,
             updateResult,
             previousIndicator?.last_successful_refresh,
-            todayText,
+            finishedAt,
           );
     const nextExpectedUpdate = calculateNextExpectedUpdate(definition, latestAvailableDate);
+    const expectedSourceUpdate = calculateExpectedSourceUpdate(
+      definition,
+      nextExpectedUpdate,
+    );
     let lastSuccessfulRefresh = previousIndicator?.last_successful_refresh || null;
+    let sourceAvailableDate =
+      previousIndicator?.source_available_date ||
+      previousIndicator?.dashboard_latest_date ||
+      previousIndicator?.latest_available_date ||
+      null;
     if (updateResult?.status === "success") {
       lastSuccessfulRefresh = finishedAt;
+      sourceAvailableDate = latestAvailableDate;
     } else if (!lastSuccessfulRefresh && status !== "Failed") {
       lastSuccessfulRefresh = finishedAt;
+      sourceAvailableDate = latestAvailableDate;
     }
 
     indicators[definition.key] = {
@@ -1077,7 +1170,15 @@ function buildMetadata() {
       source_url: definition.sourceUrl,
       source_urls: definition.sourceUrls,
       latest_available_date: latestAvailableDate,
+      dashboard_latest_date: latestAvailableDate,
+      source_available_date: sourceAvailableDate,
       next_expected_update_date: nextExpectedUpdate,
+      next_expected_observation_date: nextExpectedUpdate,
+      expected_source_update_at: expectedSourceUpdate,
+      expected_source_update_date: expectedSourceUpdate
+        ? formatJstDisplay(expectedSourceUpdate).slice(0, 10)
+        : null,
+      expected_source_update_display: formatJstDisplay(expectedSourceUpdate),
       last_successful_refresh: lastSuccessfulRefresh,
       last_successful_refresh_display: formatJstDisplay(lastSuccessfulRefresh),
       frequency: definition.frequency,

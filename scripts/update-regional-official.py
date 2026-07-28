@@ -10,6 +10,7 @@ import io
 import json
 import os
 import re
+import ssl
 import tempfile
 from bisect import bisect_right
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -20,6 +21,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
+import certifi
 import xlrd
 from pypdf import PdfReader
 
@@ -56,7 +58,8 @@ TAIWAN_MARGIN_OFFICIAL_CORRECTIONS = {
 def fetch(url: str, *, binary: bool = False) -> bytes | str:
     try:
         request = Request(url, headers={"User-Agent": USER_AGENT, "Accept": "*/*"})
-        with urlopen(request, timeout=20) as response:
+        context = ssl.create_default_context(cafile=certifi.where())
+        with urlopen(request, timeout=20, context=context) as response:
             body = response.read()
         return body if binary else body.decode("utf-8-sig", errors="replace")
     except (HTTPError, URLError, TimeoutError) as error:

@@ -31,14 +31,14 @@ https://raylia529.github.io/market-indicators-dashboard/
 The repository includes `.github/workflows/pages.yml`, which:
 
 - deploys the current static dashboard when changes are pushed to `main`;
-- checks pending U.S. data at 09:15, 10:15, 11:15, 12:15, and 18:15 JST, Tuesday through Saturday;
-- checks pending Japan/Taiwan data at 08:15, 18:15, 19:15, 20:15, and 22:15 JST on the applicable local business-day cycle;
+- uses Cloudflare as the primary clock for combined checks at 08:15 and 22:15 JST, U.S. checks at 12:15 JST, and Japan/Taiwan checks at 18:15 and 20:15 JST;
+- keeps native GitHub Actions combined backups at 09:37 JST Tuesday through Saturday and 21:37 JST Monday through Friday;
 - uses a combined U.S./Asia profile at 18:15, while the remaining times run only their assigned region;
 - includes weekly, monthly, and quarterly data only after its expected release date has arrived;
 - treats Japan MOF JGB yields as next-business-day releases, so the 08:15 check does not request a reference date that is not scheduled for publication until 09:30;
 - skips each indicator after a successful source check on that JST date, so later retry slots contact only sources that failed or have not yet been checked;
 - uses source-aware expected release dates for slow data, so a successful download of unchanged official data does not permanently suppress later overdue retries;
-- refreshes the two S&P 500 Breadth indicators in isolated jobs at 08:45, 09:45, and 10:45 JST, Tuesday through Saturday; successful data is skipped before the later backup slots contact Alpaca;
+- refreshes the two S&P 500 Breadth indicators in an isolated Cloudflare-triggered job at 08:45 JST with one native GitHub backup at 09:47 JST, Tuesday through Saturday;
 - can be run manually from the GitHub Actions tab for `full`, `us`, `us-fast`, `us-market`, `us-slow`, `asia`, `breadth`, or `alpaca` with `workflow_dispatch`;
 - deploys `index.html`, `style.css`, `app.js`, PWA assets, icons, and `data/` to Pages.
 
@@ -55,7 +55,7 @@ Alpaca-powered ETF ratios and Breadth require two repository Actions secrets: `A
 ## Current Features
 
 - Macro, Breadth, Flows, US Rates, JP Rates, Japan, Taiwan, FX, Data Status, and Glossary tabs with matching responsive layouts where applicable.
-- Data Status tab with latest and next expected observation dates beneath each indicator plus three clear statuses: `Up to date`, `Source lag`, or `Failed`; source, frequency, formula, and error information stays available under each row's `Details` control.
+- Data Status tab with compact expandable cards: each collapsed card shows Dashboard latest and status, while source availability, check time, next expected observation date, update frequency, formulas, errors, and source links appear in the expanded view.
 - Observation dates retain each source's local market or publication date; dashboard refresh timestamps are displayed in Japan Standard Time (`JST`).
 - Glossary tab with search plus collapsible indicator explanations in English, Japanese, and Chinese. Long-press an indicator card to open its Glossary entry; long-press a Glossary card to return to that indicator's dashboard tab.
 - Mobile card-to-chart swipe layout for portrait and landscape phone screens.
@@ -135,7 +135,7 @@ All dashboard data is stored in `data/`.
 | New High / New Low (Proxy) | `data/new-high-low-breadth.csv` | Calculated from current S&P 500 constituents using Alpaca IEX daily bars | 2021-07-27 | Daily/US trading days |
 | % Above 200DMA (Proxy) | `data/sp500-above-200dma.csv` | Calculated from current S&P 500 constituents using Alpaca IEX daily bars | 2021-05-12 | Daily/US trading days |
 | TSMC Revenue YoY | `data/tsmc-revenue-yoy.csv` | MOPSOV monthly operating revenue for TSMC `2330` | 2013-01-31 | Monthly |
-| USD/JPY | `data/fx.csv` | FRED `DEXJPUS`, with Yahoo Finance `JPY=X` filling only recent unpublished dates | 1971-01-04 | Daily/forex trading days |
+| USD/JPY | `data/fx.csv` | Yahoo Finance `JPY=X` for incremental updates; existing CSV retains the historical archive | 1971-01-04 | Daily/forex trading days |
 | US-JP 2Y Spread | `data/fx.csv` | FRED `DGS2` minus Japan MOF 2Y JGB yield | 1976-06-01 | Daily/business daily with forward-filled published yield observations |
 | BOJ Policy Rate | `data/boj-policy-rate.csv` | BIS Central Bank Policy Rates `D.JP`, reported with the Bank of Japan | 1946-01-01 | Daily observations, weekly BIS release |
 | Japan Overnight Call Rate | `data/japan-overnight-call-rate.csv` | Bank of Japan Time-Series Data Search `FM01'STRDCLUCON` | 1998-01-05 | Daily/Japan business days |
@@ -149,7 +149,7 @@ All dashboard data is stored in `data/`.
 | TAIEX | `data/taiex.csv` | Yahoo Finance `^TWII` | 1997-07-02 | Daily/Taiwan trading days |
 | Foreign Investors Net Buying of Taiwan Equities | `data/taiwan-foreign-investor-net-buying.csv` | FinMind TWSE-derived bulk history, with recent official TWSE BFI82U values taking priority | 2004-04-07 | Daily/Taiwan trading days |
 | Taiwan Electronics Exports YoY | `data/taiwan-electronics-exports-yoy.csv` | Taiwan Ministry of Finance exports by main commodity, electronic components in USD | 2002-01-31 | Monthly |
-| USD/TWD | `data/usdtwd.csv` | FRED `DEXTAUS`, with Yahoo Finance `TWD=X` filling only recent unpublished dates | 1983-10-03 | Daily/forex trading days |
+| USD/TWD | `data/usdtwd.csv` | Yahoo Finance `TWD=X` for incremental updates; existing CSV retains the historical archive | 1983-10-03 | Daily/forex trading days |
 | Taiwan Margin Financing Balance YoY | `data/taiwan-margin-financing-balance-yoy.csv` | FinMind TWSE-derived total-market history, recent TWSE MI_MARGN overwrite, then calculated YoY | 2002-01-03 | Daily/Taiwan trading days |
 
 ## Source and Terms Notes
@@ -194,7 +194,7 @@ The Data Status page reads generated metadata from:
 data/status.json
 ```
 
-The Data Status table links each indicator name to its primary source and shows the latest observation, next expected update, and current status directly beneath the indicator name. Source links, update frequency, formulas, release notes, and errors are grouped under `Details`. `Up to date` means the next observation is not overdue. `Source lag` means the source was checked after the expected update date but still had no newer observation. `Update not run` means the expected update date passed before a successful source check occurred. `Failed` means the latest refresh attempt failed or no valid data is available.
+Each Data Status card links its indicator name to the primary source. The collapsed card shows only `Dashboard latest`, the newest observation stored in the committed CSV, plus the status badge. Expanding one card closes any other open card and reveals `Source available`, the newest observation confirmed during the latest successful source check; `Source checked`, that check time in JST; `Next observation`, the next expected observation date rather than the source download time; and update frequency. Delayed-release series can also show `Source due`, the estimated time in JST when that observation should become available. For example, the Federal Reserve H.15 Treasury yields are normally posted on the following U.S. business day, which is generally another calendar day later in Japan. Formulas, release notes, and errors follow when applicable, with source links placed last. `Up to date` means the dashboard has successfully checked the source and contains the newest observation available from it, or the next source release is not due yet. `Update not run` means the source due time passed without a newer successful source check. `Source lag` is reserved for an explicit upstream-lag result reported by an updater rather than inferred only from an expected date. `Failed` means the latest refresh attempt failed or no valid data is available; in that case, `Source available` remains the last confirmed value rather than claiming to represent the source's current state.
 
 The Glossary page reads static reference text from:
 
@@ -233,20 +233,18 @@ Scheduled downloads have no delayed retries and use finite request timeouts. Eac
 
 GitHub documents that scheduled workflow events can be delayed or dropped during periods of high Actions load. The optional Cloudflare Worker in `scheduler/` provides an independent clock while GitHub Actions continues to perform the actual update and deployment.
 
-The Worker dispatches the existing workflow at these times:
+The Worker dispatches the existing workflow at these primary times:
 
 | Profile | JST | UTC cron |
 | --- | --- | --- |
-| Asia | 08:15 Tue-Sat | `15 23 * * 1-5` |
-| US | 09:15, 10:15, 12:15 Tue-Sat | `15 0,1,3 * * 2-6` |
-| US | 11:15 Tue-Sat | `15 2 * * 2-6` |
+| US + prior pending Asia | 08:15 Tue-Sat | `15 23 * * 1-5` |
 | Breadth | 08:45 Tue-Sat | `45 23 * * 1-5` |
-| Breadth backup | 09:45, 10:45 Tue-Sat | `45 0,1 * * 2-6` |
-| US + Asia | 18:15 Mon-Fri | `15 9 * * 1-5` |
-| US | 18:15 Sat | `15 9 * * 6` |
-| Asia | 19:15, 20:15, 22:15 Mon-Fri | `15 10,11,13 * * 1-5` |
+| US | 12:15 Tue-Sat | `15 3 * * 2-6` |
+| Asia | 18:15 Mon-Fri | `15 9 * * 1-5` |
+| Asia retry | 20:15 Mon-Fri | `15 11 * * 1-5` |
+| US + Asia pending | 22:15 Mon-Fri | `15 13 * * 1-5` |
 
-The existing GitHub schedules remain enabled as a fallback. Duplicate dispatches do not duplicate provider downloads because `scripts/should-update.mjs` skips indicators already complete for the current market cycle.
+Native GitHub schedules remain enabled only as fallbacks: combined at 09:37 JST Tuesday through Saturday and 21:37 JST Monday through Friday, plus an isolated Breadth backup at 09:47 JST Tuesday through Saturday. Duplicate dispatches do not duplicate provider downloads because `scripts/should-update.mjs` skips indicators already complete for the current market cycle.
 
 To deploy the external scheduler:
 
@@ -288,7 +286,7 @@ The Fed Funds Rate card uses the official target-rate series rather than the eff
 
 ### FX
 
-- USD/JPY source: FRED `DEXJPUS` remains the official complete-history source. Yahoo Finance `JPY=X` only fills recent dates that FRED has not published; duplicate dates always use FRED.
+- USD/JPY source: the existing canonical CSV retains its complete historical archive. Ongoing updates request only the latest five days from Yahoo Finance `JPY=X`, merge valid completed daily closes, and never replace the archive with a limited-period download.
 - US 2-Year Treasury source: FRED `DGS2`
 - Japan 2-Year JGB source: Japan Ministry of Finance JGB interest rate CSV files:
   - Historical: `https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/historical/jgbcme_all.csv`
@@ -339,7 +337,7 @@ Japan 10-Year JGB Yield - Japan 2-Year JGB Yield
 - TAIEX uses Yahoo Finance `^TWII` and is clearly labelled as a market-data source, not TWSE official historical archive.
 - TSMC Revenue YoY uses the canonical MOPSOV dataset shared by the Taiwan dashboard and update pipeline.
 - The historical archive starts in 2013 because the MOPS IFRS monthly revenue endpoint is available from ROC year 102. The updater merges newly available months and preserves existing history if a source request fails.
-- USD/TWD uses FRED `DEXTAUS` as the canonical history and Yahoo Finance `TWD=X` only for dates newer than FRED's latest observation; definition is `1 USD = X TWD`. Values outside 10–100 are rejected.
+- USD/TWD retains the complete canonical history already stored in `data/usdtwd.csv`. Ongoing updates request only the latest five days from Yahoo Finance `TWD=X`; definition is `1 USD = X TWD`, and values outside 10–100 are rejected.
 - Foreign Investors Net Buying of Taiwan Equities uses FinMind's TWSE-derived `TaiwanStockTotalInstitutionalInvestors` bulk history from 2004 and filters `Foreign_Investor`. Recent dates are checked against the official [TWSE BFI82U report](https://www.twse.com.tw/en/trading/foreign/bfi82u.html), whose values take priority when available. The historical request uses TWSE's `dayDate` parameter and rejects a response whose reported date does not match the requested date.
 - Taiwan Electronics Exports YoY is calculated from the Taiwan Ministry of Finance [Exports by main commodity](https://data.gov.tw/en/datasets/8380) monthly CSV, using the USD electronic-components column. The resulting history begins in 2002.
 - Taiwan Margin Financing Balance uses FinMind's TWSE-derived `TaiwanStockTotalMarginPurchaseShortSale` bulk history from 2001 and filters `MarginPurchaseMoney`. Recent official [TWSE MI_MARGN](https://www.twse.com.tw/en/trading/margin/mi-margn.html) balances take priority when available. Two isolated bulk-history errors (`2008-09-01` and `2020-03-24`) are replaced with values verified in the corresponding official TWSE daily reports before YoY is calculated.
@@ -357,7 +355,7 @@ Japan 10-Year JGB Yield - Japan 2-Year JGB Yield
 - Breadth contains the canonical S&P 500, RSP/SPY, New High / New Low, and % Above 200DMA.
 - RSP/SPY uses matching split-adjusted Alpaca IEX daily closes and is updated with the regular U.S. market group.
 - The two constituent-based indicators use the current S&P 500 list published by the `datasets/s-and-p-500-companies` GitHub dataset and Alpaca IEX daily bars.
-- Breadth is isolated from the normal U.S. market updater and is checked at 08:45, 09:45, and 10:45 JST after each U.S. trading day, Tuesday through Saturday. Later checks skip Alpaca when the first run has already produced the target observation.
+- Breadth is isolated from the normal U.S. market updater and is checked at 08:45 JST after each U.S. trading day, Tuesday through Saturday, with one native GitHub backup at 09:47 JST. The backup skips Alpaca when the first run has already produced the target observation.
 - The updater requests a rolling window sufficient for 200-day averages and 252-trading-day highs/lows, calculates aggregate series in memory, and saves only the derived CSVs. Raw constituent bars are not committed or deployed.
 - At least 95% of the current constituent list must have valid history before a new aggregate observation is accepted. Existing published Breadth history remains intact when coverage is insufficient.
 - `New High / New Low` is `(new 252-trading-day highs - new 252-trading-day lows) / valid constituents * 100`.
