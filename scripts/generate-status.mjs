@@ -382,6 +382,34 @@ const indicatorDefinitions = [
     sourceReleaseTimeZone: "America/New_York",
   },
   {
+    key: "SMH_SPY",
+    displayName: "VanEck Semiconductor ETF / SPDR S&P 500 ETF Ratio",
+    shortName: "SMH/SPY",
+    sourceName: "Alpaca Market Data API",
+    sourceUrl: "https://docs.alpaca.markets/docs/about-market-data-api",
+    sourceUrls: [
+      {
+        label: "Alpaca Market Data API",
+        url: "https://docs.alpaca.markets/docs/about-market-data-api",
+      },
+      {
+        label: "Nasdaq historical archive bootstrap",
+        url: "https://www.nasdaq.com/market-activity/etf/smh/historical",
+      },
+    ],
+    frequency: "Daily, US trading days",
+    unit: "Split-adjusted close ratio",
+    formula: "SMH split-adjusted close / SPY split-adjusted close on matching trading dates",
+    releaseNote:
+      "The initial archive uses matching Nasdaq historical closes. New observations use matching Alpaca IEX daily bars only; no forward fill or estimated values are used.",
+    file: "data/smh-spy.csv",
+    type: "single",
+    dailyLagDays: 5,
+    sourceReleaseBusinessDays: 0,
+    sourceReleaseTime: "17:15",
+    sourceReleaseTimeZone: "America/New_York",
+  },
+  {
     key: "NEW_HIGH_LOW_BREADTH",
     displayName: "S&P 500 New High / New Low Breadth",
     shortName: "New High / New Low",

@@ -1,4 +1,4 @@
-const CACHE_VERSION = "market-dashboard-v116";
+const CACHE_VERSION = "market-dashboard-v117";
 const APP_SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 
@@ -6,7 +6,7 @@ const APP_SHELL_ASSETS = [
   "./",
   "./index.html",
   "./style.css?v=card-titles-v46",
-  "./app.js?v=official-fx-v50",
+  "./app.js?v=smh-spy-v51",
   "./data/glossary.json",
   "./manifest.json",
   "./offline.html",

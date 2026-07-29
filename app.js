@@ -217,6 +217,18 @@ const flowsIndicators = [
     decimals: 4,
     changeFormat: "percent",
   },
+  {
+    id: "smh-spy",
+    name: "SMH/SPY",
+    descriptor: "Semiconductor Leadership",
+    file: "data/smh-spy.csv",
+    unitLabel: "Ratio",
+    valueSuffix: "",
+    category: "ratio",
+    color: "#2b83ae",
+    decimals: 4,
+    changeFormat: "percent",
+  },
 ];
 
 const usRatesIndicators = [
@@ -539,6 +551,7 @@ const defaultIndicatorColors = {
   "spy-tlt": "#3f6fcb",
   "xly-xlp": "#9254aa",
   "iwm-spy": "#d44d5c",
+  "smh-spy": "#2b83ae",
   "new-high-low-breadth": "#6559bd",
   "sp500-above-200dma": "#218c83",
   "fed-funds-rate": "#d77d32",
@@ -666,6 +679,7 @@ const glossaryDisplayOrder = [
   "SPY_TLT",
   "XLY_XLP",
   "IWM_SPY",
+  "SMH_SPY",
   "DFEDTARU",
   "DGS2",
   "DGS10",
@@ -716,6 +730,7 @@ const indicatorGlossaryIds = {
   "spy-tlt": "SPY_TLT",
   "xly-xlp": "XLY_XLP",
   "iwm-spy": "IWM_SPY",
+  "smh-spy": "SMH_SPY",
   "taiwan-tsmc-revenue-yoy": "TSMC_REVENUE_YOY",
   "fed-funds-rate": "DFEDTARU",
   "us-2y-yield": "DGS2",
@@ -758,6 +773,7 @@ const glossaryDashboardTargets = {
   SPY_TLT: { tab: "flows", selector: '[data-flows-indicator="spy-tlt"]' },
   XLY_XLP: { tab: "flows", selector: '[data-flows-indicator="xly-xlp"]' },
   IWM_SPY: { tab: "flows", selector: '[data-flows-indicator="iwm-spy"]' },
+  SMH_SPY: { tab: "flows", selector: '[data-flows-indicator="smh-spy"]' },
   NEW_HIGH_LOW_BREADTH: {
     tab: "breadth",
     selector: '[data-breadth-indicator="new-high-low-breadth"]',
@@ -838,6 +854,7 @@ const indicatorChangeFormatOverrides = {
   "spy-tlt": "percent",
   "xly-xlp": "percent",
   "iwm-spy": "percent",
+  "smh-spy": "percent",
   "us-rates-sp500": "percent",
   topix: "percent",
   "jp-rates-topix": "percent",

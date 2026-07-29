@@ -20,6 +20,7 @@ const files = {
   spyTlt: path.join("data", "spy-tlt.csv"),
   xlyXlp: path.join("data", "xly-xlp.csv"),
   iwmSpy: path.join("data", "iwm-spy.csv"),
+  smhSpy: path.join("data", "smh-spy.csv"),
   above200: path.join("data", "sp500-above-200dma.csv"),
   newHighLow: path.join("data", "new-high-low-breadth.csv"),
 };
@@ -55,6 +56,12 @@ const ratioDefinitions = [
     left: "IWM",
     right: "SPY",
     file: files.iwmSpy,
+  },
+  {
+    label: "SMH/SPY",
+    left: "SMH",
+    right: "SPY",
+    file: files.smhSpy,
   },
 ];
 

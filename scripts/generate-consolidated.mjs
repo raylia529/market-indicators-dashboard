@@ -18,6 +18,7 @@ const sources = [
   { file: "spy-tlt.csv", columns: { value: "SPY_TLT" } },
   { file: "xly-xlp.csv", columns: { value: "XLY_XLP" } },
   { file: "iwm-spy.csv", columns: { value: "IWM_SPY" } },
+  { file: "smh-spy.csv", columns: { value: "SMH_SPY" } },
   { file: "new-high-low-breadth.csv", columns: { value: "NEW_HIGH_LOW_BREADTH" } },
   { file: "sp500-above-200dma.csv", columns: { value: "SP500_ABOVE_200DMA" } },
   { file: "tsmc-revenue-yoy.csv", columns: { value: "TSMC_REVENUE_YOY" } },
