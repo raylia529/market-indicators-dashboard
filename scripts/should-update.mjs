@@ -127,8 +127,25 @@ for (const key of keys) {
   const lastRefreshTargetDate = lastRefreshTime
     ? targetDateFor(profile, key, lastRefreshTime)
     : null;
+  const expectedSourceTime = indicator.expected_source_update_at
+    ? new Date(indicator.expected_source_update_at)
+    : null;
+  const sourceAvailableCheckTime = indicator.source_available_checked_at
+    ? new Date(indicator.source_available_checked_at)
+    : null;
+  const expectedSourceReleaseSatisfied =
+    !expectedSourceTime ||
+    Number.isNaN(expectedSourceTime.getTime()) ||
+    currentTime < expectedSourceTime ||
+    (sourceAvailableCheckTime &&
+      !Number.isNaN(sourceAvailableCheckTime.getTime()) &&
+      sourceAvailableCheckTime >= expectedSourceTime);
 
-  if (indicator.status === "Up to date" && lastRefreshTargetDate === targetDate) {
+  if (
+    indicator.status === "Up to date" &&
+    lastRefreshTargetDate === targetDate &&
+    expectedSourceReleaseSatisfied
+  ) {
     continue;
   }
 

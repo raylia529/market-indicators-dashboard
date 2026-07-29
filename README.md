@@ -36,7 +36,7 @@ The repository includes `.github/workflows/pages.yml`, which:
 - uses a combined U.S./Asia profile at 18:15, while the remaining times run only their assigned region;
 - includes weekly, monthly, and quarterly data only after its expected release date has arrived;
 - treats Japan MOF JGB yields as next-business-day releases, so the 08:15 check does not request a reference date that is not scheduled for publication until 09:30;
-- skips each indicator after a successful source check on that JST date, so later retry slots contact only sources that failed or have not yet been checked;
+- skips an indicator only after its source has been checked for the relevant publication cycle. A check made before the source's expected release time does not suppress the first later schedule after that release;
 - uses source-aware expected release dates for slow data, so a successful download of unchanged official data does not permanently suppress later overdue retries;
 - dispatches the isolated S&P 500 Breadth job alongside the 08:15 Cloudflare trigger, with one native GitHub backup at 09:47 JST, Tuesday through Saturday;
 - can be run manually from the GitHub Actions tab for `full`, `us`, `us-fast`, `us-market`, `us-slow`, `asia`, `breadth`, or `alpaca` with `workflow_dispatch`;
@@ -44,7 +44,7 @@ The repository includes `.github/workflows/pages.yml`, which:
 
 GitHub Actions cron expressions use UTC. The comments and times above are the intended fixed Japan Standard Time schedule. Every scheduled run evaluates freshness indicator by indicator before downloading anything. Exchange holidays can keep a daily series pending until a later check, while already complete indicators are skipped. Downloaders make no delayed retries; each configured primary or fallback endpoint is requested at most once per scheduled check. Existing committed data is retained if a source remains unavailable.
 
-Network updates are incremental. Each updater reads the complete local CSV first, requests only a recent overlap window, and merges newer observations by date. FRED, Alpaca, Yahoo Finance, FinMind, TWSE, MOPS, JPX, and Japan MOF updates therefore do not bootstrap full history again when a valid local archive exists. Small Yahoo series normally request the latest five days. Alpaca ETF ratios request a 14-calendar-day overlap. Weekly Breadth requests about 430 calendar days so genuine 200-day averages and 252-trading-day highs/lows can be calculated without storing or publishing the underlying constituent histories. Full-file downloads remain unavoidable for source endpoints that expose only one complete artifact: FINRA margin statistics, the New York Fed ACM workbook, Cboe SKEW history, Taiwan MOF exports, and SEC Company Facts. Freshness gates prevent those files from being requested again after the indicator is current.
+Network updates are incremental. Each updater reads the complete local CSV first, requests only a recent overlap window, and merges newer observations by date. FRED, Alpaca, Yahoo Finance, FinMind, TWSE, MOPS, JPX, Bank of Japan, and Japan MOF updates therefore do not bootstrap full history again when a valid local archive exists. Small Yahoo series normally request the latest five days. Alpaca ETF ratios request a 14-calendar-day overlap. Weekly Breadth requests about 430 calendar days so genuine 200-day averages and 252-trading-day highs/lows can be calculated without storing or publishing the underlying constituent histories. Full-file downloads remain unavoidable for source endpoints that expose only one complete artifact: FINRA margin statistics, the New York Fed ACM workbook, Cboe SKEW history, Taiwan central-bank daily exchange rates, Taiwan MOF exports, and SEC Company Facts. Freshness gates prevent those files from being requested again after the indicator is current.
 
 In GitHub, set `Settings -> Pages -> Build and deployment -> Source` to `GitHub Actions`.
 
@@ -55,7 +55,8 @@ Alpaca-powered ETF ratios and Breadth require two repository Actions secrets: `A
 ## Current Features
 
 - Macro, Breadth, Flows, US Rates, JP Rates, Japan, Taiwan, FX, Data Status, and Glossary tabs with matching responsive layouts where applicable.
-- Data Status tab with compact expandable cards: each collapsed card shows Dashboard latest and status, while source availability, check time, next expected observation date, update frequency, formulas, errors, and source links appear in the expanded view.
+- Data Status tab with compact expandable cards. `Dashboard latest` is the newest observation stored locally, `Source available` is the newest observation confirmed by a successful source request, and `Source checked` is the time of that successful confirmation. A failed connection does not replace the last successful source check.
+- `Up to date` requires the dashboard date to be at least the confirmed source date. Once an expected publication time has passed, it also requires a successful source check after that time; otherwise the status is `Update not run` or `Failed`.
 - Observation dates retain each source's local market or publication date; dashboard refresh timestamps are displayed in Japan Standard Time (`JST`).
 - Glossary tab with search plus collapsible indicator explanations in English, Japanese, and Chinese. Long-press an indicator card to open its Glossary entry; long-press a Glossary card to return to that indicator's dashboard tab.
 - Mobile card-to-chart swipe layout for portrait and landscape phone screens.
@@ -135,7 +136,7 @@ All dashboard data is stored in `data/`.
 | New High / New Low (Proxy) | `data/new-high-low-breadth.csv` | Calculated from current S&P 500 constituents using Alpaca IEX daily bars | 2021-07-27 | Daily/US trading days |
 | % Above 200DMA (Proxy) | `data/sp500-above-200dma.csv` | Calculated from current S&P 500 constituents using Alpaca IEX daily bars | 2021-05-12 | Daily/US trading days |
 | TSMC Revenue YoY | `data/tsmc-revenue-yoy.csv` | MOPSOV monthly operating revenue for TSMC `2330` | 2013-01-31 | Monthly |
-| USD/JPY | `data/fx.csv` | Yahoo Finance `JPY=X` for incremental updates; existing CSV retains the historical archive | 1971-01-04 | Daily/forex trading days |
+| USD/JPY | `data/usd-jpy.csv` and `data/fx.csv` | Bank of Japan `FM08/FXERD04` from 1998; earlier archive retained | 1971-01-04 | Daily/Tokyo business days |
 | US-JP 2Y Spread | `data/fx.csv` | FRED `DGS2` minus Japan MOF 2Y JGB yield | 1976-06-01 | Daily/business daily with forward-filled published yield observations |
 | BOJ Policy Rate | `data/boj-policy-rate.csv` | BIS Central Bank Policy Rates `D.JP`, reported with the Bank of Japan | 1946-01-01 | Daily observations, weekly BIS release |
 | Japan Overnight Call Rate | `data/japan-overnight-call-rate.csv` | Bank of Japan Time-Series Data Search `FM01'STRDCLUCON` | 1998-01-05 | Daily/Japan business days |
@@ -149,7 +150,7 @@ All dashboard data is stored in `data/`.
 | TAIEX | `data/taiex.csv` | Yahoo Finance `^TWII` | 1997-07-02 | Daily/Taiwan trading days |
 | Foreign Investors Net Buying of Taiwan Equities | `data/taiwan-foreign-investor-net-buying.csv` | FinMind TWSE-derived bulk history, with recent official TWSE BFI82U values taking priority | 2004-04-07 | Daily/Taiwan trading days |
 | Taiwan Electronics Exports YoY | `data/taiwan-electronics-exports-yoy.csv` | Taiwan Ministry of Finance exports by main commodity, electronic components in USD | 2002-01-31 | Monthly |
-| USD/TWD | `data/usdtwd.csv` | Yahoo Finance `TWD=X` for incremental updates; existing CSV retains the historical archive | 1983-10-03 | Daily/forex trading days |
+| USD/TWD | `data/usdtwd.csv` | Central Bank of the Republic of China (Taiwan) official daily interbank close from 2008; earlier archive retained | 1983-10-03 | Daily/Taiwan business days |
 | Taiwan Margin Financing Balance YoY | `data/taiwan-margin-financing-balance-yoy.csv` | FinMind TWSE-derived total-market history, recent TWSE MI_MARGN overwrite, then calculated YoY | 2002-01-03 | Daily/Taiwan trading days |
 
 ## Source and Terms Notes
@@ -157,9 +158,9 @@ All dashboard data is stored in `data/`.
 This is a personal dashboard built from publicly accessible sources. The repository keeps source attribution in Data Status, and `data/status.json` is regenerated during each refresh so the visible source list stays aligned with the update pipeline.
 
 - Official or public-agency sources used here include FRED, FINRA, Japan Ministry of Finance, JPX, TWSE/MOPS, and Taiwan Ministry of Finance.
-- Free market-data endpoints used here include Alpaca Market Data API's Paper IEX feed, Yahoo Finance, Yahoo Japan, and Cboe public CSV downloads where available.
+- Free market-data endpoints used here include Alpaca Market Data API's Paper IEX feed, Yahoo Finance, Yahoo Japan, the Bank of Japan, the Central Bank of the Republic of China (Taiwan), and Cboe public CSV downloads where available.
 - HYG/IEF retains the existing pre-Alpaca archive and uses Alpaca split-adjusted HYG and IEF closes for new observations because FRED does not provide matching ETF price series. RSP/SPY, SPY/TLT, XLY/XLP, and IWM/SPY use the same Alpaca feed. All ratios use matching published dates only, with no forward fill or estimates.
-- Alpaca replaces Yahoo or FRED only where the dashboard needs the exact same U.S.-listed stock or ETF close. It does not replace macroeconomic series, FX, or exact index definitions with ETF proxies. S&P 500, VIX, HY OAS, Treasury yields, and other macro series therefore retain their canonical sources; MOVE and non-U.S. indices retain their current sources unless an exact validated replacement becomes available.
+- Alpaca replaces Yahoo or FRED only where the dashboard needs the exact same U.S.-listed stock or ETF close. It does not replace macroeconomic series, FX, or exact index definitions with ETF proxies. S&P 500, VIX, HY OAS, Treasury yields, and other macro series therefore retain their canonical sources; MOVE and non-U.S. indices retain their current sources unless an exact validated replacement becomes available. USD/JPY and USD/TWD use their respective central-bank sources instead of Yahoo.
 - ISM Manufacturing PMI is parsed from the revised rolling 12-month table in ISM's official monthly press release distributed by PR Newswire. FRED removed ISM series from its services in 2016, so this repository does not label a proxy or an unverified third-party reconstruction as official history. The committed series begins in July 2025 and grows by monthly merge. ISM content and PMI trademarks remain subject to ISM's terms; review those terms before redistribution or commercial use.
 - Some sources may still be subject to provider terms, third-party data rights, rate limits, or redistribution restrictions. This is especially relevant for Alpaca/IEX market data, ICE-linked HY OAS data available through FRED, ISM PMI content, Yahoo Finance data, Cboe data, New York Fed term premium data, and BIS statistics. BIS policy-rate data should retain BIS and Bank of Japan attribution.
 - For personal, low-traffic use, the current setup is intended to be practical and transparent. Before commercial use, broad redistribution, or presenting this as a data service, review the relevant provider terms and replace any source whose terms are not suitable.
@@ -285,13 +286,14 @@ The Fed Funds Rate card uses the official target-rate series rather than the eff
 
 ### FX
 
-- USD/JPY source: the existing canonical CSV retains its complete historical archive. Ongoing updates request only the latest five days from Yahoo Finance `JPY=X`, merge valid completed daily closes, and never replace the archive with a limited-period download.
+- USD/JPY source: official Bank of Japan Time-Series Data Search API database `FM08`, series `FXERD04` (`US.Dollar/Yen Spot Rate at 17:00 in JST, Tokyo Market`). `data/usd-jpy.csv` retains the pre-1998 archive and gives official BOJ observations priority from 1998 onward. After the one-time official-history migration, updates request only the latest overlapping calendar months.
 - US 2-Year Treasury source: FRED `DGS2`
 - Japan 2-Year JGB source: Japan Ministry of Finance JGB interest rate CSV files:
   - Historical: `https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/historical/jgbcme_all.csv`
   - Current: `https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/jgbcme.csv`
 - The MOF parser locates the header row containing `Date` and `2Y`; it does not rely on fixed column positions.
 - US and Japan 2Y yields are outer-joined by date and forward-filled only from already published observations before calculating the spread.
+- Actual published observations are also retained separately in `data/us-2-year-treasury-yield.csv` and `data/japan-2-year-jgb-yield.csv`. Their cards, charts, and Data Status dates use these canonical files, never the forward-filled dates in the calculated spread table.
 - Japan Core CPI YoY and Tokyo Core CPI YoY use the official Statistics Bureau of Japan / e-Stat monthly CSVs. The parser identifies `All items, less fresh food` by its header, reads the published YoY value directly, and merges the 2020-base and 2025-base files with the existing history.
 - CPI observations remain monthly and are not forward-filled onto daily FX dates. The FX comparison chart plots each series only on its actual published observation dates.
 
@@ -311,7 +313,7 @@ The Fed Funds Rate card uses the official target-rate series rather than the eff
 - The first update builds the full series from 1946-01-01. Later updates request only the latest 60-day window and merge it with the existing CSV.
 - Japan Overnight Call Rate uses the official Bank of Japan Time-Series Data Search API series `FM01'STRDCLUCON`. It is the observed uncollateralized overnight market rate, not the BOJ policy target.
 - The first download builds the complete official history from 1998-01-05. Later updates request only the latest and prior calendar month, then merge by date with the existing CSV.
-- Japan 2-Year JGB Yield reuses the canonical `Japan_2Y_Yield` column in `data/fx.csv`.
+- Japan 2-Year JGB Yield uses the canonical actual-observation file `data/japan-2-year-jgb-yield.csv`. `data/fx.csv` retains the outer-joined, forward-filled columns needed only to calculate the US-Japan spread.
 - Japan 10-Year JGB Yield comes from the same official Japan Ministry of Finance JGB interest rate CSV family used for Japan 2Y.
 - The parser detects the `Date` and `10Y` headers dynamically.
 - Japan 10-Year Minus 2-Year JGB Yield Spread formula:
@@ -336,7 +338,7 @@ Japan 10-Year JGB Yield - Japan 2-Year JGB Yield
 - TAIEX uses Yahoo Finance `^TWII` and is clearly labelled as a market-data source, not TWSE official historical archive.
 - TSMC Revenue YoY uses the canonical MOPSOV dataset shared by the Taiwan dashboard and update pipeline.
 - The historical archive starts in 2013 because the MOPS IFRS monthly revenue endpoint is available from ROC year 102. The updater merges newly available months and preserves existing history if a source request fails.
-- USD/TWD retains the complete canonical history already stored in `data/usdtwd.csv`. Ongoing updates request only the latest five days from Yahoo Finance `TWD=X`; definition is `1 USD = X TWD`, and values outside 10–100 are rejected.
+- USD/TWD retains the complete canonical history already stored in `data/usdtwd.csv`. Official daily interbank closing rates come from the [Central Bank of the Republic of China (Taiwan) OpenData API](https://cpx.cbc.gov.tw/api/OpenData/FTDOpenData_Day), with official observations taking priority from 2008 onward. The endpoint exposes one complete artifact rather than a date-window API, so freshness gating prevents repeat downloads after the current cycle succeeds. Definition is `1 USD = X TWD`, and values outside 10–100 are rejected.
 - Foreign Investors Net Buying of Taiwan Equities uses FinMind's TWSE-derived `TaiwanStockTotalInstitutionalInvestors` bulk history from 2004 and filters `Foreign_Investor`. Recent dates are checked against the official [TWSE BFI82U report](https://www.twse.com.tw/en/trading/foreign/bfi82u.html), whose values take priority when available. The historical request uses TWSE's `dayDate` parameter and rejects a response whose reported date does not match the requested date.
 - Taiwan Electronics Exports YoY is calculated from the Taiwan Ministry of Finance [Exports by main commodity](https://data.gov.tw/en/datasets/8380) monthly CSV, using the USD electronic-components column. The resulting history begins in 2002.
 - Taiwan Margin Financing Balance uses FinMind's TWSE-derived `TaiwanStockTotalMarginPurchaseShortSale` bulk history from 2001 and filters `MarginPurchaseMoney`. Recent official [TWSE MI_MARGN](https://www.twse.com.tw/en/trading/margin/mi-margn.html) balances take priority when available. Two isolated bulk-history errors (`2008-09-01` and `2020-03-24`) are replaced with values verified in the corresponding official TWSE daily reports before YoY is calculated.
@@ -370,6 +372,7 @@ node --check app.js
 node --check sw.js
 node --check scripts/generate-consolidated.mjs
 node --check scripts/generate-status.mjs
+node --check scripts/audit-data-status.mjs
 node --check scripts/update-sp500.mjs
 node --check scripts/update-hy-oas.mjs
 node --check scripts/update-fred-series.mjs
@@ -382,6 +385,7 @@ node --check scripts/update-boj-overnight-rate.mjs
 node --check scripts/update-japan-cpi.mjs
 node --check scripts/update-regional-markets.mjs
 node --check scripts/should-update.mjs
+node scripts/audit-data-status.mjs
 python3 -m py_compile scripts/update-finra-margin-debt-yoy.py
 ```
 

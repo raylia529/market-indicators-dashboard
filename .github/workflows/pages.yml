@@ -253,7 +253,6 @@ jobs:
             run_update "MOVE Index" "node scripts/update-extra-indicators.mjs --only=move" "MOVE" "daily" "us" "yahoo"
             run_update "Alpaca ETF ratios" "node scripts/update-alpaca-indicators.mjs --only=ratios" "HYG_IEF,RSP_SPY,SPY_TLT,XLY_XLP,IWM_SPY" "daily" "us" "alpaca"
             run_update "CBOE SKEW Index" "node scripts/update-extra-indicators.mjs --only=skew" "SKEW" "daily" "us" "cboe"
-            run_update "USD/JPY" "node scripts/update-fx.mjs --profile=us --only=usdjpy" "DEXJPUS" "daily" "us" "yahoo"
           }
 
           run_breadth() {
@@ -272,6 +271,7 @@ jobs:
           }
 
           run_asia_daily() {
+            run_update "USD/JPY" "node scripts/update-fx.mjs --profile=asia --only=usdjpy" "DEXJPUS" "daily" "asia" "boj-fx"
             run_update "Japan overnight call rate" "node scripts/update-boj-overnight-rate.mjs" "BOJ_OVERNIGHT_CALL_RATE" "daily" "asia" "boj"
             run_update "Japan 2Y and spread" "node scripts/update-fx.mjs --profile=asia --only=japan2y" "JAPAN_2Y_JGB,US_JAPAN_2Y_SPREAD" "daily" "asia" "japan-mof"
             run_update "Japan 10Y rates" "node scripts/update-japan-rates.mjs" "JAPAN_10Y_JGB,JAPAN_10Y_2Y_SPREAD" "daily" "asia" "japan-mof"
@@ -280,7 +280,7 @@ jobs:
             run_update "Taiwan foreign net buying" "python scripts/update-regional-official.py --only=taiwan-foreign" "TAIWAN_FOREIGN_NET_BUYING" "daily" "asia" "twse"
             run_update "Taiwan margin financing YoY" "python scripts/update-regional-official.py --only=taiwan-margin" "TAIWAN_MARGIN_FINANCING_BALANCE_YOY" "daily" "asia" "twse"
             run_update "TAIEX" "node scripts/update-regional-markets.mjs --only=taiex" "TAIEX" "daily" "asia" "yahoo"
-            run_update "USD/TWD" "node scripts/update-regional-markets.mjs --only=usdtwd" "USDTWD" "daily" "asia" "yahoo"
+            run_update "USD/TWD" "node scripts/update-regional-markets.mjs --only=usdtwd" "USDTWD" "daily" "asia" "taiwan-cbc"
           }
 
           run_asia_slow() {
@@ -356,6 +356,7 @@ jobs:
           node --check sw.js
           node --check scripts/generate-consolidated.mjs
           node --check scripts/generate-status.mjs
+          node --check scripts/audit-data-status.mjs
           node --check scripts/update-sp500.mjs
           node --check scripts/update-hy-oas.mjs
           node --check scripts/update-fred-series.mjs
@@ -374,6 +375,7 @@ jobs:
           node -e 'JSON.parse(require("fs").readFileSync("scheduler/wrangler.jsonc", "utf8"))'
           python -B -m py_compile scripts/update-regional-official.py
           python -B -m py_compile scripts/update-finra-margin-debt-yoy.py
+          node scripts/audit-data-status.mjs
 
       - name: Remove generated caches
         run: |

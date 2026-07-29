@@ -8,8 +8,8 @@ const defaultRetryBackoffMs = [];
 const fredRetryBackoffMs = [];
 
 const sources = {
-  usdJpyYahoo:
-    "https://query1.finance.yahoo.com/v8/finance/chart/JPY%3DX?range=5d&interval=1d&events=history",
+  usdJpyBojBase:
+    "https://www.stat-search.boj.or.jp/api/v1/getDataCode?format=json&lang=en&db=FM08&code=FXERD04",
   us2y: "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2",
   japan2yHistorical:
     "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/historical/jgbcme_all.csv",
@@ -19,6 +19,9 @@ const sources = {
 const recentOverlapDays = 90;
 
 const outputFile = path.join("data", "fx.csv");
+const usdJpyOutputFile = path.join("data", "usd-jpy.csv");
+const us2yOutputFile = path.join("data", "us-2-year-treasury-yield.csv");
+const japan2yOutputFile = path.join("data", "japan-2-year-jgb-yield.csv");
 const profileArg = process.argv.find((argument) => argument.startsWith("--profile="));
 const updateProfile = profileArg ? profileArg.slice("--profile=".length).toLowerCase() : "full";
 const onlyArg = process.argv.find((argument) => argument.startsWith("--only="));
@@ -29,8 +32,8 @@ if (!["full", "us", "asia"].includes(updateProfile)) {
 
 const defaultSourcesByProfile = {
   full: ["usdjpy", "us2y", "japan2y"],
-  us: ["usdjpy", "us2y"],
-  asia: ["japan2y"],
+  us: ["us2y"],
+  asia: ["usdjpy", "japan2y"],
 };
 const requestedSources = new Set(
   onlyArg
@@ -118,39 +121,50 @@ async function downloadWithRetry(
   throw lastError;
 }
 
-function parseYahooUsdJpy(text) {
+function parseBojUsdJpy(text) {
   const payload = JSON.parse(text);
-  const result = payload?.chart?.result?.[0];
-  const timestamps = result?.timestamp;
-  const closes = result?.indicators?.quote?.[0]?.close;
+  const result = payload?.RESULTSET?.find((series) => series.SERIES_CODE === "FXERD04");
+  const dates = result?.VALUES?.SURVEY_DATES;
+  const values = result?.VALUES?.VALUES;
 
-  if (!Array.isArray(timestamps) || !Array.isArray(closes) || timestamps.length !== closes.length) {
-    throw new Error("Unexpected Yahoo Finance JPY=X response.");
+  if (
+    payload?.STATUS !== 200 ||
+    !Array.isArray(dates) ||
+    !Array.isArray(values) ||
+    dates.length !== values.length
+  ) {
+    throw new Error("Unexpected Bank of Japan FXERD04 response.");
   }
 
-  const timeZone = result.meta?.exchangeTimezoneName || "UTC";
-  const regularMarketTime = result.meta?.regularMarketTime;
-  const regularMarketEnd = result.meta?.currentTradingPeriod?.regular?.end;
-  const marketIsOpen = Number.isFinite(regularMarketEnd) && Date.now() / 1000 < regularMarketEnd;
-  const dateFormatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
+  return dates
+    .map((rawDate, index) => {
+      const compactDate = String(rawDate);
+      return {
+        date:
+          compactDate.length === 8
+            ? `${compactDate.slice(0, 4)}-${compactDate.slice(4, 6)}-${compactDate.slice(6, 8)}`
+            : "",
+        value: values[index] === null ? null : Number(values[index]),
+      };
+    })
+    .filter((row) => /^\d{4}-\d{2}-\d{2}$/.test(row.date) && isValidUsdJpyValue(row.value))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
 
-  return timestamps
-    .map((timestamp, index) => ({
-      date: dateFormatter.format(new Date(timestamp * 1000)),
-      timestamp,
-      value: Number(closes[index]),
-    }))
-    .filter(
-      (row) =>
-        row.date &&
-        isValidUsdJpyValue(row.value) &&
-        !(marketIsOpen && row.timestamp === regularMarketTime),
-    );
+function bojUsdJpyUrl(existingRows) {
+  const now = new Date();
+  const endDate = `${now.getUTCFullYear()}${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+  if (existingRows.length === 0) {
+    return `${sources.usdJpyBojBase}&startDate=199801&endDate=${endDate}`;
+  }
+
+  const latestDate = new Date(`${existingRows.at(-1).date}T00:00:00Z`);
+  latestDate.setUTCMonth(latestDate.getUTCMonth() - 2);
+  const startDate = `${latestDate.getUTCFullYear()}${String(latestDate.getUTCMonth() + 1).padStart(
+    2,
+    "0",
+  )}`;
+  return `${sources.usdJpyBojBase}&startDate=${startDate}&endDate=${endDate}`;
 }
 
 function splitCsvLine(line) {
@@ -252,6 +266,44 @@ function mergeSeries(rows) {
   return Array.from(merged, ([date, value]) => ({ date, value })).sort((a, b) =>
     a.date.localeCompare(b.date),
   );
+}
+
+function loadSingleSeries(file) {
+  if (!fs.existsSync(file)) {
+    return [];
+  }
+
+  return fs
+    .readFileSync(file, "utf8")
+    .trim()
+    .split(/\r?\n/)
+    .slice(1)
+    .map((line) => {
+      const [date, rawValue] = splitCsvLine(line);
+      return { date, value: Number(rawValue) };
+    })
+    .filter((row) => row.date && Number.isFinite(row.value))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function atomicWriteSingleSeries(file, rows, label) {
+  if (rows.length === 0) {
+    throw new Error(`${label} has no valid observations.`);
+  }
+
+  const output = `date,value\n${rows
+    .map((row) => `${row.date},${row.value.toFixed(4)}`)
+    .join("\n")}\n`;
+  const tempFile = `${file}.tmp`;
+  fs.writeFileSync(tempFile, output);
+  const verifiedRows = loadSingleSeries(tempFile);
+  if (
+    verifiedRows.length !== rows.length ||
+    verifiedRows.some((row, index) => index > 0 && verifiedRows[index - 1].date >= row.date)
+  ) {
+    throw new Error(`${label} canonical CSV validation failed.`);
+  }
+  fs.renameSync(tempFile, file);
 }
 
 function incrementalFredUrl(baseUrl, existingRows, requiredEarliestDate = null) {
@@ -388,16 +440,28 @@ function loadRowsFromFile(file) {
 
 async function main() {
   const existingRows = loadExisting();
-  const existingUsdJpy = existingRows
-    .filter((row) => isValidUsdJpyValue(row.USDJPY))
-    .map((row) => ({ date: row.date, value: row.USDJPY }));
-  const existingUs2y = existingRows
-    .filter((row) => Number.isFinite(row.US_2Y_Yield))
-    .map((row) => ({ date: row.date, value: row.US_2Y_Yield }));
-  const existingJapan2y = existingRows
-    .filter((row) => Number.isFinite(row.Japan_2Y_Yield))
-    .map((row) => ({ date: row.date, value: row.Japan_2Y_Yield }));
-  let yahooUsdJpyRows = [];
+  const canonicalUsdJpy = loadSingleSeries(usdJpyOutputFile);
+  const archiveUsdJpy = existingRows
+      .filter((row) => isValidUsdJpyValue(row.USDJPY))
+      .map((row) => ({ date: row.date, value: row.USDJPY }));
+  const existingUsdJpy = canonicalUsdJpy.length > 0 ? canonicalUsdJpy : archiveUsdJpy;
+  const canonicalUs2y = loadSingleSeries(us2yOutputFile);
+  const canonicalJapan2y = loadSingleSeries(japan2yOutputFile);
+  const existingUs2y = canonicalUs2y.length > 0
+    ? canonicalUs2y
+    : requestedSources.has("us2y")
+      ? []
+      : existingRows
+          .filter((row) => Number.isFinite(row.US_2Y_Yield))
+          .map((row) => ({ date: row.date, value: row.US_2Y_Yield }));
+  const existingJapan2y = canonicalJapan2y.length > 0
+    ? canonicalJapan2y
+    : requestedSources.has("japan2y")
+      ? []
+      : existingRows
+          .filter((row) => Number.isFinite(row.Japan_2Y_Yield))
+          .map((row) => ({ date: row.date, value: row.Japan_2Y_Yield }));
+  let bojUsdJpyRows = [];
   let us2yRows = [];
   let japan2yRows = [];
   const warnings = [];
@@ -408,12 +472,12 @@ async function main() {
 
   if (requestedSources.has("usdjpy")) {
     try {
-      yahooUsdJpyRows = parseYahooUsdJpy(
-        await downloadWithRetry(sources.usdJpyYahoo, { "User-Agent": "Mozilla/5.0" }),
+      bojUsdJpyRows = parseBojUsdJpy(
+        await downloadWithRetry(bojUsdJpyUrl(canonicalUsdJpy)),
       );
       usdJpySourceSucceeded = true;
     } catch (error) {
-      warnings.push(`WARNING: Yahoo USDJPY download/parse failed. ${error.message}`);
+      warnings.push(`WARNING: Bank of Japan USDJPY download/parse failed. ${error.message}`);
     }
 
   }
@@ -455,11 +519,28 @@ async function main() {
     console.warn(warning);
   }
 
-  // Existing historical values survive download failures. Yahoo only adds or
-  // replaces observations from its recent five-day response.
-  const combinedUsdJpy = mergeSeries([...existingUsdJpy, ...yahooUsdJpyRows]);
+  // Preserve the pre-BOJ archive. Official BOJ observations take priority on
+  // overlapping dates and future runs request only a recent overlap window.
+  const combinedUsdJpy = mergeSeries([...existingUsdJpy, ...bojUsdJpyRows]);
   const combinedUs2y = mergeSeries([...existingUs2y, ...us2yRows]);
   const combinedJapan2y = mergeSeries([...existingJapan2y, ...japan2yRows]);
+  if (us2ySourceSucceeded) {
+    atomicWriteSingleSeries(
+      us2yOutputFile,
+      combinedUs2y,
+      "US 2-Year Treasury Yield",
+    );
+  }
+  if (usdJpySourceSucceeded) {
+    atomicWriteSingleSeries(usdJpyOutputFile, combinedUsdJpy, "USD/JPY");
+  }
+  if (japan2ySourceSucceeded) {
+    atomicWriteSingleSeries(
+      japan2yOutputFile,
+      combinedJapan2y,
+      "Japan 2-Year JGB Yield",
+    );
+  }
   const finalRows = consolidate({
     usdJpyRows: combinedUsdJpy,
     us2yRows: combinedUs2y,
@@ -477,18 +558,20 @@ async function main() {
   const latestSpread = [...finalRows]
     .reverse()
     .find((row) => Number.isFinite(row.US_Japan_2Y_Spread));
+  const latestUs2y = combinedUs2y.at(-1);
+  const latestJapan2y = combinedJapan2y.at(-1);
 
   console.log("FX validation");
   console.log(`Earliest date: ${finalRows[0].date}`);
   console.log(`Latest date: ${finalRows.at(-1).date}`);
   console.log(`Valid USDJPY observations: ${validation.validUsdJpyRows.length}`);
-  console.log(`Yahoo USDJPY observations downloaded: ${yahooUsdJpyRows.length}`);
-  console.log("USDJPY merge priority: existing history < recent Yahoo daily closes");
+  console.log(`Bank of Japan USDJPY observations downloaded: ${bojUsdJpyRows.length}`);
+  console.log("USDJPY merge priority: existing archive < official BOJ FXERD04 observations");
   console.log(`Valid spread observations: ${validation.validSpreadRows.length}`);
   console.log(`Duplicate dates: ${validation.duplicateDates}`);
   console.log(`Latest USDJPY: ${latestUsdJpy.date} ${latestUsdJpy.USDJPY.toFixed(4)}`);
-  console.log(`Latest US 2Y: ${latestSpread.date} ${latestSpread.US_2Y_Yield.toFixed(4)}`);
-  console.log(`Latest Japan 2Y: ${latestSpread.date} ${latestSpread.Japan_2Y_Yield.toFixed(4)}`);
+  console.log(`Latest US 2Y: ${latestUs2y.date} ${latestUs2y.value.toFixed(4)}`);
+  console.log(`Latest Japan 2Y: ${latestJapan2y.date} ${latestJapan2y.value.toFixed(4)}`);
   console.log(
     `Latest US-Japan 2Y Spread: ${latestSpread.date} ${latestSpread.US_Japan_2Y_Spread.toFixed(
       4,

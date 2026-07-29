@@ -5,6 +5,9 @@ import path from "node:path";
 const userAgent = "market-indicators-dashboard/1.0 raylia529";
 const downloadTimeoutMs = 20_000;
 const retryBackoffMs = [];
+const sources = {
+  usdTwdCbc: "https://cpx.cbc.gov.tw/api/OpenData/FTDOpenData_Day",
+};
 const files = {
   nikkei225: path.join("data", "nikkei-225.csv"),
   taiex: path.join("data", "taiex.csv"),
@@ -194,6 +197,33 @@ function parseYahooChart(text, label) {
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
+function parseCbcUsdTwd(text) {
+  const payload = JSON.parse(text);
+  if (!Array.isArray(payload)) {
+    throw new Error("Unexpected Taiwan central bank USD/TWD response.");
+  }
+
+  return payload
+    .map((entry) => {
+      const compactDate = String(entry?.["日期"] || "").trim();
+      return {
+        date:
+          compactDate.length === 8
+            ? `${compactDate.slice(0, 4)}-${compactDate.slice(4, 6)}-${compactDate.slice(6, 8)}`
+            : "",
+        value: Number(entry?.NTD_USD),
+      };
+    })
+    .filter(
+      (row) =>
+        /^\d{4}-\d{2}-\d{2}$/.test(row.date) &&
+        Number.isFinite(row.value) &&
+        row.value >= 10 &&
+        row.value <= 100,
+    )
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
 async function updateYahooSeries({ symbol, label, file, decimals = 2 }) {
   const existingRows = loadSingleCsv(file);
   const latestDate = existingRows.at(-1)?.date;
@@ -220,25 +250,20 @@ async function updateUsdTwd() {
     (row) => row.value >= 10 && row.value <= 100,
   );
   const removedInvalidRows = loadSingleCsv(files.usdTwd).length - existingRows.length;
-  const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(
-    "TWD=X",
-  )}?range=5d&interval=1d&events=history`;
-  const yahooRows = parseYahooChart(
-    await download(yahooUrl, { "User-Agent": "Mozilla/5.0" }),
-    label,
-  ).filter((row) => row.value >= 10 && row.value <= 100);
+  const officialRows = parseCbcUsdTwd(await download(sources.usdTwdCbc));
 
-  const rows = mergeRows(existingRows, yahooRows);
+  const rows = mergeRows(existingRows, officialRows);
   validateRows(rows, label, existingRows);
   atomicWriteCsv(files.usdTwd, rows, label, 4);
   console.log(`${label} validation`);
-  console.log("Source: Yahoo Finance TWD=X recent daily closes");
+  console.log("Source: Central Bank of the Republic of China (Taiwan) daily interbank close");
   console.log(`Earliest date: ${rows[0].date}`);
   console.log(`Latest date: ${rows.at(-1).date}`);
   console.log(`Valid observations: ${rows.length}`);
   console.log(`Invalid existing observations removed: ${removedInvalidRows}`);
-  console.log(`Yahoo observations downloaded: ${yahooRows.length}`);
-  console.log("Request mode: latest 5 days");
+  console.log(`Official observations downloaded: ${officialRows.length}`);
+  console.log("Merge priority: existing archive < official central bank observations");
+  console.log("Request mode: official endpoint exposes one complete daily artifact");
 }
 
 async function main() {

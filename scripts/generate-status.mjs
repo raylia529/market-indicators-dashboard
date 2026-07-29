@@ -19,6 +19,9 @@ const indicatorDefinitions = [
     file: "data/sp500.csv",
     type: "single",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 1,
+    sourceReleaseTime: "16:15",
+    sourceReleaseTimeZone: "America/New_York",
   },
   {
     key: "VIXCLS",
@@ -32,6 +35,9 @@ const indicatorDefinitions = [
     file: "data/vix.csv",
     type: "single",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 1,
+    sourceReleaseTime: "16:15",
+    sourceReleaseTimeZone: "America/New_York",
   },
   {
     key: "BAMLH0A0HYM2",
@@ -45,6 +51,9 @@ const indicatorDefinitions = [
     file: "data/hy_oas.csv",
     type: "single",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 1,
+    sourceReleaseTime: "16:15",
+    sourceReleaseTimeZone: "America/New_York",
   },
   {
     key: "HYG_IEF",
@@ -66,6 +75,9 @@ const indicatorDefinitions = [
     file: "data/hyg-ief.csv",
     type: "single",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 0,
+    sourceReleaseTime: "17:15",
+    sourceReleaseTimeZone: "America/New_York",
   },
   {
     key: "DFEDTARU",
@@ -104,6 +116,9 @@ const indicatorDefinitions = [
     file: "data/fed-funds-rate.csv",
     type: "single",
     dailyLagDays: 3,
+    sourceReleaseBusinessDays: 0,
+    sourceReleaseTime: "14:00",
+    sourceReleaseTimeZone: "America/New_York",
   },
   {
     key: "DGS10",
@@ -168,6 +183,9 @@ const indicatorDefinitions = [
     file: "data/move.csv",
     type: "single",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 0,
+    sourceReleaseTime: "17:15",
+    sourceReleaseTimeZone: "America/New_York",
   },
   {
     key: "ACMTP10",
@@ -263,6 +281,9 @@ const indicatorDefinitions = [
     file: "data/skew.csv",
     type: "single",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 0,
+    sourceReleaseTime: "17:15",
+    sourceReleaseTimeZone: "America/New_York",
   },
   {
     key: "RSP_SPY",
@@ -284,6 +305,9 @@ const indicatorDefinitions = [
     file: "data/rsp-spy.csv",
     type: "single",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 0,
+    sourceReleaseTime: "17:15",
+    sourceReleaseTimeZone: "America/New_York",
   },
   {
     key: "SPY_TLT",
@@ -305,6 +329,9 @@ const indicatorDefinitions = [
     file: "data/spy-tlt.csv",
     type: "single",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 0,
+    sourceReleaseTime: "17:15",
+    sourceReleaseTimeZone: "America/New_York",
   },
   {
     key: "XLY_XLP",
@@ -326,6 +353,9 @@ const indicatorDefinitions = [
     file: "data/xly-xlp.csv",
     type: "single",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 0,
+    sourceReleaseTime: "17:15",
+    sourceReleaseTimeZone: "America/New_York",
   },
   {
     key: "IWM_SPY",
@@ -347,6 +377,9 @@ const indicatorDefinitions = [
     file: "data/iwm-spy.csv",
     type: "single",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 0,
+    sourceReleaseTime: "17:15",
+    sourceReleaseTimeZone: "America/New_York",
   },
   {
     key: "NEW_HIGH_LOW_BREADTH",
@@ -373,6 +406,9 @@ const indicatorDefinitions = [
     file: "data/new-high-low-breadth.csv",
     type: "single",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 0,
+    sourceReleaseTime: "17:15",
+    sourceReleaseTimeZone: "America/New_York",
   },
   {
     key: "SP500_ABOVE_200DMA",
@@ -397,6 +433,9 @@ const indicatorDefinitions = [
     file: "data/sp500-above-200dma.csv",
     type: "single",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 0,
+    sourceReleaseTime: "17:15",
+    sourceReleaseTimeZone: "America/New_York",
   },
   {
     key: "TSMC_REVENUE_YOY",
@@ -421,19 +460,22 @@ const indicatorDefinitions = [
     key: "DEXJPUS",
     displayName: "USD/JPY Exchange Rate",
     shortName: "USD/JPY",
-    sourceName: "Yahoo Finance",
-    sourceUrl: "https://finance.yahoo.com/quote/JPY%3DX/history/",
+    sourceName: "Bank of Japan",
+    sourceUrl: "https://www.stat-search.boj.or.jp/index_en.html",
     sourceUrls: [
-      { label: "Yahoo Finance JPY=X", url: "https://finance.yahoo.com/quote/JPY%3DX/history/" },
+      { label: "Bank of Japan Time-Series Data Search", url: "https://www.stat-search.boj.or.jp/index_en.html" },
+      { label: "BOJ FM08 API metadata", url: "https://www.stat-search.boj.or.jp/api/v1/getMetadata?format=json&lang=en&db=FM08" },
     ],
     frequency: "Daily forex trading days",
     unit: "JPY per USD",
     releaseNote:
-      "The existing CSV retains its complete historical archive. Ongoing incremental updates use recent Yahoo Finance JPY=X daily closes and do not redownload the archive.",
-    file: "data/fx.csv",
-    type: "fx",
-    column: "USDJPY",
+      "Official series FXERD04 is the USD/JPY spot rate at 17:00 JST in the Tokyo market. The pre-1998 archive is retained; BOJ observations take priority from 1998 onward.",
+    file: "data/usd-jpy.csv",
+    type: "single",
     dailyLagDays: 4,
+    sourceReleaseBusinessDays: 1,
+    sourceReleaseTime: "10:00",
+    sourceReleaseTimeZone: "Asia/Tokyo",
   },
   {
     key: "BOJ_POLICY_RATE",
@@ -487,6 +529,9 @@ const indicatorDefinitions = [
     file: "data/japan-overnight-call-rate.csv",
     type: "single",
     dailyLagDays: 4,
+    sourceReleaseBusinessDays: 1,
+    sourceReleaseTime: "10:00",
+    sourceReleaseTimeZone: "Asia/Tokyo",
   },
   {
     key: "JAPAN_CORE_CPI_YOY",
@@ -545,9 +590,8 @@ const indicatorDefinitions = [
     sourceUrls: [{ label: "FRED DGS2", url: "https://fred.stlouisfed.org/series/DGS2" }],
     frequency: "Daily",
     unit: "Percent",
-    file: "data/fx.csv",
-    type: "fx",
-    column: "US_2Y_Yield",
+    file: "data/us-2-year-treasury-yield.csv",
+    type: "single",
     dailyLagDays: 5,
     sourceReleaseBusinessDays: 1,
     sourceReleaseTime: "16:15",
@@ -567,10 +611,12 @@ const indicatorDefinitions = [
     ],
     frequency: "Daily, Japan business days",
     unit: "Percent",
-    file: "data/fx.csv",
-    type: "fx",
-    column: "Japan_2Y_Yield",
+    file: "data/japan-2-year-jgb-yield.csv",
+    type: "single",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 1,
+    sourceReleaseTime: "10:00",
+    sourceReleaseTimeZone: "Asia/Tokyo",
   },
   {
     key: "US_JAPAN_2Y_SPREAD",
@@ -592,6 +638,9 @@ const indicatorDefinitions = [
     type: "fx",
     column: "US_Japan_2Y_Spread",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 1,
+    sourceReleaseTime: "16:15",
+    sourceReleaseTimeZone: "America/New_York",
   },
   {
     key: "JAPAN_10Y_JGB",
@@ -610,6 +659,9 @@ const indicatorDefinitions = [
     file: "data/japan-10-year-jgb-yield.csv",
     type: "single",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 1,
+    sourceReleaseTime: "10:00",
+    sourceReleaseTimeZone: "Asia/Tokyo",
   },
   {
     key: "JAPAN_10Y_2Y_SPREAD",
@@ -629,6 +681,9 @@ const indicatorDefinitions = [
     file: "data/japan-10y-minus-2y-spread.csv",
     type: "single",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 1,
+    sourceReleaseTime: "10:00",
+    sourceReleaseTimeZone: "Asia/Tokyo",
   },
   {
     key: "NIKKEI_225",
@@ -642,6 +697,9 @@ const indicatorDefinitions = [
     file: "data/nikkei-225.csv",
     type: "single",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 0,
+    sourceReleaseTime: "16:00",
+    sourceReleaseTimeZone: "Asia/Tokyo",
   },
   {
     key: "TOPIX",
@@ -660,6 +718,9 @@ const indicatorDefinitions = [
     file: "data/topix.csv",
     type: "single",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 0,
+    sourceReleaseTime: "18:00",
+    sourceReleaseTimeZone: "Asia/Tokyo",
   },
   {
     key: "JAPAN_FOREIGN_NET_BUYING",
@@ -690,6 +751,9 @@ const indicatorDefinitions = [
     file: "data/taiex.csv",
     type: "single",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 0,
+    sourceReleaseTime: "18:00",
+    sourceReleaseTimeZone: "Asia/Tokyo",
   },
   {
     key: "TAIWAN_FOREIGN_NET_BUYING",
@@ -708,6 +772,9 @@ const indicatorDefinitions = [
     file: "data/taiwan-foreign-investor-net-buying.csv",
     type: "single",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 0,
+    sourceReleaseTime: "18:00",
+    sourceReleaseTimeZone: "Asia/Tokyo",
   },
   {
     key: "TAIWAN_ELECTRONICS_EXPORTS_YOY",
@@ -731,18 +798,22 @@ const indicatorDefinitions = [
     key: "USDTWD",
     displayName: "USD/TWD Exchange Rate",
     shortName: "USD/TWD",
-    sourceName: "Yahoo Finance",
-    sourceUrl: "https://finance.yahoo.com/quote/TWD%3DX/",
+    sourceName: "Central Bank of the Republic of China (Taiwan)",
+    sourceUrl: "https://data.gov.tw/dataset/7232",
     sourceUrls: [
-      { label: "Yahoo Finance TWD=X", url: "https://finance.yahoo.com/quote/TWD%3DX/" },
+      { label: "Taiwan central bank daily exchange rates", url: "https://data.gov.tw/dataset/7232" },
+      { label: "Official OpenData API", url: "https://cpx.cbc.gov.tw/api/OpenData/FTDOpenData_Day" },
     ],
     frequency: "Daily forex trading days",
     unit: "TWD per USD",
     releaseNote:
-      "Definition: 1 USD = X TWD. The existing CSV retains its complete historical archive. Ongoing incremental updates use recent Yahoo Finance TWD=X completed daily closes; values outside 10–100 are rejected.",
+      "Definition: 1 USD = X TWD. The existing pre-2008 archive is retained; official daily interbank closing rates take priority from 2008 onward.",
     file: "data/usdtwd.csv",
     type: "single",
     dailyLagDays: 4,
+    sourceReleaseBusinessDays: 0,
+    sourceReleaseTime: "18:00",
+    sourceReleaseTimeZone: "Asia/Tokyo",
   },
   {
     key: "TAIWAN_MARGIN_FINANCING_BALANCE_YOY",
@@ -762,6 +833,9 @@ const indicatorDefinitions = [
     file: "data/taiwan-margin-financing-balance-yoy.csv",
     type: "single",
     dailyLagDays: 5,
+    sourceReleaseBusinessDays: 0,
+    sourceReleaseTime: "18:00",
+    sourceReleaseTimeZone: "Asia/Tokyo",
   },
 ];
 
@@ -1036,75 +1110,70 @@ function readPythonVersion() {
 
 function calculateStatus(
   definition,
-  latestAvailableDate,
-  updateResult,
-  previousSuccessfulRefresh,
+  dashboardLatestDate,
+  sourceAvailableDate,
+  sourceAvailableCheckedAt,
+  sourceCheckStatus,
   finishedAt,
 ) {
   if (definition.statusOverride) {
     return definition.statusOverride;
   }
 
-  if (updateResult?.status === "failed") {
+  if (!dashboardLatestDate) {
     return "Failed";
   }
 
-  if (updateResult?.status === "source_lag") {
-    return "Source lag";
-  }
-
-  if (!latestAvailableDate) {
+  if (sourceAvailableDate && dashboardLatestDate < sourceAvailableDate) {
     return "Failed";
-  }
-
-  if (updateResult?.status === "success") {
-    return "Up to date";
   }
 
   const todayText = finishedAt.slice(0, 10);
-  const nextExpectedUpdate = calculateNextExpectedUpdate(definition, latestAvailableDate);
+  const nextExpectedUpdate = calculateNextExpectedUpdate(definition, dashboardLatestDate);
   if (nextExpectedUpdate) {
     const expectedSourceUpdate = calculateExpectedSourceUpdate(
       definition,
       nextExpectedUpdate,
     );
-    const successfulRefreshAt =
-      updateResult?.status === "success" ? finishedAt : previousSuccessfulRefresh || "";
 
     if (expectedSourceUpdate) {
       if (Date.parse(finishedAt) < Date.parse(expectedSourceUpdate)) {
         return "Up to date";
       }
 
-      if (!successfulRefreshAt || Date.parse(successfulRefreshAt) < Date.parse(expectedSourceUpdate)) {
-        return "Update not run";
+      if (
+        sourceAvailableCheckedAt &&
+        Date.parse(sourceAvailableCheckedAt) >= Date.parse(expectedSourceUpdate)
+      ) {
+        return "Up to date";
       }
 
-      return "Up to date";
+      return sourceCheckStatus === "failed" ? "Failed" : "Update not run";
     }
 
-    const successfulRefreshDate = successfulRefreshAt.slice(0, 10);
+    const sourceAvailableCheckedDate = sourceAvailableCheckedAt?.slice(0, 10) || "";
 
     if (nextExpectedUpdate >= todayText) {
       return "Up to date";
     }
 
-    if (!successfulRefreshDate || successfulRefreshDate < nextExpectedUpdate) {
-      return "Update not run";
+    if (
+      sourceAvailableCheckedDate &&
+      sourceAvailableCheckedDate >= nextExpectedUpdate
+    ) {
+      return "Up to date";
     }
 
-    return "Up to date";
+    return sourceCheckStatus === "failed" ? "Failed" : "Update not run";
   }
 
-  const lagDays = dateDiffDays(latestAvailableDate, todayText);
+  const lagDays = dateDiffDays(dashboardLatestDate, todayText);
   const fallbackLagDays = definition.dailyLagDays ?? definition.expectedReleaseDelayDays ?? 5;
   if (lagDays <= fallbackLagDays) {
     return "Up to date";
   }
 
-  return previousSuccessfulRefresh?.slice(0, 10) === todayText
-    ? "Up to date"
-    : "Update not run";
+  return sourceCheckStatus === "failed" ? "Failed" : "Update not run";
 }
 
 function buildMetadata() {
@@ -1135,24 +1204,6 @@ function buildMetadata() {
       errorMessage = error.message;
     }
 
-    const dataAdvancedWithoutCurrentResult =
-      !updateResult &&
-      latestAvailableDate &&
-      previousIndicator?.source_available_date &&
-      latestAvailableDate > previousIndicator.source_available_date;
-    if (dataAdvancedWithoutCurrentResult) {
-      errorMessage = null;
-    }
-    const status =
-      !updateResult && previousIndicator?.status === "Failed" && !dataAdvancedWithoutCurrentResult
-        ? "Failed"
-        : calculateStatus(
-            definition,
-            latestAvailableDate,
-            updateResult,
-            previousIndicator?.last_successful_refresh,
-            finishedAt,
-          );
     const nextExpectedUpdate = calculateNextExpectedUpdate(definition, latestAvailableDate);
     const expectedSourceUpdate = calculateExpectedSourceUpdate(
       definition,
@@ -1160,23 +1211,44 @@ function buildMetadata() {
     );
     let lastSuccessfulRefresh = previousIndicator?.last_successful_refresh || null;
     let sourceCheckedAt = previousIndicator?.source_checked_at || null;
+    let sourceCheckStatus = previousIndicator?.source_check_status || null;
     let sourceAvailableDate =
       previousIndicator?.source_available_date ||
       previousIndicator?.dashboard_latest_date ||
       previousIndicator?.latest_available_date ||
       null;
-    if (updateResult?.status === "success") {
-      lastSuccessfulRefresh = finishedAt;
-      sourceAvailableDate = latestAvailableDate;
-    } else if (dataAdvancedWithoutCurrentResult) {
-      sourceAvailableDate = latestAvailableDate;
-    } else if (!lastSuccessfulRefresh && status !== "Failed") {
-      lastSuccessfulRefresh = finishedAt;
-      sourceAvailableDate = latestAvailableDate;
+    let sourceAvailableCheckedAt =
+      previousIndicator?.source_available_checked_at ||
+      previousIndicator?.last_successful_refresh ||
+      null;
+    if (!sourceCheckStatus && sourceAvailableCheckedAt) {
+      sourceCheckStatus = "success";
     }
-    if (updateResult?.source_checked_at) {
-      sourceCheckedAt = updateResult.source_checked_at;
+
+    if (["success", "source_lag"].includes(updateResult?.status)) {
+      const successfulCheckAt = updateResult?.source_checked_at || finishedAt;
+      lastSuccessfulRefresh =
+        updateResult?.last_successful_refresh || successfulCheckAt;
+      sourceCheckedAt = successfulCheckAt;
+      sourceCheckStatus = "success";
+      sourceAvailableDate = latestAvailableDate;
+      sourceAvailableCheckedAt = successfulCheckAt;
+      errorMessage = null;
+    } else if (updateResult?.status) {
+      sourceCheckStatus = updateResult.status;
+      if (updateResult?.source_checked_at) {
+        sourceCheckedAt = updateResult.source_checked_at;
+      }
     }
+
+    const status = calculateStatus(
+      definition,
+      latestAvailableDate,
+      sourceAvailableDate,
+      sourceAvailableCheckedAt,
+      sourceCheckStatus,
+      finishedAt,
+    );
 
     indicators[definition.key] = {
       display_name: definition.displayName,
@@ -1196,6 +1268,9 @@ function buildMetadata() {
       expected_source_update_display: formatJstDisplay(expectedSourceUpdate),
       source_checked_at: sourceCheckedAt,
       source_checked_display: formatJstDisplay(sourceCheckedAt),
+      source_check_status: sourceCheckStatus,
+      source_available_checked_at: sourceAvailableCheckedAt,
+      source_available_checked_display: formatJstDisplay(sourceAvailableCheckedAt),
       last_successful_refresh: lastSuccessfulRefresh,
       last_successful_refresh_display: formatJstDisplay(lastSuccessfulRefresh),
       frequency: definition.frequency,

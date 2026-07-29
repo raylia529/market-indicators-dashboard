@@ -236,8 +236,7 @@ const usRatesIndicators = [
   {
     id: "us-2y-yield",
     name: "US 2Y Yield",
-    file: "data/fx.csv",
-    column: "US_2Y_Yield",
+    file: "data/us-2-year-treasury-yield.csv",
     unitLabel: "Percent",
     valueSuffix: "%",
     category: "rate",
@@ -322,8 +321,7 @@ const jpRatesIndicators = [
   {
     id: "japan-2y-jgb-yield",
     name: "Japan 2-Year JGB Yield",
-    file: "data/fx.csv",
-    column: "Japan_2Y_Yield",
+    file: "data/japan-2-year-jgb-yield.csv",
     unitLabel: "Percent",
     valueSuffix: "%",
     category: "rate",
@@ -429,8 +427,7 @@ const japanIndicators = [
   {
     id: "japan-tab-usdjpy",
     name: "USD/JPY",
-    file: "data/fx.csv",
-    column: "USDJPY",
+    file: "data/usd-jpy.csv",
     unitLabel: "JPY per USD",
     valueSuffix: "",
     category: "currency",
@@ -4510,10 +4507,36 @@ function renderStatusBadge(status) {
   return `<span class="data-status-badge ${className}">${escapeHtml(status || "Unknown")}</span>`;
 }
 
+function summarizeStatusError(message) {
+  if (!message) {
+    return "";
+  }
+
+  if (/timed out|timeout/i.test(message)) {
+    return "Source check timed out. Existing data was retained.";
+  }
+
+  if (/circuit breaker|deferred/i.test(message)) {
+    return "Source check was deferred to the next scheduled run.";
+  }
+
+  if (/\b429\b|rate limit/i.test(message)) {
+    return "Source rate limit reached. The next check will run later.";
+  }
+
+  if (/connection|ECONNRESET|ENOTFOUND|EAI_AGAIN|fetch failed|TLS/i.test(message)) {
+    return "Could not connect to the source. Existing data was retained.";
+  }
+
+  return "Source update failed. Existing data was retained.";
+}
+
 function renderStatusExpandedDetails(indicator) {
   const sourceAvailableDate = indicator.source_available_date || "--";
   const sourceCheckedAt =
-    indicator.source_checked_display || indicator.last_successful_refresh_display || "--";
+    indicator.source_available_checked_display ||
+    indicator.last_successful_refresh_display ||
+    "--";
   const sourceDueDate =
     indicator.expected_source_update_date ||
     indicator.expected_source_update_display?.slice(0, 10);
@@ -4557,8 +4580,9 @@ function renderDataStatus(metadata) {
         const releaseNote = indicator.release_note
           ? `<p class="formula-text">${escapeHtml(indicator.release_note)}</p>`
           : "";
-        const errorDetails = indicator.error_message
-          ? `<p class="formula-text"><strong>Error:</strong> ${escapeHtml(indicator.error_message)}</p>`
+        const errorSummary = summarizeStatusError(indicator.error_message);
+        const errorDetails = errorSummary
+          ? `<p class="formula-text"><strong>Last check:</strong> ${escapeHtml(errorSummary)}</p>`
           : "";
         const details = expanded
           ? `

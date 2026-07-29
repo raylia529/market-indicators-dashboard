@@ -12,7 +12,7 @@ const sources = {
 const files = {
   tenYear: path.join("data", "japan-10-year-jgb-yield.csv"),
   spread: path.join("data", "japan-10y-minus-2y-spread.csv"),
-  fx: path.join("data", "fx.csv"),
+  twoYear: path.join("data", "japan-2-year-jgb-yield.csv"),
 };
 
 function download(url, timeoutMs = downloadTimeoutMs) {
@@ -137,26 +137,6 @@ function loadSingleCsv(file) {
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
-function loadJapan2yFromFx() {
-  const [headerLine, ...lines] = fs.readFileSync(files.fx, "utf8").trim().split(/\r?\n/);
-  const headers = splitCsvLine(headerLine);
-  const dateIndex = headers.indexOf("date");
-  const valueIndex = headers.indexOf("Japan_2Y_Yield");
-
-  if (dateIndex < 0 || valueIndex < 0) {
-    throw new Error("data/fx.csv is missing Japan_2Y_Yield.");
-  }
-
-  return lines
-    .map((line) => {
-      const columns = splitCsvLine(line);
-      const value = Number(columns[valueIndex]);
-      return { date: columns[dateIndex], value };
-    })
-    .filter((row) => row.date && Number.isFinite(row.value))
-    .sort((a, b) => a.date.localeCompare(b.date));
-}
-
 function mergeRows(existingRows, nextRows) {
   const byDate = new Map(existingRows.map((row) => [row.date, row.value]));
   for (const row of nextRows) {
@@ -232,7 +212,7 @@ async function main() {
   validateRows(tenYearRows, "Japan 10-Year JGB Yield", existingTenYear);
   atomicWriteCsv(files.tenYear, tenYearRows, "Japan 10-Year JGB Yield", 4);
 
-  const japan2yRows = loadJapan2yFromFx();
+  const japan2yRows = loadSingleCsv(files.twoYear);
   const spreadRows = mergeRows(existingSpread, buildSpreadRows(japan2yRows, tenYearRows));
   validateRows(spreadRows, "Japan 10Y-2Y JGB Yield Spread", existingSpread);
   atomicWriteCsv(files.spread, spreadRows, "Japan 10Y-2Y JGB Yield Spread", 4);
