@@ -122,7 +122,7 @@ All dashboard data is stored in `data/`.
 | 10Y-2Y Spread | `data/us-10y-minus-2y-spread.csv` | FRED `T10Y2Y` | 1976-06-01 | Daily/business daily |
 | Margin Debt YoY | `data/finra-margin-debt-yoy.csv` | FINRA Margin Statistics Excel, calculated YoY from debit balances | 1998-01-31 | Monthly |
 | US 10Y Yield | `data/us-10-year-treasury-yield.csv` | FRED `DGS10` | 1962-01-02 | Daily/business daily |
-| Fed Funds Rate | `data/fed-funds-rate.csv` | FRED `DFEDTAR` through 2008-12-15, then `DFEDTARU` | 1982-09-27 | Daily as-of values; changed by FOMC decisions |
+| Fed Funds Rate | `data/fed-funds-rate.csv`; next-meeting expectation in `data/fedwatch-expected-rate.json` | FRED `DFEDTAR` through 2008-12-15, then `DFEDTARU`; CME FedWatch Historical Download | 1982-09-27 | Official rate changes with FOMC decisions; CME expectation checked daily |
 | MOVE Index | `data/move.csv` | Yahoo Finance `^MOVE` | 2002-11-12 | Daily/business daily |
 | US 10-Year Treasury Term Premium | `data/us-10y-term-premium.csv` | New York Fed ACM Term Premium, `ACM Daily` sheet, `ACMTP10` column | 1961-06-14 | Daily/business daily |
 | Fed Balance Sheet | `data/fed-balance-sheet.csv` | FRED `WALCL` | 2002-12-18 | Weekly |

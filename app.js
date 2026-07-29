@@ -922,6 +922,7 @@ document.querySelectorAll(".mobile-view-switch").forEach((switchElement) => {
 });
 
 let indicatorData = new Map();
+let fedWatchExpectation = null;
 const sharedIndicatorColorStorageKey = "marketIndicatorColorsV3";
 const sharedIndicatorColorDefaults = new Map([
   ...[
@@ -1640,6 +1641,32 @@ function renderIndicatorChange(rows, indicator) {
         `<span class="change-period ${change.direction} ${label === "Last change" ? "policy-change" : ""}"><b>${label}</b><span class="change-value">${change.text}</span></span>`,
     )
     .join("")}</small>`;
+}
+
+function renderCardChange(rows, indicator) {
+  if (indicator.id !== "fed-funds-rate") {
+    return renderIndicatorChange(rows, indicator);
+  }
+
+  const expectedRate = Number(fedWatchExpectation?.expected_target_upper_rate);
+  const meetingDate = fedWatchExpectation?.meeting_date;
+  if (!Number.isFinite(expectedRate) || !meetingDate) {
+    return "";
+  }
+
+  const meeting = new Date(`${meetingDate}T12:00:00Z`);
+  const meetingLabel = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(meeting);
+
+  return `
+    <small class="indicator-change fedwatch-expectation" title="Next FOMC expectation from CME FedWatch">
+      <strong class="fedwatch-rate">${expectedRate.toFixed(2)}%</strong>
+      <span class="fedwatch-meeting">CME Implied · ${meetingLabel}</span>
+    </small>
+  `;
 }
 
 function escapeHtml(value) {
@@ -3921,7 +3948,7 @@ function createComparisonSection(config) {
               ${indicator.descriptor ? `<span class="indicator-label-detail">${indicator.descriptor}</span>` : ""}
             </div>
             <strong>${latest ? formatValue(latest.value, indicator) : "--"}</strong>
-            ${renderIndicatorChange(rows, indicator)}
+            ${renderCardChange(rows, indicator)}
             ${latest ? "" : `<small class="indicator-date">${state.loaded ? "Unavailable" : "Loading"}</small>`}
             ${renderColorPalette({
               activeColor: getIndicatorColor(indicator.id),
@@ -4455,18 +4482,36 @@ function validateMacroScale() {
 }
 
 async function loadIndicatorData() {
-  const datasets = await Promise.all(
-    indicators.map(async (indicator) => {
-      try {
-        return [indicator.id, parseIndicatorRows(await fetchLocalText(indicator.file), indicator)];
-      } catch (error) {
-        console.warn(`${indicator.name} unavailable:`, error);
-        return [indicator.id, []];
-      }
-    }),
-  );
+  const [datasets] = await Promise.all([
+    Promise.all(
+      indicators.map(async (indicator) => {
+        try {
+          return [indicator.id, parseIndicatorRows(await fetchLocalText(indicator.file), indicator)];
+        } catch (error) {
+          console.warn(`${indicator.name} unavailable:`, error);
+          return [indicator.id, []];
+        }
+      }),
+    ),
+    loadFedWatchExpectation(),
+  ]);
 
   indicatorData = new Map(datasets);
+}
+
+async function loadFedWatchExpectation() {
+  try {
+    const response = await fetch(`data/fedwatch-expected-rate.json?updated=${Date.now()}`, {
+      cache: "no-store",
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    fedWatchExpectation = await response.json();
+  } catch (error) {
+    fedWatchExpectation = null;
+    console.warn("CME FedWatch expectation unavailable:", error);
+  }
 }
 
 async function loadFxData() {

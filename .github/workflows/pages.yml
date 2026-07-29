@@ -250,6 +250,7 @@ jobs:
           }
 
           run_us_market() {
+            run_update "CME FedWatch expectation" "node scripts/update-cme-fedwatch.mjs" "CME_FEDWATCH_EXPECTED_RATE" "once" "us" "cme-fedwatch"
             run_update "MOVE Index" "node scripts/update-extra-indicators.mjs --only=move" "MOVE" "daily" "us" "yahoo"
             run_update "Alpaca ETF ratios" "node scripts/update-alpaca-indicators.mjs --only=ratios" "HYG_IEF,RSP_SPY,SPY_TLT,XLY_XLP,IWM_SPY,SMH_SPY" "daily" "us" "alpaca"
             run_update "CBOE SKEW Index" "node scripts/update-extra-indicators.mjs --only=skew" "SKEW" "daily" "us" "cboe"
@@ -327,6 +328,7 @@ jobs:
             run_update "S&P 500" "node scripts/update-sp500.mjs" "SP500" "force" "full"
             run_update "HY OAS" "node scripts/update-hy-oas.mjs" "BAMLH0A0HYM2" "force" "full"
             run_update "FRED macro series" "node scripts/update-fred-series.mjs" "VIXCLS,T10Y2Y,DGS10,WALCL,NFCI,DFEDTARU" "force" "full"
+            run_update "CME FedWatch expectation" "node scripts/update-cme-fedwatch.mjs --force" "CME_FEDWATCH_EXPECTED_RATE" "force" "full"
             run_update "Extra market indicators" "node scripts/update-extra-indicators.mjs --only=move,skew,tsmc,ism-pmi" "MOVE,SKEW,TSMC_REVENUE_YOY,ISM_MANUFACTURING_PMI" "force" "full"
             run_update "Alpaca market indicators" "node scripts/update-alpaca-indicators.mjs" "HYG_IEF,RSP_SPY,SPY_TLT,XLY_XLP,IWM_SPY,SMH_SPY,NEW_HIGH_LOW_BREADTH,SP500_ABOVE_200DMA" "force" "full" "alpaca" "900"
             run_update "FX series" "node scripts/update-fx.mjs --profile=full" "DEXJPUS,DGS2,JAPAN_2Y_JGB,US_JAPAN_2Y_SPREAD" "force" "full"
@@ -360,6 +362,7 @@ jobs:
           node --check scripts/update-sp500.mjs
           node --check scripts/update-hy-oas.mjs
           node --check scripts/update-fred-series.mjs
+          node --check scripts/update-cme-fedwatch.mjs
           node --check scripts/update-extra-indicators.mjs
           node --check scripts/update-alpaca-indicators.mjs
           node --check scripts/update-fx.mjs

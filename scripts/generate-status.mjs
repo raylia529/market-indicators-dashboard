@@ -91,6 +91,10 @@ const indicatorDefinitions = [
         url: "https://fred.stlouisfed.org/series/DFEDTARU",
       },
       {
+        label: "CME FedWatch",
+        url: "https://www.cmegroup.com/fedwatch",
+      },
+      {
         label: "Federal Reserve FOMC calendar",
         url: "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
       },
@@ -98,7 +102,7 @@ const indicatorDefinitions = [
     frequency: "Policy decisions, normally eight scheduled FOMC meetings per year",
     unit: "Percent, target range upper limit",
     releaseNote:
-      "The chart uses the discontinued DFEDTAR target rate through 2008-12-15 and DFEDTARU thereafter. Daily as-of observations are drawn as a step line, while card change is measured against the previous distinct policy setting. The next expected update follows the scheduled FOMC decision date; unscheduled decisions can occur earlier.",
+      "The chart uses the discontinued DFEDTAR target rate through 2008-12-15 and DFEDTARU thereafter. Daily as-of observations are drawn as a step line. The card also shows CME FedWatch's probability-weighted expected upper limit for the next FOMC target range. The next official update follows the scheduled FOMC decision date; unscheduled decisions can occur earlier.",
     scheduledUpdateDates: [
       "2026-07-29",
       "2026-09-16",
@@ -1218,6 +1222,14 @@ function buildMetadata() {
   const previousMetadata = loadPreviousMetadata();
   const hasUpdateResults = Object.keys(updateResults).length > 0;
   const indicators = {};
+  let fedWatchExpectation = null;
+  try {
+    fedWatchExpectation = JSON.parse(
+      fs.readFileSync(path.join("data", "fedwatch-expected-rate.json"), "utf8"),
+    );
+  } catch {
+    fedWatchExpectation = null;
+  }
 
   for (const definition of indicatorDefinitions) {
     const updateResult = updateResults[definition.key] || updateResults[definition.file] || null;
@@ -1307,6 +1319,15 @@ function buildMetadata() {
       error_message: errorMessage,
       formula: definition.formula || null,
       release_note: definition.releaseNote || null,
+      ...(definition.key === "DFEDTARU" && fedWatchExpectation
+        ? {
+            expected_policy_rate: fedWatchExpectation.expected_target_upper_rate,
+            expected_policy_rate_basis: fedWatchExpectation.method,
+            expected_policy_rate_observation_date: fedWatchExpectation.observation_date,
+            expected_policy_rate_meeting_date: fedWatchExpectation.meeting_date,
+            expected_policy_rate_source_checked_at: fedWatchExpectation.source_checked_at,
+          }
+        : {}),
     };
   }
 

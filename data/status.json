@@ -149,6 +149,10 @@
           "url": "https://fred.stlouisfed.org/series/DFEDTARU"
         },
         {
+          "label": "CME FedWatch",
+          "url": "https://www.cmegroup.com/fedwatch"
+        },
+        {
           "label": "Federal Reserve FOMC calendar",
           "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
         }
@@ -173,7 +177,12 @@
       "status": "Up to date",
       "error_message": null,
       "formula": null,
-      "release_note": "The chart uses the discontinued DFEDTAR target rate through 2008-12-15 and DFEDTARU thereafter. Daily as-of observations are drawn as a step line, while card change is measured against the previous distinct policy setting. The next expected update follows the scheduled FOMC decision date; unscheduled decisions can occur earlier."
+      "release_note": "The chart uses the discontinued DFEDTAR target rate through 2008-12-15 and DFEDTARU thereafter. Daily as-of observations are drawn as a step line. The card also shows CME FedWatch's probability-weighted expected upper limit for the next FOMC target range. The next official update follows the scheduled FOMC decision date; unscheduled decisions can occur earlier.",
+      "expected_policy_rate": 3.8275,
+      "expected_policy_rate_basis": "Probability-weighted target-range upper limit",
+      "expected_policy_rate_observation_date": "2026-07-28",
+      "expected_policy_rate_meeting_date": "2026-07-29",
+      "expected_policy_rate_source_checked_at": "2026-07-29T10:06:03.564Z"
     },
     "DGS10": {
       "display_name": "US 10-Year Treasury Yield",

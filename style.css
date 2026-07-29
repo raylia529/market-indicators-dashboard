@@ -503,6 +503,32 @@ h2 {
   white-space: nowrap;
 }
 
+.fedwatch-expectation {
+  display: grid;
+  justify-items: start;
+  row-gap: 0;
+  color: var(--text);
+}
+
+.metric-card .fedwatch-rate {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.05;
+  white-space: nowrap;
+}
+
+.fedwatch-meeting {
+  color: var(--muted);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .metric-card .fedwatch-rate {
+    font-size: 1.15rem;
+  }
+}
+
 .change-period b {
   font-weight: 900;
 }
