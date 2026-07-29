@@ -948,11 +948,35 @@ let activeFxRange = "3M";
 let visibleFxSeries = new Set(["USDJPY", "US_Japan_2Y_Spread"]);
 let glossaryEntries = [];
 let glossarySearchText = "";
-let activeGlossaryLanguage = "zh";
+let activeGlossaryLanguage = getGlossaryLanguageFromUrl();
 let expandedGlossaryId = null;
 let dataStatusMetadata = null;
 let expandedStatusKey = null;
 const localTextRequests = new Map();
+
+function getGlossaryLanguageFromUrl() {
+  const languageAliases = {
+    us: "en",
+    jp: "ja",
+    tw: "zh",
+    en: "en",
+    ja: "ja",
+    zh: "zh",
+  };
+  const requestedLanguage = new URLSearchParams(window.location.search).get("lang");
+  return languageAliases[requestedLanguage?.toLowerCase()] || "zh";
+}
+
+function updateGlossaryLanguageUrl(language) {
+  const publicLanguageCodes = {
+    en: "us",
+    ja: "jp",
+    zh: "tw",
+  };
+  const url = new URL(window.location.href);
+  url.searchParams.set("lang", publicLanguageCodes[language] || "tw");
+  window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+}
 
 function consumeLongPressClick(element) {
   if (element.dataset.longPressActivated !== "true") {
@@ -5238,6 +5262,7 @@ if (dataStatusBody) {
 glossaryLanguageButtons.forEach((button) => {
   button.addEventListener("click", () => {
     activeGlossaryLanguage = button.dataset.glossaryGlobalLanguage;
+    updateGlossaryLanguageUrl(activeGlossaryLanguage);
     renderGlossary({ indicators: glossaryEntries });
   });
 });

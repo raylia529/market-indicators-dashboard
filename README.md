@@ -113,6 +113,9 @@ Caching strategy:
 
 All dashboard data is stored in `data/`.
 
+Glossary language can be shared in the URL with `?lang=us` for English,
+`?lang=jp` for Japanese, or `?lang=tw` for Traditional Chinese.
+
 | Indicator | Local file | Source | Earliest observation | Frequency |
 | --- | --- | --- | --- | --- |
 | S&P 500 | `data/sp500.csv` | Full-history CSV archive plus FRED `SP500` latest data | 1950-01-03 | Daily |
