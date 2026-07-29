@@ -38,6 +38,8 @@ TAIEX_FILE = DATA_DIR / "taiex.csv"
 
 JPX_ARCHIVE = "https://www.jpx.co.jp/english/markets/statistics-equities/investor-type/"
 JPX_MONTHLY = "https://www.jpx.co.jp/english/markets/statistics-equities/monthly/"
+JPX_CURRENT_INDICES = "https://www.jpx.co.jp/market/indices/e_indices_stock_price3.txt"
+JPX_CURRENT_INDICES_TIME = "https://www.jpx.co.jp/market/indices/e_indices_stock_price3.time.txt"
 TWSE_FOREIGN = "https://www.twse.com.tw/rwd/en/fund/BFI82U"
 TWSE_MARGIN = "https://www.twse.com.tw/exchangeReport/MI_MARGN"
 TAIWAN_EXPORTS = (
@@ -130,29 +132,20 @@ def print_validation(label: str, rows: list[dict[str, float | str]], source: str
     print("Duplicate dates: 0")
 
 
-def parse_topix_page(html: str) -> tuple[list[dict[str, float | str]], int]:
-    item_pattern = re.compile(
-        r'\\"date\\":\\"(\d{4}/\d{1,2}/\d{1,2})\\".*?'
-        r'\\"closePrice\\":\\"([\d,.]+)\\"'
-    )
-    rows = []
-    for raw_date, raw_close in item_pattern.findall(html):
-        parsed_date = datetime.strptime(raw_date, "%Y/%m/%d").date().isoformat()
-        rows.append({"date": parsed_date, "value": float(raw_close.replace(",", ""))})
-    page_counts = [int(value) for value in re.findall(r'\\"totalPage\\":(\d+)', html)]
-    return rows, max(page_counts, default=1)
+def fetch_current_topix() -> list[dict[str, float | str]]:
+    update_text = str(fetch(JPX_CURRENT_INDICES_TIME)).strip()
+    if not re.fullmatch(r"\d{12}", update_text):
+        raise ValueError("JPX current-index update time is invalid")
+    update_time = datetime.strptime(update_text, "%Y%m%d%H%M")
+    if update_time.time() < datetime.strptime("15:30", "%H:%M").time():
+        raise ValueError(f"JPX TOPIX value is still intraday at {update_time:%H:%M}")
 
-
-def topix_url(year: int, page: int) -> str:
-    query = urlencode(
-        {
-            "from": f"{year}0101",
-            "to": f"{year}1231",
-            "timeFrame": "d",
-            "page": page,
-        }
-    )
-    return f"https://finance.yahoo.co.jp/quote/998405.T/history?{query}"
+    payload = json.loads(str(fetch(JPX_CURRENT_INDICES)))
+    raw_value = payload.get("MainStockIndex", {}).get("Topix", {}).get("currentPrice")
+    value = float(str(raw_value or "").replace(",", ""))
+    if value <= 0:
+        raise ValueError("JPX current-index file has no valid TOPIX value")
+    return [{"date": update_time.date().isoformat(), "value": value}]
 
 
 def parse_jpx_topix_pdf(body: bytes, year: int, month: int) -> list[dict[str, float | str]]:
@@ -220,20 +213,13 @@ def update_topix() -> None:
             except Exception as error:
                 print(f"WARNING: JPX TOPIX PDF skipped: {link}: {error}")
 
-    recent_rows: list[dict[str, float | str]] = []
-    try:
-        current_year = date.today().year
-        recent_html = str(fetch(topix_url(current_year, 1)))
-        recent_rows, _ = parse_topix_page(recent_html)
-    except Exception as error:
-        print(f"WARNING: Yahoo Japan recent TOPIX gap fill unavailable: {error}")
-
-    merged = merge_rows(existing, official_rows, recent_rows)
+    current_rows = fetch_current_topix()
+    merged = merge_rows(existing, official_rows, current_rows)
     atomic_write(TOPIX_FILE, merged, "TOPIX", 2)
     print_validation(
         "TOPIX",
         merged,
-        "JPX monthly statistics daily closes, with Yahoo Japan recent daily gap fill when available",
+        "JPX monthly statistics daily closes and JPX official current-index file",
     )
 
 

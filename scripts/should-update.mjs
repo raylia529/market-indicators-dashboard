@@ -143,6 +143,8 @@ for (const key of keys) {
 
   if (
     indicator.status === "Up to date" &&
+    indicator.latest_available_date &&
+    indicator.latest_available_date >= targetDate &&
     lastRefreshTargetDate === targetDate &&
     expectedSourceReleaseSatisfied
   ) {

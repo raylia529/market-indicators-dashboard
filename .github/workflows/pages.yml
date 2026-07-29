@@ -160,18 +160,6 @@ jobs:
               fi
             fi
 
-            if [ "${source_group}" = "yahoo" ]; then
-              node scripts/source-cooldown.mjs check yahoo
-              cooldown_code=$?
-              if [ "${cooldown_code}" -eq 4 ]; then
-                echo "::notice::${name} skipped because Yahoo is paused after an HTTP 429 earlier today (JST)."
-                return
-              fi
-              if [ "${cooldown_code}" -ne 0 ]; then
-                echo "::warning::Could not read Yahoo cooldown state; continuing with one request."
-              fi
-            fi
-
             state_prefix=""
             if [ -n "${source_group}" ]; then
               state_prefix="$(source_state_prefix "${source_group}")"
@@ -219,20 +207,12 @@ jobs:
                 fi
               fi
 
-              if [ "${source_group}" = "yahoo" ] && printf '%s' "${output}" | grep -Eiq 'HTTP (429)|HTTP Error (429)|\(429\)|status code 429'; then
-                node scripts/source-cooldown.mjs set yahoo "HTTP 429"
-                echo "::warning::Yahoo requests are paused for the remainder of the current JST date."
-              fi
-
               echo "::warning::${name} failed; keeping existing committed data and deferring another attempt to the next schedule."
               record_update_result "${keys}" "failed" "${output}"
               failures=1
             else
               if [ -n "${state_prefix}" ]; then
                 rm -f "${state_prefix}.count" "${state_prefix}.open"
-              fi
-              if [ "${source_group}" = "yahoo" ]; then
-                node scripts/source-cooldown.mjs clear yahoo
               fi
               record_update_result "${keys}" "success" ""
             fi
@@ -251,7 +231,7 @@ jobs:
 
           run_us_market() {
             run_update "CME FedWatch expectation" "node scripts/update-cme-fedwatch.mjs" "CME_FEDWATCH_EXPECTED_RATE" "once" "us" "cme-fedwatch"
-            run_update "MOVE Index" "node scripts/update-extra-indicators.mjs --only=move" "MOVE" "daily" "us" "yahoo"
+            run_update "MOVE Index" "node scripts/update-extra-indicators.mjs --only=move" "MOVE" "daily" "us" "google-finance"
             run_update "Alpaca ETF ratios" "node scripts/update-alpaca-indicators.mjs --only=ratios" "HYG_IEF,RSP_SPY,SPY_TLT,XLY_XLP,IWM_SPY,SMH_SPY" "daily" "us" "alpaca"
             run_update "CBOE SKEW Index" "node scripts/update-extra-indicators.mjs --only=skew" "SKEW" "daily" "us" "cboe"
           }
@@ -276,11 +256,11 @@ jobs:
             run_update "Japan overnight call rate" "node scripts/update-boj-overnight-rate.mjs" "BOJ_OVERNIGHT_CALL_RATE" "daily" "asia" "boj"
             run_update "Japan 2Y and spread" "node scripts/update-fx.mjs --profile=asia --only=japan2y" "JAPAN_2Y_JGB,US_JAPAN_2Y_SPREAD" "daily" "asia" "japan-mof"
             run_update "Japan 10Y rates" "node scripts/update-japan-rates.mjs" "JAPAN_10Y_JGB,JAPAN_10Y_2Y_SPREAD" "daily" "asia" "japan-mof"
-            run_update "Nikkei 225" "node scripts/update-regional-markets.mjs --only=nikkei" "NIKKEI_225" "daily" "asia" "yahoo"
+            run_update "Nikkei 225" "node scripts/update-regional-markets.mjs --only=nikkei" "NIKKEI_225" "daily" "asia" "nikkei-official"
             run_update "TOPIX" "python scripts/update-regional-official.py --only=topix" "TOPIX" "daily" "asia" "jpx"
             run_update "Taiwan foreign net buying" "python scripts/update-regional-official.py --only=taiwan-foreign" "TAIWAN_FOREIGN_NET_BUYING" "daily" "asia" "twse"
             run_update "Taiwan margin financing YoY" "python scripts/update-regional-official.py --only=taiwan-margin" "TAIWAN_MARGIN_FINANCING_BALANCE_YOY" "daily" "asia" "twse"
-            run_update "TAIEX" "node scripts/update-regional-markets.mjs --only=taiex" "TAIEX" "daily" "asia" "yahoo"
+            run_update "TAIEX" "node scripts/update-regional-markets.mjs --only=taiex" "TAIEX" "daily" "asia" "twse"
             run_update "USD/TWD" "node scripts/update-regional-markets.mjs --only=usdtwd" "USDTWD" "daily" "asia" "taiwan-cbc"
           }
 
@@ -373,7 +353,6 @@ jobs:
           node --check scripts/update-japan-cpi.mjs
           node --check scripts/update-regional-markets.mjs
           node --check scripts/should-update.mjs
-          node --check scripts/source-cooldown.mjs
           node --check scheduler/worker.mjs
           node -e 'JSON.parse(require("fs").readFileSync("scheduler/wrangler.jsonc", "utf8"))'
           python -B -m py_compile scripts/update-regional-official.py

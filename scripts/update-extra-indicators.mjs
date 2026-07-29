@@ -168,76 +168,81 @@ function loadSingleCsv(file) {
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
-function parseYahooChart(text, label, { adjusted = false } = {}) {
-  const payload = JSON.parse(text);
-  const result = payload?.chart?.result?.[0];
-  const error = payload?.chart?.error;
+function parseGoogleFinanceRows(text, label) {
+  const priceMatch = text.match(/\bdata-last-price="([^"]+)"/);
+  const timestampMatch = text.match(/\bdata-last-normal-market-timestamp="(\d+)"/);
+  const embeddedQuoteMatch = text.match(
+    /\["MOVE","INDEXNYSEGIS"\],"Merrill Lynch Option Volatility Estimate",1,null,\[(-?\d+(?:\.\d+)?),[^\]]*\],null,[\s\S]*?"America\/New_York",-?\d+,"\/g\/[^"]+",null,null,\[(\d+)\]/,
+  );
+  const value = Number(priceMatch?.[1] || embeddedQuoteMatch?.[1]);
+  const timestamp = Number(timestampMatch?.[1] || embeddedQuoteMatch?.[2]);
 
-  if (error) {
-    throw new Error(`${label} Yahoo error: ${error.description || error.code}`);
+  if (
+    !text.includes("MOVE:INDEXNYSEGIS") ||
+    !Number.isFinite(value) ||
+    value <= 0 ||
+    !Number.isFinite(timestamp)
+  ) {
+    throw new Error(`Unexpected Google Finance response for ${label}.`);
   }
 
-  const timestamps = result?.timestamp;
-  const closes = result?.indicators?.quote?.[0]?.close;
-  const adjustedCloses = result?.indicators?.adjclose?.[0]?.adjclose;
-
-  if (!Array.isArray(timestamps) || !Array.isArray(closes)) {
-    throw new Error(`Unexpected Yahoo response for ${label}.`);
-  }
-
-  if (adjusted && !Array.isArray(adjustedCloses)) {
-    throw new Error(`Yahoo adjusted-close data is unavailable for ${label}.`);
-  }
-
-  const timeZone = result.meta?.exchangeTimezoneName || "UTC";
-  const formatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone,
+  const date = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/New_York",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  });
+  }).format(new Date(timestamp * 1000));
 
-  return timestamps
-    .map((timestamp, index) => ({
-      date: formatter.format(new Date(timestamp * 1000)),
-      value: Number(adjusted ? adjustedCloses[index] : closes[index]),
-    }))
-    .filter((row) => row.date && Number.isFinite(row.value) && row.value !== 0)
-    .sort((a, b) => a.date.localeCompare(b.date));
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw new Error(`Google Finance returned an invalid market date for ${label}.`);
+  }
+
+  const rowsByDate = new Map();
+  const chartRowPattern =
+    /\[(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),"(20\d{2}-\d{2}-\d{2})T[^"]+",0\]/g;
+  let chartMatch;
+  while ((chartMatch = chartRowPattern.exec(text))) {
+    const chartValue = Number(chartMatch[2]);
+    if (Number.isFinite(chartValue) && chartValue > 0) {
+      rowsByDate.set(chartMatch[5], chartValue);
+    }
+  }
+
+  rowsByDate.set(date, value);
+  return Array.from(rowsByDate, ([rowDate, rowValue]) => ({
+    date: rowDate,
+    value: rowValue,
+  })).sort((left, right) => left.date.localeCompare(right.date));
 }
 
-async function downloadYahooChart(symbol, label, { period1 = 0, range = null } = {}) {
-  const period2 = Math.floor(Date.now() / 1000) + 86400;
-  const windowQuery = range
-    ? `range=${encodeURIComponent(range)}`
-    : `period1=${period1}&period2=${period2}`;
-  const chartPath = `/v8/finance/chart/${encodeURIComponent(
-    symbol,
-  )}?${windowQuery}&interval=1d&events=history`;
+async function updateGoogleFinanceMove() {
+  const label = "MOVE Index";
+  const file = files.move;
+  const existingRows = loadSingleCsv(file);
+  if (existingRows.length === 0) {
+    throw new Error("MOVE historical archive is required before incremental Google Finance updates.");
+  }
+
+  const url = "https://www.google.com/finance/quote/MOVE:INDEXNYSEGIS?hl=en";
   const headers = {
-    Accept: "application/json",
+    Accept: "text/html",
+    "Accept-Language": "en-US,en;q=0.9",
     "User-Agent":
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/126 Safari/537.36",
   };
-  return downloadWithRetry(`https://query1.finance.yahoo.com${chartPath}`, headers);
-}
-
-async function updateYahooIndex({ symbol, label, file, decimals = 2 }) {
-  const existingRows = loadSingleCsv(file);
-  const latestDate = existingRows.at(-1)?.date;
-  const downloadedRows = parseYahooChart(
-    await downloadYahooChart(symbol, label, latestDate ? { range: "5d" } : { period1: 0 }),
+  const downloadedRows = parseGoogleFinanceRows(
+    await downloadWithRetry(url, headers),
     label,
   );
   const rows = mergeRowsByDate(existingRows, downloadedRows);
-  atomicWriteCsv(file, rows, label, decimals);
+  atomicWriteCsv(file, rows, label, 2);
   console.log(`${label} validation`);
-  console.log(`Source: Yahoo Finance ${symbol}`);
+  console.log("Source: Google Finance MOVE:INDEXNYSEGIS");
   console.log(`Earliest date: ${rows[0].date}`);
   console.log(`Latest date: ${rows.at(-1).date}`);
   console.log(`Valid observations: ${rows.length}`);
-  console.log(`Downloaded observations: ${downloadedRows.length}`);
-  console.log(`Request mode: ${latestDate ? "latest 5 days" : "full bootstrap"}`);
+  console.log(`Recent observations parsed from one page: ${downloadedRows.length}`);
+  console.log("Request mode: one latest-quote page; existing historical archive preserved");
 }
 
 const prNewswireUserAgent =
@@ -527,7 +532,7 @@ async function main() {
     {
       key: "move",
       label: "MOVE Index",
-      update: () => updateYahooIndex({ symbol: "^MOVE", label: "MOVE Index", file: files.move }),
+      update: updateGoogleFinanceMove,
     },
     { key: "skew", label: "CBOE SKEW Index", update: updateSkew },
     { key: "tsmc", label: "TSMC Revenue YoY", update: updateTsmcRevenueYoy },

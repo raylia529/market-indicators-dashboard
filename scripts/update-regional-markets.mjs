@@ -6,6 +6,8 @@ const userAgent = "market-indicators-dashboard/1.0 raylia529";
 const downloadTimeoutMs = 20_000;
 const retryBackoffMs = [];
 const sources = {
+  nikkei225:
+    "https://indexes.nikkei.co.jp/nkave/historical/nikkei_stock_average_daily_en.csv",
   usdTwdCbc: "https://cpx.cbc.gov.tw/api/OpenData/FTDOpenData_Day",
 };
 const files = {
@@ -154,47 +156,78 @@ function atomicWriteCsv(file, rows, label, decimals = 2, options = {}) {
   fs.renameSync(tempFile, file);
 }
 
-function parseYahooChart(text, label) {
+function parseNikkei225(text) {
+  return text
+    .split(/\r?\n/)
+    .slice(1)
+    .map((line) => {
+      const [rawDate, rawClose] = splitCsvLine(line);
+      return {
+        date: /^\d{4}\/\d{2}\/\d{2}$/.test(rawDate) ? rawDate.replaceAll("/", "-") : "",
+        value: Number(rawClose),
+      };
+    })
+    .filter(
+      (row) =>
+        /^\d{4}-\d{2}-\d{2}$/.test(row.date) &&
+        Number.isFinite(row.value) &&
+        row.value > 0,
+    )
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function parseTaiex(text) {
   const payload = JSON.parse(text);
-  const result = payload?.chart?.result?.[0];
-  const error = payload?.chart?.error;
+  const entries = Array.isArray(payload)
+    ? payload.map((entry) => [
+        entry?.Date,
+        entry?.OpeningIndex,
+        entry?.HighestIndex,
+        entry?.LowestIndex,
+        entry?.ClosingIndex,
+      ])
+    : payload?.stat === "OK" && Array.isArray(payload.data)
+      ? payload.data
+      : null;
 
-  if (error) {
-    throw new Error(`${label} Yahoo error: ${error.description || error.code}`);
+  if (!entries) {
+    throw new Error("Unexpected TWSE TAIEX response.");
   }
 
-  const timestamps = result?.timestamp;
-  const closes = result?.indicators?.quote?.[0]?.close;
+  return entries
+    .map((entry) => {
+      const rawDate = String(entry?.[0] || "").trim();
+      const compactDate = rawDate.replaceAll("/", "");
+      const isGregorianDate = /^\d{8}$/.test(compactDate);
+      const rocYear = Number(compactDate.slice(0, 3));
+      return {
+        date: isGregorianDate
+          ? `${compactDate.slice(0, 4)}-${compactDate.slice(4, 6)}-${compactDate.slice(6, 8)}`
+          : /^\d{7}$/.test(compactDate) && Number.isFinite(rocYear)
+            ? `${rocYear + 1911}-${compactDate.slice(3, 5)}-${compactDate.slice(5, 7)}`
+            : "",
+        value: Number(String(entry?.[4] || "").replaceAll(",", "")),
+      };
+    })
+    .filter(
+      (row) =>
+        /^\d{4}-\d{2}-\d{2}$/.test(row.date) &&
+        Number.isFinite(row.value) &&
+        row.value > 0,
+    )
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
 
-  if (!Array.isArray(timestamps) || !Array.isArray(closes)) {
-    throw new Error(`Unexpected Yahoo response for ${label}.`);
-  }
-
-  const timeZone = result.meta?.exchangeTimezoneName || "UTC";
-  const regularMarketTime = result.meta?.regularMarketTime;
-  const regularMarketEnd = result.meta?.currentTradingPeriod?.regular?.end;
-  const marketIsOpen = Number.isFinite(regularMarketEnd) && Date.now() / 1000 < regularMarketEnd;
-  const formatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone,
+function taiexOfficialUrl() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Taipei",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  });
-
-  return timestamps
-    .map((timestamp, index) => ({
-      date: formatter.format(new Date(timestamp * 1000)),
-      timestamp,
-      value: Number(closes[index]),
-    }))
-    .filter(
-      (row) =>
-        row.date &&
-        Number.isFinite(row.value) &&
-        row.value !== 0 &&
-        !(marketIsOpen && row.timestamp === regularMarketTime),
-    )
-    .sort((a, b) => a.date.localeCompare(b.date));
+  }).formatToParts(new Date());
+  const dateParts = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+  const date = `${dateParts.year}${dateParts.month}${dateParts.day}`;
+  return `https://www.twse.com.tw/rwd/en/TAIEX/MI_5MINS_HIST?date=${date}&response=json`;
 }
 
 function parseCbcUsdTwd(text) {
@@ -224,24 +257,19 @@ function parseCbcUsdTwd(text) {
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
-async function updateYahooSeries({ symbol, label, file, decimals = 2 }) {
+async function updateOfficialSeries({ url, parse, label, file, source, decimals = 2 }) {
   const existingRows = loadSingleCsv(file);
-  const latestDate = existingRows.at(-1)?.date;
-  const windowQuery = latestDate ? "range=5d" : "period1=0";
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(
-    symbol,
-  )}?${windowQuery}&interval=1d&events=history`;
-  const downloadedRows = parseYahooChart(await download(url, { "User-Agent": "Mozilla/5.0" }), label);
+  const downloadedRows = parse(await download(url, { Accept: "text/csv,application/json" }));
   const rows = mergeRows(existingRows, downloadedRows);
   validateRows(rows, label, existingRows);
   atomicWriteCsv(file, rows, label, decimals);
   console.log(`${label} validation`);
-  console.log(`Source: Yahoo Finance ${symbol}`);
+  console.log(`Source: ${source}`);
   console.log(`Earliest date: ${rows[0].date}`);
   console.log(`Latest date: ${rows.at(-1).date}`);
   console.log(`Valid observations: ${rows.length}`);
-  console.log(`Downloaded observations: ${downloadedRows.length}`);
-  console.log(`Request mode: ${latestDate ? "latest 5 days" : "full bootstrap"}`);
+  console.log(`Official observations downloaded: ${downloadedRows.length}`);
+  console.log("Merge priority: existing archive < official observations");
 }
 
 async function updateUsdTwd() {
@@ -270,11 +298,25 @@ async function main() {
   const updateDefinitions = [
     {
       key: "nikkei",
-      update: () => updateYahooSeries({ symbol: "^N225", label: "Nikkei 225", file: files.nikkei225 }),
+      update: () =>
+        updateOfficialSeries({
+          url: sources.nikkei225,
+          parse: parseNikkei225,
+          label: "Nikkei 225",
+          file: files.nikkei225,
+          source: "Nikkei Indexes official daily CSV",
+        }),
     },
     {
       key: "taiex",
-      update: () => updateYahooSeries({ symbol: "^TWII", label: "TAIEX", file: files.taiex }),
+      update: () =>
+        updateOfficialSeries({
+          url: taiexOfficialUrl(),
+          parse: parseTaiex,
+          label: "TAIEX",
+          file: files.taiex,
+          source: "Taiwan Stock Exchange official historical report",
+        }),
     },
     {
       key: "usdtwd",

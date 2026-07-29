@@ -41,6 +41,8 @@ async function dispatchWorkflow(profile, token) {
     const details = (await response.text()).slice(0, 500);
     throw new Error(`GitHub workflow dispatch failed with HTTP ${response.status}: ${details}`);
   }
+
+  console.log(`Dispatched GitHub workflow profile: ${profile}`);
 }
 
 export default {
@@ -51,6 +53,7 @@ export default {
       throw new Error(`No update profile is configured for cron ${controller.cron}.`);
     }
 
+    console.log(`Scheduled event received: ${controller.cron}; profiles: ${profiles.join(", ")}`);
     context.waitUntil(Promise.all(profiles.map((profile) => dispatchWorkflow(profile, env.GITHUB_ACTIONS_TOKEN))));
   },
 };
