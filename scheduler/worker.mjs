@@ -3,7 +3,7 @@ const workflowDispatchUrl =
 
 const scheduleProfiles = new Map([
   ["15 23 * * MON-FRI", ["combined", "breadth"]],
-  ["15 3 * * TUE-SAT", ["us"]],
+  ["15 1 * * TUE-SAT", ["us"]],
   ["15 9 * * MON-FRI", ["asia"]],
   ["15 11 * * MON-FRI", ["asia-retry"]],
   ["15 13 * * MON-FRI", ["combined"]],

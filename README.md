@@ -31,14 +31,13 @@ https://raylia529.github.io/market-indicators-dashboard/
 The repository includes `.github/workflows/pages.yml`, which:
 
 - deploys the current static dashboard when changes are pushed to `main`;
-- uses Cloudflare as the primary clock for combined checks at 08:15 and 22:15 JST, U.S. checks at 12:15 JST, and Japan/Taiwan checks at 18:15 and 20:15 JST;
-- keeps native GitHub Actions combined backups at 09:37 JST Tuesday through Saturday and 21:37 JST Monday through Friday;
+- uses Cloudflare as the clock for combined checks at 08:15 and 22:15 JST, U.S. checks at 10:15 JST, and Japan/Taiwan checks at 18:15 and 20:15 JST;
 - uses a combined U.S./Asia profile at 18:15, while the remaining times run only their assigned region;
 - includes weekly, monthly, and quarterly data only after its expected release date has arrived;
 - treats Japan MOF JGB yields as next-business-day releases, so the 08:15 check does not request a reference date that is not scheduled for publication until 09:30;
 - skips an indicator only after its source has been checked for the relevant publication cycle. A check made before the source's expected release time does not suppress the first later schedule after that release;
 - uses source-aware expected release dates for slow data, so a successful download of unchanged official data does not permanently suppress later overdue retries;
-- dispatches the isolated S&P 500 Breadth job alongside the 08:15 Cloudflare trigger, with one native GitHub backup at 09:47 JST, Tuesday through Saturday;
+- dispatches the isolated S&P 500 Breadth job alongside the 08:15 Cloudflare trigger, Tuesday through Saturday;
 - can be run manually from the GitHub Actions tab for `full`, `us`, `us-fast`, `us-market`, `us-slow`, `asia`, `breadth`, or `alpaca` with `workflow_dispatch`;
 - deploys `index.html`, `style.css`, `app.js`, PWA assets, icons, and `data/` to Pages.
 
@@ -246,12 +245,12 @@ The Worker dispatches the existing workflow at these primary times:
 | Profile | JST | UTC cron |
 | --- | --- | --- |
 | US + prior pending Asia; Breadth | 08:15 Tue-Sat | `15 23 * * MON-FRI` |
-| US | 12:15 Tue-Sat | `15 3 * * TUE-SAT` |
+| US | 10:15 Tue-Sat | `15 1 * * TUE-SAT` |
 | Asia | 18:15 Mon-Fri | `15 9 * * MON-FRI` |
 | Asia retry | 20:15 Mon-Fri | `15 11 * * MON-FRI` |
 | US + Asia pending | 22:15 Mon-Fri | `15 13 * * MON-FRI` |
 
-Native GitHub schedules remain enabled only as fallbacks: combined at 09:37 JST Tuesday through Saturday and 21:37 JST Monday through Friday, plus an isolated Breadth backup at 09:47 JST Tuesday through Saturday. Duplicate dispatches do not duplicate provider downloads because `scripts/should-update.mjs` skips indicators already complete for the current market cycle.
+Native GitHub schedules are disabled. Cloudflare owns all recurring schedule triggers, while GitHub Actions still performs each requested update and deployment. `scripts/should-update.mjs` skips indicators already complete for the current market cycle.
 
 To deploy the external scheduler:
 
@@ -363,7 +362,7 @@ Japan 10-Year JGB Yield - Japan 2-Year JGB Yield
 - Breadth contains the canonical S&P 500, RSP/SPY, New High / New Low, and % Above 200DMA.
 - RSP/SPY uses matching split-adjusted Alpaca IEX daily closes and is updated with the regular U.S. market group.
 - The two constituent-based indicators use the current S&P 500 list published by the `datasets/s-and-p-500-companies` GitHub dataset and Alpaca IEX daily bars.
-- Breadth remains an isolated workflow profile, but Cloudflare dispatches it alongside the 08:15 JST combined check after each U.S. trading day, Tuesday through Saturday. A native GitHub backup runs at 09:47 JST and skips Alpaca when the first run has already produced the target observation.
+- Breadth remains an isolated workflow profile, and Cloudflare dispatches it alongside the 08:15 JST combined check after each U.S. trading day, Tuesday through Saturday.
 - The updater requests a rolling window sufficient for 200-day averages and 252-trading-day highs/lows, calculates aggregate series in memory, and saves only the derived CSVs. Raw constituent bars are not committed or deployed.
 - At least 95% of the current constituent list must have valid history before a new aggregate observation is accepted. Existing published Breadth history remains intact when coverage is insufficient.
 - `New High / New Low` is `(new 252-trading-day highs - new 252-trading-day lows) / valid constituents * 100`.

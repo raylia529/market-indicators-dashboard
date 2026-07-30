@@ -4,13 +4,6 @@ on:
   push:
     branches:
       - main
-  schedule:
-    # 09:37 JST Tue-Sat: combined backup for the Cloudflare morning checks.
-    - cron: "37 0 * * 2-6"
-    # 09:47 JST Tue-Sat: isolated Breadth backup.
-    - cron: "47 0 * * 2-6"
-    # 21:37 JST Mon-Fri: combined backup for the Cloudflare evening checks.
-    - cron: "37 12 * * 1-5"
   workflow_dispatch:
     inputs:
       update_profile:
@@ -72,15 +65,6 @@ jobs:
         if: github.event_name != 'push'
         run: |
           profile="${{ inputs.update_profile || 'full' }}"
-
-          if [ "${{ github.event_name }}" = "schedule" ]; then
-            case "${{ github.event.schedule }}" in
-              "37 0 * * 2-6") profile=combined ;;
-              "47 0 * * 2-6") profile=breadth ;;
-              "37 12 * * 1-5") profile=combined ;;
-              *) profile=full ;;
-            esac
-          fi
 
           echo "UPDATE_PROFILE=${profile}" >> "${GITHUB_ENV}"
           echo "Selected ${profile} update group."
