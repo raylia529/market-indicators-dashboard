@@ -1,14 +1,13 @@
 import fs from "node:fs";
 import https from "node:https";
 import path from "node:path";
+import { fetchFredObservations } from "./fred-api.mjs";
 
 const downloadTimeoutMs = 60_000;
 const defaultRetryBackoffMs = [];
-const fredRetryBackoffMs = [];
 
 const archiveUrl =
   "https://raw.githubusercontent.com/csaladenes/eco-archive/refs/heads/main/BAMLH0A0HYM2.csv";
-const fredUrl = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2";
 const outputFile = path.join("data", "hy_oas.csv");
 const seriesColumn = "BAMLH0A0HYM2";
 const recentOverlapDays = 90;
@@ -239,10 +238,10 @@ async function main() {
 
   try {
     const startDate = recentStartDate(existingHyOas);
-    const incrementalUrl = startDate ? `${fredUrl}&cosd=${startDate}` : fredUrl;
-    const fredText = await downloadWithRetry(incrementalUrl, fredRetryBackoffMs);
-    fredRows = parseCsv(fredText, ["observation_date", "DATE"]);
-    console.log(`FRED request: ${startDate ? `incremental window from ${startDate}` : "full bootstrap"}`);
+    fredRows = await fetchFredObservations(seriesColumn, { observationStart: startDate });
+    console.log(
+      `FRED API request: ${startDate ? `incremental window from ${startDate}` : "full bootstrap"}`,
+    );
   } catch (error) {
     fredDownloadError = error;
     console.warn(`WARNING: FRED rolling download/parse failed. ${error.message}`);

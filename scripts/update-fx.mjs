@@ -1,16 +1,14 @@
 import fs from "node:fs";
 import https from "node:https";
 import path from "node:path";
+import { fetchFredObservations } from "./fred-api.mjs";
 
 const downloadTimeoutMs = 20_000;
-const fredDownloadTimeoutMs = 60_000;
 const defaultRetryBackoffMs = [];
-const fredRetryBackoffMs = [];
 
 const sources = {
   usdJpyBojBase:
     "https://www.stat-search.boj.or.jp/api/v1/getDataCode?format=json&lang=en&db=FM08&code=FXERD04",
-  us2y: "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2",
   japan2yHistorical:
     "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/historical/jgbcme_all.csv",
   japan2yCurrent:
@@ -201,31 +199,6 @@ function toIsoDate(dateText) {
     .padStart(2, "0")}`;
 }
 
-function parseFred(text, seriesId) {
-  const lines = text.trim().split(/\r?\n/);
-  const headers = splitCsvLine(lines[0]);
-  const dateIndex = headers.indexOf("observation_date");
-  const valueIndex = headers.indexOf(seriesId);
-
-  if (dateIndex < 0 || valueIndex < 0) {
-    throw new Error(`Unexpected ${seriesId} header: ${headers.join(",")}`);
-  }
-
-  return lines
-    .slice(1)
-    .map((line) => {
-      const columns = splitCsvLine(line);
-      const date = toIsoDate(columns[dateIndex] || "");
-      const rawValue = columns[valueIndex] || "";
-      const value = Number(rawValue);
-      return { date, rawValue, value };
-    })
-    .filter(
-      (row) =>
-        row.date && row.rawValue !== "" && row.rawValue !== "." && Number.isFinite(row.value),
-    );
-}
-
 function parseMofJapan2y(text) {
   const lines = text.trim().split(/\r?\n/);
   const headerIndex = lines.findIndex((line) => {
@@ -306,18 +279,18 @@ function atomicWriteSingleSeries(file, rows, label) {
   fs.renameSync(tempFile, file);
 }
 
-function incrementalFredUrl(baseUrl, existingRows, requiredEarliestDate = null) {
+function recentStartDate(existingRows, requiredEarliestDate = null) {
   const latestDate = existingRows.at(-1)?.date;
   if (
     !latestDate ||
     (requiredEarliestDate && existingRows[0]?.date > requiredEarliestDate)
   ) {
-    return baseUrl;
+    return null;
   }
 
   const startDate = new Date(`${latestDate}T00:00:00Z`);
   startDate.setUTCDate(startDate.getUTCDate() - recentOverlapDays);
-  return `${baseUrl}&cosd=${startDate.toISOString().slice(0, 10)}`;
+  return startDate.toISOString().slice(0, 10);
 }
 
 function loadExisting() {
@@ -484,15 +457,9 @@ async function main() {
 
   if (requestedSources.has("us2y")) {
     try {
-      us2yRows = parseFred(
-        await downloadWithRetry(
-          incrementalFredUrl(sources.us2y, existingUs2y),
-          {},
-          fredRetryBackoffMs,
-          fredDownloadTimeoutMs,
-        ),
-        "DGS2",
-      );
+      us2yRows = await fetchFredObservations("DGS2", {
+        observationStart: recentStartDate(existingUs2y),
+      });
       us2ySourceSucceeded = true;
     } catch (error) {
       warnings.push(`WARNING: US 2Y download/parse failed. ${error.message}`);

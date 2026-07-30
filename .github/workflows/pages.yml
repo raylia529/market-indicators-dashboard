@@ -90,6 +90,7 @@ jobs:
         env:
           ALPACA_API_KEY_ID: ${{ secrets.ALPACA_API_KEY_ID }}
           ALPACA_API_SECRET_KEY: ${{ secrets.ALPACA_API_SECRET_KEY }}
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
         run: |
           set +e
           failures=0
@@ -339,6 +340,7 @@ jobs:
           node --check scripts/generate-consolidated.mjs
           node --check scripts/generate-status.mjs
           node --check scripts/audit-data-status.mjs
+          node --check scripts/fred-api.mjs
           node --check scripts/update-sp500.mjs
           node --check scripts/update-hy-oas.mjs
           node --check scripts/update-fred-series.mjs

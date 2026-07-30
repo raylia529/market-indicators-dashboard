@@ -1,9 +1,7 @@
 import fs from "node:fs";
-import https from "node:https";
 import path from "node:path";
+import { fetchFredObservations } from "./fred-api.mjs";
 
-const downloadTimeoutMs = 60_000;
-const fredRetryBackoffMs = [];
 const recentOverlapDays = 90;
 
 const series = [
@@ -52,65 +50,6 @@ const requestedSeries = seriesArg
         .filter(Boolean),
     )
   : null;
-
-function download(url, timeoutMs = downloadTimeoutMs) {
-  return new Promise((resolve, reject) => {
-    const request = https.get(url, (response) => {
-        if (
-          response.statusCode >= 300 &&
-          response.statusCode < 400 &&
-          response.headers.location
-        ) {
-          response.resume();
-          download(response.headers.location, timeoutMs).then(resolve, reject);
-          return;
-        }
-
-        if (response.statusCode !== 200) {
-          response.resume();
-          reject(new Error(`Download failed: ${url} (${response.statusCode})`));
-          return;
-        }
-
-        let body = "";
-        response.setEncoding("utf8");
-        response.on("data", (chunk) => {
-          body += chunk;
-        });
-        response.on("end", () => resolve(body));
-      });
-
-    request.setTimeout(timeoutMs, () => {
-      request.destroy(new Error(`Download timed out after ${timeoutMs / 1000}s: ${url}`));
-    });
-    request.on("error", reject);
-  });
-}
-
-function wait(ms) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
-
-async function downloadWithRetry(url, backoffMs = fredRetryBackoffMs) {
-  let lastError;
-  for (let attempt = 0; attempt <= backoffMs.length; attempt += 1) {
-    try {
-      return await download(url);
-    } catch (error) {
-      lastError = error;
-      if (attempt < backoffMs.length) {
-        const delayMs = backoffMs[attempt];
-        console.warn(
-          `FRED download failed (${error.message}); retry ${attempt + 1}/${backoffMs.length} in ${delayMs / 1000}s.`,
-        );
-        await wait(delayMs);
-      }
-    }
-  }
-  throw lastError;
-}
 
 function parseFredCsv(text, seriesId) {
   const lines = text.trim().split(/\r?\n/);
@@ -191,16 +130,12 @@ function validate(rows, label) {
 async function updateSeries(item) {
   const existingRows = readExisting(item);
   const startDate = recentStartDate(existingRows);
-  const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${item.id}${
-    startDate ? `&cosd=${startDate}` : ""
-  }`;
-  const text = await downloadWithRetry(url);
-  let downloadedRows = parseFredCsv(text, item.id);
+  let downloadedRows = await fetchFredObservations(item.id, {
+    observationStart: startDate,
+  });
 
   if (existingRows.length === 0 && item.legacyId) {
-    const legacyUrl = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${item.legacyId}`;
-    const legacyText = await downloadWithRetry(legacyUrl);
-    const legacyRows = parseFredCsv(legacyText, item.legacyId);
+    const legacyRows = await fetchFredObservations(item.legacyId);
     downloadedRows = mergeRows(legacyRows, downloadedRows);
   }
 

@@ -1,14 +1,13 @@
 import fs from "node:fs";
 import https from "node:https";
 import path from "node:path";
+import { fetchFredObservations } from "./fred-api.mjs";
 
 const downloadTimeoutMs = 60_000;
 const defaultRetryBackoffMs = [];
-const fredRetryBackoffMs = [];
 
 const archiveUrl =
   "https://raw.githubusercontent.com/vijinho/sp500/refs/heads/master/csv/sp500.csv";
-const latestUrl = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500";
 const outputFile = path.join("data", "sp500.csv");
 const recentOverlapDays = 90;
 
@@ -237,10 +236,10 @@ async function main() {
 
   try {
     const startDate = recentStartDate(existingRows);
-    const incrementalUrl = startDate ? `${latestUrl}&cosd=${startDate}` : latestUrl;
-    const latestText = await downloadWithRetry(incrementalUrl, fredRetryBackoffMs);
-    latestRows = parseRows(latestText, "observation_date", "SP500");
-    latestSource = startDate ? `FRED SP500 incremental window from ${startDate}` : "FRED SP500 full bootstrap";
+    latestRows = await fetchFredObservations("SP500", { observationStart: startDate });
+    latestSource = startDate
+      ? `FRED API SP500 incremental window from ${startDate}`
+      : "FRED API SP500 full bootstrap";
   } catch (error) {
     latestDownloadError = error;
     latestSource = "not updated; preserved existing/latest archive rows";
