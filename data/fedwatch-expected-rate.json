@@ -1,21 +1,25 @@
 {
-  "meeting_date": "2026-07-29",
+  "meeting_date": "2026-09-16",
   "observation_date": "2026-07-28",
-  "expected_target_upper_rate": 3.8275,
-  "expected_target_midpoint_rate": 3.7025,
-  "probability_sum": 1,
+  "expected_target_upper_rate": 3.9905,
+  "expected_target_midpoint_rate": 3.8655,
+  "probability_sum": 0.999999,
   "probabilities": [
     {
       "target_range": "3.50-3.75",
-      "probability": 0.69
+      "probability": 0.240021
     },
     {
       "target_range": "3.75-4.00",
-      "probability": 0.31
+      "probability": 0.557815
+    },
+    {
+      "target_range": "4.00-4.25",
+      "probability": 0.202164
     }
   ],
   "source_name": "CME FedWatch",
   "source_url": "https://www.cmegroup.com/fedwatch",
   "method": "Probability-weighted target-range upper limit",
-  "source_checked_at": "2026-07-29T17:01:23.462Z"
+  "source_checked_at": "2026-07-30T01:08:51.626Z"
 }

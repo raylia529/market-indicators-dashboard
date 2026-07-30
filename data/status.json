@@ -3,8 +3,8 @@
   "last_dashboard_refresh_display": "2026-07-30 09:58 JST",
   "update_duration_seconds": 3,
   "dashboard_version": "1.0.0",
-  "last_git_commit": "66092ab",
-  "python_version": "Python 3.12.13",
+  "last_git_commit": "2bb3bae",
+  "python_version": "Python 3.13.3",
   "indicators": {
     "SP500": {
       "display_name": "S&P 500 Index",
@@ -178,11 +178,11 @@
       "error_message": null,
       "formula": null,
       "release_note": "The chart uses the discontinued DFEDTAR target rate through 2008-12-15 and DFEDTARU thereafter. Daily as-of observations are drawn as a step line. The card also shows CME FedWatch's probability-weighted expected upper limit for the next FOMC target range. The next official update follows the scheduled FOMC decision date; unscheduled decisions can occur earlier.",
-      "expected_policy_rate": 3.8275,
+      "expected_policy_rate": 3.9905,
       "expected_policy_rate_basis": "Probability-weighted target-range upper limit",
       "expected_policy_rate_observation_date": "2026-07-28",
-      "expected_policy_rate_meeting_date": "2026-07-29",
-      "expected_policy_rate_source_checked_at": "2026-07-29T17:01:23.462Z"
+      "expected_policy_rate_meeting_date": "2026-09-16",
+      "expected_policy_rate_source_checked_at": "2026-07-30T01:08:51.626Z"
     },
     "DGS10": {
       "display_name": "US 10-Year Treasury Yield",
@@ -1023,7 +1023,7 @@
       "last_successful_refresh_display": "2026-07-29 09:50 JST",
       "frequency": "Daily, Japan business days",
       "unit": "Percent",
-      "status": "Up to date",
+      "status": "Update not run",
       "error_message": null,
       "formula": null,
       "release_note": null
@@ -1093,7 +1093,7 @@
       "last_successful_refresh_display": "2026-07-29 09:50 JST",
       "frequency": "Daily, Japan business days",
       "unit": "Percent",
-      "status": "Up to date",
+      "status": "Update not run",
       "error_message": null,
       "formula": null,
       "release_note": null
@@ -1126,7 +1126,7 @@
       "last_successful_refresh_display": "2026-07-29 09:50 JST",
       "frequency": "Daily, Japan business days",
       "unit": "Percentage Points",
-      "status": "Up to date",
+      "status": "Update not run",
       "error_message": null,
       "formula": "Japan 10-Year JGB Yield - Japan 2-Year JGB Yield",
       "release_note": null

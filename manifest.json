@@ -1,7 +1,7 @@
 {
   "name": "Market Indicators Dashboard",
   "short_name": "Markets",
-  "description": "A CSV-driven market indicators dashboard for Macro and FX charts.",
+  "description": "A CSV-driven market indicators dashboard for U.S., Japan, Taiwan, and FX charts.",
   "start_url": "/market-indicators-dashboard/",
   "scope": "/market-indicators-dashboard/",
   "display": "standalone",

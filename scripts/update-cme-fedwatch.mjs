@@ -7,6 +7,7 @@ const publicSourceUrl = "https://www.cmegroup.com/fedwatch";
 const outputFile = path.join("data", "fedwatch-expected-rate.json");
 const force = process.argv.includes("--force");
 const timeoutMs = 60_000;
+const fomcDecisionMinuteChicago = 13 * 60;
 const monthNumbers = new Map(
   ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map(
     (month, index) => [month, index + 1],
@@ -30,6 +31,26 @@ function chicagoDate(date = new Date()) {
     month: "2-digit",
     day: "2-digit",
   }).format(date);
+}
+
+function chicagoMinuteOfDay(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Chicago",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  })
+    .formatToParts(date)
+    .reduce((result, part) => ({ ...result, [part.type]: part.value }), {});
+  return Number(parts.hour) * 60 + Number(parts.minute);
+}
+
+function meetingIsUpcoming(meetingDate, date = new Date()) {
+  const today = chicagoDate(date);
+  return (
+    meetingDate > today ||
+    (meetingDate === today && chicagoMinuteOfDay(date) < fomcDecisionMinuteChicago)
+  );
 }
 
 function loadPrevious() {
@@ -174,7 +195,12 @@ function atomicWriteJson(file, data) {
 }
 
 const previous = loadPrevious();
-if (!force && previous?.source_checked_at && jstDate(new Date(previous.source_checked_at)) === jstDate()) {
+if (
+  !force &&
+  previous?.source_checked_at &&
+  jstDate(new Date(previous.source_checked_at)) === jstDate() &&
+  meetingIsUpcoming(previous.meeting_date)
+) {
   console.log(`CME FedWatch already checked today (${jstDate()}); keeping ${previous.observation_date}.`);
   process.exit(0);
 }
@@ -186,7 +212,7 @@ sessionUrl.pathname = sessionUrl.pathname.replace("QuikStrikeTools.aspx", "QuikS
 
 const viewResponse = await request(sessionUrl.href);
 const viewHtml = await viewResponse.text();
-const meetingDate = parseMeetingDates(viewHtml).find((date) => date >= chicagoDate());
+const meetingDate = parseMeetingDates(viewHtml).find((date) => meetingIsUpcoming(date));
 
 if (!meetingDate) {
   throw new Error("No upcoming FOMC meeting was found in CME FedWatch");

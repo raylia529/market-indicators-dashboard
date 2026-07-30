@@ -2335,7 +2335,7 @@ function buildMacroPrompt(dateText) {
     "Market indicator analysis request",
     "",
     `Selected date: ${dateText}`,
-    `Dashboard section: Macro`,
+    `Dashboard section: US Macro`,
     `Visible range selected in dashboard: ${activeRange}`,
     `Selected indicators: ${selected.map((id) => getIndicator(id).name).join(", ") || "none"}`,
     "",
@@ -4358,7 +4358,7 @@ function buildComparisonPrompt(sectionLabel, state, definitions, dateText) {
 const comparisonSections = [
   createComparisonSection({
     key: "breadth",
-    label: "Breadth",
+    label: "US Breadth",
     indicators: breadthIndicators,
     defaultSelectedIds: ["breadth-sp500"],
     defaultRange: "5Y",
@@ -4367,7 +4367,7 @@ const comparisonSections = [
   }),
   createComparisonSection({
     key: "flows",
-    label: "Flows",
+    label: "US Flows",
     indicators: flowsIndicators,
     defaultSelectedIds: ["flows-rsp-spy"],
     defaultRange: "5Y",
