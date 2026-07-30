@@ -13,9 +13,9 @@
     <title>Market Indicators Dashboard</title>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2" />
-    <link rel="stylesheet" href="style.css?v=fedwatch-card-v48" />
+    <link rel="stylesheet" href="style.css?v=cme-implied-series-v51" />
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
-    <script src="app.js?v=us-section-labels-v57" defer></script>
+    <script src="app.js?v=linked-range-v69" defer></script>
   </head>
   <body>
     <main class="dashboard-shell">
@@ -114,13 +114,13 @@
           <section class="mobile-pane chart-pane" data-mobile-pane="charts" aria-label="FX charts">
             <div class="fx-controls">
               <div class="range-selector" aria-label="FX date range selector">
-                <button class="range-button active" type="button" data-fx-range="3M">3M</button>
+                <button class="range-button" type="button" data-fx-range="3M">3M</button>
                 <button class="range-button" type="button" data-fx-range="6M">6M</button>
-                <button class="range-button" type="button" data-fx-range="1Y">1Y</button>
-                <button class="range-button" type="button" data-fx-range="2Y">2Y</button>
+                <button class="range-button active" type="button" data-fx-range="1Y">1Y</button>
+                <button class="range-button" type="button" data-fx-range="3Y">3Y</button>
                 <button class="range-button" type="button" data-fx-range="5Y">5Y</button>
                 <button class="range-button" type="button" data-fx-range="10Y">10Y</button>
-                <button class="range-button" type="button" data-fx-range="MAX">MAX</button>
+                <button class="range-button" type="button" data-fx-range="Max">Max</button>
               </div>
             </div>
             <div class="selection-notice" id="fx-selection-notice" role="status" hidden>

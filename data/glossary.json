@@ -533,6 +533,21 @@
       }
     },
     {
+      "id": "CME_EXPECTED_POLICY_RATE",
+      "short_name": "CME Implied Rate",
+      "full_name": "CME Implied Policy Rate",
+      "headings": {
+        "zh": "CME 隱含政策利率",
+        "en": "CME Implied Policy Rate",
+        "ja": "CMEインプライド政策金利"
+      },
+      "descriptions": {
+        "zh": "CME 隱含政策利率是根據芝加哥商業交易所（CME）交易的聯邦基金期貨（Fed Funds Futures）價格推算出的市場隱含政策利率，代表市場對未來聯邦基金利率的共識預期。Fed Funds Futures 是以美國有效聯邦基金利率（Effective Federal Funds Rate）為基礎的利率期貨，由銀行、資產管理公司、避險基金及其他機構投資人廣泛交易，因此其價格能即時反映市場對未來貨幣政策的看法。\n\n與 Fed 公布的政策利率不同，Fed 僅提供目前的利率水準，而 Fed Funds Futures 則會隨著通膨、就業、經濟數據及 Fed 官員談話持續調整價格，因此能反映市場對未來升息、降息或維持利率的預期。CME FedWatch Tool 正是利用這些期貨價格推算各利率區間的機率，並進一步計算出機率加權平均的 Expected Policy Rate。\n\n若預期政策利率高於目前利率，代表市場認為未來仍有升息或高利率維持更久的可能；若低於目前利率，則表示市場開始預期降息。由於它是機率加權平均，因此數值可能介於官方利率區間之間，例如 3.83%，並不代表 Fed 將公布 3.83% 的政策利率，而是反映市場對各種利率結果的整體定價。\n\n由於 Expected Policy Rate 能快速反映市場預期的變化，因此常與 US 2Y Treasury Yield、Fed Funds Rate、MOVE Index 及美元走勢搭配觀察，是分析市場對未來貨幣政策預期的重要指標。",
+        "en": "The CME Implied Policy Rate is the market-implied federal funds rate derived from prices of Fed Funds Futures traded on the Chicago Mercantile Exchange (CME). Fed Funds Futures are interest rate futures based on the Effective Federal Funds Rate and are actively traded by banks, asset managers, hedge funds, and other institutional investors. As a result, they provide one of the most widely followed measures of market expectations for future Federal Reserve policy.\n\nUnlike the Federal Reserve’s current policy rate, which only reflects today’s target range, Fed Funds Futures continuously incorporate new information such as inflation, employment data, economic releases, and Federal Reserve communications. The CME FedWatch Tool uses these futures prices to estimate the probability of each possible policy-rate outcome and calculates a probability-weighted Expected Policy Rate.\n\nWhen the expected rate is above the current policy rate, markets are pricing in a higher probability of future rate hikes or a higher-for-longer policy stance. When it is below the current rate, markets expect future rate cuts. Because the value is probability-weighted, it often falls between official policy-rate levels. For example, an implied rate of 3.83% does not mean the Federal Reserve will set the policy rate at exactly 3.83%; instead, it reflects the market’s combined expectations across multiple possible outcomes.\n\nBecause it quickly incorporates changing expectations, the Expected Policy Rate is commonly analyzed alongside the US 2-Year Treasury Yield, the Federal Funds Rate, the MOVE Index, and the US Dollar to assess market expectations for future monetary policy.",
+        "ja": "CMEインプライド政策金利は、シカゴ・マーカンタイル取引所（CME）で取引されるフェデラルファンド先物（Fed Funds Futures）の価格から算出される市場の予想政策金利です。Fed Funds Futuresは実効フェデラルファンド金利（Effective Federal Funds Rate）を対象とした金利先物であり、銀行、資産運用会社、ヘッジファンドなど多くの機関投資家が取引しているため、市場の金融政策見通しを反映する代表的な指標とされています。\n\nFRBが公表する政策金利は現在の目標レンジを示すだけですが、Fed Funds Futuresはインフレ、雇用統計、経済指標、FRB高官の発言などの新しい情報を継続的に織り込みます。CME FedWatch Toolはこれらの先物価格を利用して各政策金利シナリオの確率を推計し、その確率加重平均としてExpected Policy Rateを算出しています。\n\n予想政策金利が現在の政策金利を上回る場合、市場は追加利上げや高金利の長期化を織り込んでいることを示します。逆に下回る場合は、利下げ期待が高まっていることを意味します。この数値は確率加重平均であるため、3.83%のように実際の政策金利の間の値になることがあります。これはFRBが3.83%という金利を設定するという意味ではなく、市場全体の期待を数値化したものです。\n\nExpected Policy Rateは市場予想の変化を素早く反映するため、米国2年債利回り（US 2Y Treasury Yield）、Fed Funds Rate、MOVE指数、米ドル相場などと併せて分析することで、市場が将来の金融政策をどのように織り込んでいるかを把握するのに役立ちます。"
+      }
+    },
+    {
       "id": "ISM_MANUFACTURING_PMI",
       "short_name": "ISM Manufacturing PMI",
       "full_name": "Institute for Supply Management Manufacturing Purchasing Managers' Index",

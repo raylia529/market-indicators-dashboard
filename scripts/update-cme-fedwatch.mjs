@@ -5,9 +5,18 @@ const sourceUrl =
   "https://cmegroup-tools.quikstrike.net/User/QuikStrikeTools.aspx?viewitemid=IntegratedFedWatchTool&userId=lwolf";
 const publicSourceUrl = "https://www.cmegroup.com/fedwatch";
 const outputFile = path.join("data", "fedwatch-expected-rate.json");
+const historyFile = path.join("data", "cme-expected-policy-rate.csv");
 const force = process.argv.includes("--force");
+const backfill = process.argv.includes("--backfill");
 const timeoutMs = 60_000;
 const fomcDecisionMinuteChicago = 13 * 60;
+const backfillStartDate = "2026-01-28";
+const knownHistoricalMeetings = [
+  "2026-03-18",
+  "2026-04-29",
+  "2026-06-17",
+  "2026-07-29",
+];
 const monthNumbers = new Map(
   ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map(
     (month, index) => [month, index + 1],
@@ -144,6 +153,72 @@ function parseMeetingDates(html) {
   return [...dates].sort();
 }
 
+function parseMeetingTargets(html) {
+  const targets = new Map();
+  const decoded = decodeHtml(html);
+  const pattern =
+    /<a\b[^>]*href="javascript:__doPostBack\('([^']+)','[^']*'\)"[^>]*>\s*(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)(\d{2})\s*<\/a>/gi;
+
+  for (const match of decoded.matchAll(pattern)) {
+    const [, target, day, month, year] = match;
+    const date = `20${year}-${String(monthNumbers.get(month)).padStart(2, "0")}-${day.padStart(2, "0")}`;
+    targets.set(date, target);
+  }
+
+  return targets;
+}
+
+function parseHiddenFields(html) {
+  const fields = new URLSearchParams();
+
+  for (const match of html.matchAll(/<input\b[^>]*type=["']hidden["'][^>]*>/gi)) {
+    const tag = match[0];
+    const name = tag.match(/\bname=["']([^"']+)["']/i)?.[1];
+    const value = tag.match(/\bvalue=["']([^"']*)["']/i)?.[1] || "";
+
+    if (name) {
+      fields.set(decodeHtml(name), decodeHtml(value));
+    }
+  }
+
+  return fields;
+}
+
+function parseCurrentProbabilityRow(html, observationDate) {
+  const table = html.match(
+    /<table class="grid-thm grid-thm-v2 w-lg">([\s\S]*?)<\/table>/i,
+  )?.[1];
+
+  if (!table) {
+    throw new Error("CME current probability table was not found");
+  }
+
+  const probabilities = [];
+  for (const rowMatch of table.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)) {
+    const cells = [...rowMatch[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map(
+      (cell) => decodeHtml(cell[1].replace(/<[^>]+>/g, "").trim()),
+    );
+    const range = cells[0]?.match(/^(\d+)-(\d+)/);
+
+    if (!range) {
+      continue;
+    }
+
+    const now = Number((cells[1] || "0").replace("%", "").trim() || 0) / 100;
+    probabilities.push({
+      lowerBps: Number(range[1]),
+      upperBps: Number(range[2]),
+      probability: now,
+    });
+  }
+
+  if (probabilities.length === 0) {
+    throw new Error("CME current probability table contained no target ranges");
+  }
+
+  return { observationDate, probabilities };
+}
+
 function parseCsv(text) {
   const lines = text.trim().split(/\r?\n/).filter(Boolean);
   if (lines.length < 2) {
@@ -194,6 +269,124 @@ function atomicWriteJson(file, data) {
   fs.renameSync(temporaryFile, file);
 }
 
+function loadHistory() {
+  try {
+    return fs
+      .readFileSync(historyFile, "utf8")
+      .trim()
+      .split(/\r?\n/)
+      .slice(1)
+      .map((line) => {
+        const [date, value, meetingDate] = line.split(",");
+        return { date, value: Number(value), meetingDate };
+      })
+      .filter((row) => row.date && Number.isFinite(row.value) && row.meetingDate);
+  } catch {
+    return [];
+  }
+}
+
+function atomicWriteHistory(rows) {
+  const temporaryFile = `${historyFile}.tmp`;
+  const body = rows
+    .sort((left, right) => left.date.localeCompare(right.date))
+    .map((row) => `${row.date},${row.value.toFixed(4)},${row.meetingDate}`)
+    .join("\n");
+  fs.writeFileSync(temporaryFile, `date,value,meeting_date\n${body}\n`);
+  fs.renameSync(temporaryFile, historyFile);
+}
+
+function calculateExpectation(row) {
+  const probabilitySum = row.probabilities.reduce(
+    (sum, item) => sum + item.probability,
+    0,
+  );
+  if (probabilitySum < 0.99 || probabilitySum > 1.01) {
+    throw new Error(
+      `CME FedWatch probabilities for ${row.observationDate} summed to ${probabilitySum.toFixed(4)}, not 1`,
+    );
+  }
+
+  return {
+    probabilitySum,
+    upperRate:
+      row.probabilities.reduce(
+        (sum, item) => sum + (item.upperBps / 100) * item.probability,
+        0,
+      ) / probabilitySum,
+    midpointRate:
+      row.probabilities.reduce(
+        (sum, item) =>
+          sum + ((item.lowerBps + item.upperBps) / 200) * item.probability,
+        0,
+      ) / probabilitySum,
+  };
+}
+
+function updateHistory(previous, current) {
+  const history = loadHistory();
+  const upsert = (row) => {
+    const existingIndex = history.findIndex((item) => item.date === row.date);
+    if (existingIndex >= 0) {
+      history[existingIndex] = row;
+    } else {
+      history.push(row);
+    }
+  };
+
+  if (
+    history.length === 0 &&
+    previous?.observation_date &&
+    Number.isFinite(previous.expected_target_upper_rate)
+  ) {
+    upsert({
+      date: previous.observation_date,
+      value: previous.expected_target_upper_rate,
+      meetingDate: previous.meeting_date,
+    });
+  }
+
+  const currentMeetingRows = history.filter(
+    (row) => row.meetingDate === current.meeting_date,
+  );
+  const latestCurrentMeetingDate = currentMeetingRows
+    .map((row) => row.date)
+    .sort()
+    .at(-1);
+  if (
+    latestCurrentMeetingDate &&
+    current.observation_date < latestCurrentMeetingDate
+  ) {
+    atomicWriteHistory(history);
+    return;
+  }
+
+  let historyDate = current.observation_date;
+  const latestHistoryDate = history.map((row) => row.date).sort().at(-1);
+  const occupiedByAnotherMeeting = history.some(
+    (row) => row.date === historyDate && row.meetingDate !== current.meeting_date,
+  );
+  if (
+    occupiedByAnotherMeeting ||
+    (previous?.meeting_date &&
+      current.meeting_date !== previous.meeting_date &&
+      latestHistoryDate &&
+      historyDate <= latestHistoryDate)
+  ) {
+    historyDate =
+      previous?.meeting_date && previous.meeting_date > historyDate
+        ? previous.meeting_date
+        : chicagoDate();
+  }
+
+  upsert({
+    date: historyDate,
+    value: current.expected_target_upper_rate,
+    meetingDate: current.meeting_date,
+  });
+  atomicWriteHistory(history);
+}
+
 const previous = loadPrevious();
 if (
   !force &&
@@ -212,61 +405,165 @@ sessionUrl.pathname = sessionUrl.pathname.replace("QuikStrikeTools.aspx", "QuikS
 
 const viewResponse = await request(sessionUrl.href);
 const viewHtml = await viewResponse.text();
-const meetingDate = parseMeetingDates(viewHtml).find((date) => meetingIsUpcoming(date));
+const meetingDates = parseMeetingDates(viewHtml);
+const meetingTargets = parseMeetingTargets(viewHtml);
+const meetingDate = meetingDates.find((date) => meetingIsUpcoming(date));
 
 if (!meetingDate) {
   throw new Error("No upcoming FOMC meeting was found in CME FedWatch");
 }
 
-const meetingDateCompact = meetingDate.replaceAll("-", "");
-const exportUrl = new URL("/User/Export/FedWatch/MeetingExport.aspx", sessionUrl.origin);
-exportUrl.searchParams.set("MeetingDate", meetingDateCompact);
-exportUrl.searchParams.set("insid", sessionUrl.searchParams.get("insid"));
-exportUrl.searchParams.set("qsid", sessionUrl.searchParams.get("qsid"));
+async function downloadMeetingRows(targetMeetingDate) {
+  const exportUrl = new URL(
+    "/User/Export/FedWatch/MeetingExport.aspx",
+    sessionUrl.origin,
+  );
+  exportUrl.searchParams.set(
+    "MeetingDate",
+    targetMeetingDate.replaceAll("-", ""),
+  );
+  exportUrl.searchParams.set("insid", sessionUrl.searchParams.get("insid"));
+  exportUrl.searchParams.set("qsid", sessionUrl.searchParams.get("qsid"));
+  const csvResponse = await request(exportUrl.href);
+  const csvText = await csvResponse.text();
 
-const csvResponse = await request(exportUrl.href);
-const rows = parseCsv(await csvResponse.text());
+  try {
+    return parseCsv(csvText);
+  } catch (error) {
+    const preview = csvText.trim().replace(/\s+/g, " ").slice(0, 160);
+    throw new Error(`${error.message}; response: ${preview || "(empty)"}`);
+  }
+}
+
+async function downloadCurrentMeetingRow(targetMeetingDate) {
+  const target = meetingTargets.get(targetMeetingDate);
+  if (!target) {
+    throw new Error("CME meeting selector was not found");
+  }
+
+  const fields = parseHiddenFields(viewHtml);
+  fields.set("__EVENTTARGET", target);
+  fields.set("__EVENTARGUMENT", "");
+  const response = await request(sessionUrl.href, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: fields.toString(),
+  });
+  return parseCurrentProbabilityRow(await response.text(), chicagoDate());
+}
+
+const rows = await downloadMeetingRows(meetingDate);
 const latest = rows.filter((row) => row.observationDate <= chicagoDate()).at(-1);
 
 if (!latest) {
   throw new Error("CME FedWatch did not provide a current probability observation");
 }
 
-const probabilitySum = latest.probabilities.reduce((sum, item) => sum + item.probability, 0);
-if (probabilitySum < 0.99 || probabilitySum > 1.01) {
-  throw new Error(`CME FedWatch probabilities summed to ${probabilitySum.toFixed(4)}, not 1`);
+const sourceCheckedAt = new Date().toISOString();
+const futureCurve = [];
+let currentNowRow = null;
+
+for (const futureMeetingDate of meetingDates.filter((date) => meetingIsUpcoming(date))) {
+  try {
+    const currentRow =
+      futureMeetingDate === meetingDate
+        ? parseCurrentProbabilityRow(viewHtml, chicagoDate())
+        : await downloadCurrentMeetingRow(futureMeetingDate);
+    if (futureMeetingDate === meetingDate) {
+      currentNowRow = currentRow;
+    }
+    const futureExpectation = calculateExpectation(currentRow);
+    futureCurve.push({
+      meeting_date: futureMeetingDate,
+      observation_date: currentRow.observationDate,
+      expected_target_upper_rate: Number(futureExpectation.upperRate.toFixed(4)),
+      expected_target_midpoint_rate: Number(futureExpectation.midpointRate.toFixed(4)),
+    });
+  } catch (error) {
+    console.warn(
+      `CME FedWatch ${futureMeetingDate}: current probability unavailable (${error.message})`,
+    );
+  }
 }
 
-const expectedTargetUpperRate =
-  latest.probabilities.reduce(
-    (sum, item) => sum + (item.upperBps / 100) * item.probability,
-    0,
-  ) / probabilitySum;
-const expectedTargetMidpointRate =
-  latest.probabilities.reduce(
-    (sum, item) => sum + ((item.lowerBps + item.upperBps) / 200) * item.probability,
-    0,
-  ) / probabilitySum;
-const sourceCheckedAt = new Date().toISOString();
+const currentSourceRow = currentNowRow || latest;
+const currentSourceExpectation = calculateExpectation(currentSourceRow);
+const probabilitySum = currentSourceExpectation.probabilitySum;
+const expectedTargetUpperRate = currentSourceExpectation.upperRate;
+const expectedTargetMidpointRate = currentSourceExpectation.midpointRate;
 
-atomicWriteJson(outputFile, {
+const currentExpectation = {
   meeting_date: meetingDate,
-  observation_date: latest.observationDate,
+  meeting_dates: meetingDates,
+  previous_meeting_date:
+    meetingDate !== previous?.meeting_date
+      ? previous?.meeting_date || previous?.previous_meeting_date || null
+      : previous?.previous_meeting_date || null,
+  observation_date: currentSourceRow.observationDate,
   expected_target_upper_rate: Number(expectedTargetUpperRate.toFixed(4)),
   expected_target_midpoint_rate: Number(expectedTargetMidpointRate.toFixed(4)),
   probability_sum: Number(probabilitySum.toFixed(6)),
-  probabilities: latest.probabilities
+  probabilities: currentSourceRow.probabilities
     .filter((item) => item.probability > 0)
     .map((item) => ({
       target_range: `${(item.lowerBps / 100).toFixed(2)}-${(item.upperBps / 100).toFixed(2)}`,
       probability: Number((item.probability / probabilitySum).toFixed(6)),
     })),
+  future_curve: futureCurve,
   source_name: "CME FedWatch",
   source_url: publicSourceUrl,
   method: "Probability-weighted target-range upper limit",
   source_checked_at: sourceCheckedAt,
-});
+};
+
+atomicWriteJson(outputFile, currentExpectation);
+if (backfill) {
+  const rollingMeetings = [
+    ...new Set([...knownHistoricalMeetings, ...meetingDates]),
+  ]
+    .filter((date) => date > backfillStartDate && date <= meetingDate)
+    .sort();
+  const rollingHistory = [];
+  let windowStart = backfillStartDate;
+
+  for (const rollingMeetingDate of rollingMeetings) {
+    const meetingRows =
+      rollingMeetingDate === meetingDate
+        ? rows
+        : await downloadMeetingRows(rollingMeetingDate);
+    const windowRows = meetingRows.filter(
+      (row) =>
+        row.observationDate >= windowStart &&
+        row.observationDate < rollingMeetingDate,
+    );
+
+    for (const row of windowRows) {
+      rollingHistory.push({
+        date: row.observationDate,
+        value: calculateExpectation(row).upperRate,
+        meetingDate: rollingMeetingDate,
+      });
+    }
+    windowStart = rollingMeetingDate;
+  }
+
+  const currentMeetingHasDecisionDate = rollingHistory.some(
+    (row) => row.meetingDate === meetingDate && row.date >= windowStart,
+  );
+  if (!currentMeetingHasDecisionDate) {
+    rollingHistory.push({
+      date: currentExpectation.previous_meeting_date || windowStart,
+      value: currentExpectation.expected_target_upper_rate,
+      meetingDate,
+    });
+  }
+  atomicWriteHistory(rollingHistory);
+} else {
+  updateHistory(previous, currentExpectation);
+}
 
 console.log(
-  `CME FedWatch ${latest.observationDate}: next FOMC ${meetingDate}, expected upper target ${expectedTargetUpperRate.toFixed(2)}%`,
+  `CME FedWatch ${currentSourceRow.observationDate}: ${futureCurve.length} future meetings, next implied upper target ${expectedTargetUpperRate.toFixed(2)}%`,
 );

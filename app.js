@@ -246,6 +246,18 @@ const usRatesIndicators = [
     lineShape: "hv",
   },
   {
+    id: "cme-expected-policy-rate",
+    name: "CME Implied Rate",
+    file: "data/cme-expected-policy-rate.csv",
+    unitLabel: "%",
+    valueSuffix: "%",
+    category: "rate",
+    color: "#9254aa",
+    decimals: 2,
+    changeFormat: "bps",
+    lineShape: "hv",
+  },
+  {
     id: "us-2y-yield",
     name: "US 2Y Yield",
     file: "data/us-2-year-treasury-yield.csv",
@@ -555,6 +567,7 @@ const defaultIndicatorColors = {
   "new-high-low-breadth": "#6559bd",
   "sp500-above-200dma": "#218c83",
   "fed-funds-rate": "#d77d32",
+  "cme-expected-policy-rate": "#9254aa",
   "boj-policy-rate": "#111827",
   "japan-overnight-call-rate": "#d77d32",
   "japan-core-cpi-yoy": "#9254aa",
@@ -681,6 +694,7 @@ const glossaryDisplayOrder = [
   "IWM_SPY",
   "SMH_SPY",
   "DFEDTARU",
+  "CME_EXPECTED_POLICY_RATE",
   "DGS2",
   "DGS10",
   "T10Y2Y",
@@ -733,6 +747,7 @@ const indicatorGlossaryIds = {
   "smh-spy": "SMH_SPY",
   "taiwan-tsmc-revenue-yoy": "TSMC_REVENUE_YOY",
   "fed-funds-rate": "DFEDTARU",
+  "cme-expected-policy-rate": "CME_EXPECTED_POLICY_RATE",
   "us-2y-yield": "DGS2",
   "us-rates-10y-yield": "DGS10",
   "us-rates-10y-2y-spread": "T10Y2Y",
@@ -787,6 +802,10 @@ const glossaryDashboardTargets = {
     selector: '[data-taiwan-indicator="taiwan-tsmc-revenue-yoy"]',
   },
   DFEDTARU: { tab: "us-rates", selector: '[data-us-rates-indicator="fed-funds-rate"]' },
+  CME_EXPECTED_POLICY_RATE: {
+    tab: "us-rates",
+    selector: '[data-us-rates-indicator="cme-expected-policy-rate"]',
+  },
   DGS2: { tab: "us-rates", selector: '[data-us-rates-indicator="us-2y-yield"]' },
   DGS10: { tab: "us-rates", selector: '[data-us-rates-indicator="us-rates-10y-yield"]' },
   T10Y2Y: { tab: "us-rates", selector: '[data-us-rates-indicator="us-rates-10y-2y-spread"]' },
@@ -912,6 +931,7 @@ const glossaryMeta = document.getElementById("glossary-meta");
 const glossaryBody = document.getElementById("glossary-body");
 const glossarySearchInput = document.getElementById("glossary-search");
 const glossaryLanguageButtons = Array.from(document.querySelectorAll("[data-glossary-global-language]"));
+const DEFAULT_RANGE = "1Y";
 
 document.querySelectorAll(".mobile-view-switch").forEach((switchElement) => {
   const section = switchElement.closest(".dashboard-section");
@@ -941,10 +961,10 @@ let sharedIndicatorColors = loadSharedIndicatorColors(sharedIndicatorColorDefaul
 let selectedIndicatorIds = ["sp500"];
 let axisOrder = ["sp500"];
 let manualAxisOrder = false;
-let activeRange = "5Y";
+let activeRange = DEFAULT_RANGE;
 let macroScale = "linear";
 let fxData = [];
-let activeFxRange = "3M";
+let activeFxRange = DEFAULT_RANGE;
 let visibleFxSeries = new Set(["USDJPY", "US_Japan_2Y_Spread"]);
 let glossaryEntries = [];
 let glossarySearchText = "";
@@ -1286,6 +1306,7 @@ function getChartTheme() {
     muted: getCssColor("--muted", "#64748b"),
     line: getCssColor("--line", "#e5e7eb"),
     grid: getCssColor("--chart-grid", "#e5e7eb"),
+    guide: getCssColor("--chart-guide", "#94a3b8"),
     zero: getCssColor("--chart-zero", "#d1d5db"),
     surface: getCssColor("--surface", "#ffffff"),
   };
@@ -1434,10 +1455,11 @@ function parseCsv(csvText) {
     .split(/\r?\n/)
     .slice(1)
     .map((line) => {
-      const [date, value] = line.split(",");
+      const [date, value, meetingDate] = line.split(",");
       return {
         date: date.trim(),
         value: Number(value),
+        meetingDate: meetingDate?.trim() || null,
       };
     })
     .filter((row) => row.date && Number.isFinite(row.value))
@@ -1601,8 +1623,15 @@ function getIndicatorChange(latest, previous, indicator) {
   };
 }
 
-function findPreviousActualObservation(rows, observationsBack) {
-  const actualRows = rows.filter((row) => Number.isFinite(row.value));
+function findPreviousActualObservation(rows, observationsBack, indicator) {
+  const latestMeetingDate = rows.at(-1)?.meetingDate;
+  const actualRows = rows.filter(
+    (row) =>
+      Number.isFinite(row.value) &&
+      (indicator.id !== "cme-expected-policy-rate" ||
+        !latestMeetingDate ||
+        row.meetingDate === latestMeetingDate),
+  );
   return actualRows.at(-(observationsBack + 1)) || null;
 }
 
@@ -1639,17 +1668,19 @@ function renderIndicatorChange(rows, indicator) {
       { label: "1Q", observationsBack: 1 },
       { label: "2Q", observationsBack: 2 },
     ],
-    policy: [{ label: "Last change", distinctValue: true }],
+    policy: [{ label: "Last meeting", policyMeeting: true }],
   };
   const periods = periodsByCadence[indicator.cadence || "daily"];
   const changes = periods
-    .map(({ label, observationsBack, distinctValue }) => ({
+    .map(({ label, observationsBack, distinctValue, policyMeeting }) => ({
       label,
       change: getIndicatorChange(
         latest,
-        distinctValue
+        policyMeeting
+          ? findPolicyRateBeforePreviousMeeting(rows)
+          : distinctValue
           ? findPreviousDistinctObservation(rows)
-          : findPreviousActualObservation(rows, observationsBack),
+          : findPreviousActualObservation(rows, observationsBack, indicator),
         indicator,
       ),
     }))
@@ -1662,35 +1693,26 @@ function renderIndicatorChange(rows, indicator) {
   return `<small class="indicator-change">${changes
     .map(
       ({ label, change }) =>
-        `<span class="change-period ${change.direction} ${label === "Last change" ? "policy-change" : ""}"><b>${label}</b><span class="change-value">${change.text}</span></span>`,
+        `<span class="change-period ${change.direction} ${label === "Last meeting" ? "policy-change" : ""}"><b>${label}</b><span class="change-value">${change.text}</span></span>`,
     )
     .join("")}</small>`;
 }
 
+function findPolicyRateBeforePreviousMeeting(rows) {
+  const previousMeetingDate = fedWatchExpectation?.previous_meeting_date;
+  if (!previousMeetingDate) {
+    return findPreviousDistinctObservation(rows);
+  }
+
+  return (
+    rows.findLast(
+      (row) => Number.isFinite(row.value) && row.date < previousMeetingDate,
+    ) || findPreviousDistinctObservation(rows)
+  );
+}
+
 function renderCardChange(rows, indicator) {
-  if (indicator.id !== "fed-funds-rate") {
-    return renderIndicatorChange(rows, indicator);
-  }
-
-  const expectedRate = Number(fedWatchExpectation?.expected_target_upper_rate);
-  const meetingDate = fedWatchExpectation?.meeting_date;
-  if (!Number.isFinite(expectedRate) || !meetingDate) {
-    return "";
-  }
-
-  const meeting = new Date(`${meetingDate}T12:00:00Z`);
-  const meetingLabel = new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  }).format(meeting);
-
-  return `
-    <small class="indicator-change fedwatch-expectation" title="Next FOMC expectation from CME FedWatch">
-      <strong class="fedwatch-rate">${expectedRate.toFixed(2)}%</strong>
-      <span class="fedwatch-meeting">CME Implied · ${meetingLabel}</span>
-    </small>
-  `;
+  return renderIndicatorChange(rows, indicator);
 }
 
 function escapeHtml(value) {
@@ -1726,6 +1748,19 @@ function formatDateTime(value) {
     .reduce((acc, part) => ({ ...acc, [part.type]: part.value }), {});
 
   return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute} JST`;
+}
+
+function getTodayJst() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  })
+    .formatToParts(new Date())
+    .reduce((acc, part) => ({ ...acc, [part.type]: part.value }), {});
+
+  return `${parts.year}-${parts.month}-${parts.day}`;
 }
 
 function shiftDateByRange(endDate, rangeKey) {
@@ -2573,7 +2608,11 @@ function setupBoundedXAxis(chartNode, getBounds) {
       return;
     }
 
-    const [clampedStart, clampedEnd] = clampDateRange(start, end, bounds);
+    const allowedBounds = {
+      start: bounds.allowedStart || bounds.start,
+      end: bounds.allowedEnd || bounds.end,
+    };
+    const [clampedStart, clampedEnd] = clampDateRange(start, end, allowedBounds);
 
     const normalizedStart = toIsoDate(new Date(start));
     const normalizedEnd = toIsoDate(new Date(end));
@@ -3426,7 +3465,7 @@ function getFxXBounds() {
 
   const latestDateText = fxData.at(-1).date;
   const endDate = toDate(latestDateText);
-  const startDate = activeFxRange === "MAX" ? toDate(fxData[0].date) : shiftFxDateByRange(endDate, activeFxRange);
+  const startDate = activeFxRange === "Max" ? toDate(fxData[0].date) : shiftFxDateByRange(endDate, activeFxRange);
 
   return {
     start: toIsoDate(startDate),
@@ -3435,7 +3474,7 @@ function getFxXBounds() {
 }
 
 function getFxRangeStart(rows) {
-  if (activeFxRange === "MAX") {
+  if (activeFxRange === "Max") {
     return null;
   }
 
@@ -3710,6 +3749,7 @@ function renderAll() {
 }
 
 function createComparisonSection(config) {
+  const defaultNormalized = Boolean(config.defaultNormalized);
   const state = {
     data: new Map(),
     loaded: false,
@@ -3717,10 +3757,12 @@ function createComparisonSection(config) {
     selectedIds: [...config.defaultSelectedIds],
     axisOrder: [...config.defaultSelectedIds],
     manualAxisOrder: false,
-    activeRange: config.defaultRange || "5Y",
+    activeRange: config.defaultRange || DEFAULT_RANGE,
     scale: "linear",
-    normalized: false,
-    selectionBeforeNormalized: null,
+    normalized: defaultNormalized,
+    selectionBeforeNormalized: defaultNormalized
+      ? [...(config.defaultNonNormalizedSelectedIds || config.defaultSelectedIds.slice(0, 1))]
+      : null,
   };
 
   const elements = {
@@ -3734,6 +3776,13 @@ function createComparisonSection(config) {
     normalizedInput: document.getElementById(`${config.key}-normalized`),
     rangeButtons: Array.from(document.querySelectorAll(`[data-comparison-range="${config.key}"]`)),
   };
+
+  if (elements.normalizedInput) {
+    elements.normalizedInput.checked = defaultNormalized;
+  }
+  if (elements.logScaleInput) {
+    elements.logScaleInput.disabled = defaultNormalized;
+  }
 
   function getLocalIndicator(id) {
     return config.indicators.find((indicator) => indicator.id === id);
@@ -3761,7 +3810,8 @@ function createComparisonSection(config) {
       return null;
     }
 
-    const endDate = toDate(latestDateText);
+    const today = getTodayJst();
+    const endDate = toDate(today > latestDateText ? today : latestDateText);
     const startDate =
       state.activeRange === "Max" ? toDate(maxStartDate) : shiftDateByRange(endDate, state.activeRange);
 
@@ -3805,9 +3855,44 @@ function createComparisonSection(config) {
   }
 
   function getChartRows(indicatorId) {
-    return state.normalized
+    const rows = state.normalized
       ? getNormalizedRows(indicatorId)
       : getFilteredRows(indicatorId);
+
+    if (
+      !state.normalized &&
+      indicatorId === "cme-expected-policy-rate" &&
+      rows.length > 0 &&
+      Array.isArray(fedWatchExpectation?.future_curve)
+    ) {
+      const futureRows = [];
+      const futureCurve = fedWatchExpectation.future_curve.filter(
+        (item) =>
+          item.meeting_date > rows.at(-1).date &&
+          Number.isFinite(item.expected_target_upper_rate),
+      );
+
+      futureCurve.forEach((item, index) => {
+        const segmentStart =
+          index === 0 ? addDays(rows.at(-1).date, 1) : futureCurve[index - 1].meeting_date;
+        const segmentEnd = addDays(item.meeting_date, -1);
+
+        let date = segmentStart;
+        while (date <= segmentEnd) {
+          futureRows.push({
+            date,
+            value: item.expected_target_upper_rate,
+            meetingDate: item.meeting_date,
+            projected: true,
+          });
+          date = addDays(date, 1);
+        }
+      });
+
+      return [...rows, ...futureRows];
+    }
+
+    return rows;
   }
 
   function getDisplayRows(rows, bounds) {
@@ -3856,12 +3941,66 @@ function createComparisonSection(config) {
       .map((row) => row.date)
       .sort((a, b) => a.localeCompare(b))
       .at(0);
+    const futureFomcMeetings =
+      config.key === "us-rates" &&
+      selected.includes("cme-expected-policy-rate")
+        ? (fedWatchExpectation?.future_curve || []).map((item) => item.meeting_date)
+        : [];
+    const allowedEnd = futureFomcMeetings.filter(Boolean).sort().at(-1) || baseBounds.end;
 
     return {
-      start: displayStart && displayStart < baseBounds.start ? displayStart : baseBounds.start,
+      start: displayStart && displayStart < baseBounds.start
+          ? displayStart
+          : baseBounds.start,
       end: baseBounds.end,
-      minallowed: baseBounds.start,
+      allowedStart: baseBounds.start,
+      allowedEnd: allowedEnd > baseBounds.end ? allowedEnd : baseBounds.end,
     };
+  }
+
+  function shiftMeetingMarker(date) {
+    return addDays(date, -1);
+  }
+
+  function getFomcMeetingShapes(selected, xBounds, theme) {
+    if (
+      config.key !== "us-rates" ||
+      !selected.includes("cme-expected-policy-rate") ||
+      !xBounds
+    ) {
+      return [];
+    }
+
+    const meetingDates = [
+      ...(state.data.get("cme-expected-policy-rate") || [])
+        .map((row) => row.meetingDate)
+        .filter(Boolean),
+      ...(fedWatchExpectation?.future_curve || []).map((item) => item.meeting_date),
+    ];
+
+    return [...new Set(meetingDates)]
+      .filter(Boolean)
+      .map(shiftMeetingMarker)
+      .filter(
+        (date) =>
+          date >= (xBounds.allowedStart || xBounds.start) &&
+          date <= (xBounds.allowedEnd || xBounds.end),
+      )
+      .map((markerDate) => ({
+        type: "line",
+        xref: "x",
+        yref: "paper",
+        x0: markerDate,
+        x1: markerDate,
+        y0: 0,
+        y1: 1,
+        layer: "below",
+        line: {
+          color: theme.guide,
+          width: 1,
+          dash: "dot",
+        },
+      }));
   }
 
   function getAutoOrder(ids) {
@@ -4153,8 +4292,8 @@ function createComparisonSection(config) {
       annotations: [...horizontalAxisAnnotations, ...trendAnnotations],
       xaxis: {
         range: xBounds ? [xBounds.start, xBounds.end] : undefined,
-        minallowed: xBounds?.start,
-        maxallowed: xBounds?.end,
+        minallowed: xBounds?.allowedStart || xBounds?.start,
+        maxallowed: xBounds?.allowedEnd || xBounds?.end,
         showgrid: false,
         tickformat: "%Y/%-m",
         hoverformat: "%Y/%-m/%-d",
@@ -4166,7 +4305,7 @@ function createComparisonSection(config) {
         font: { color: theme.ink },
       },
       hovermode: "x unified",
-      dragmode: getChartDragMode(),
+      dragmode: selected.includes("cme-expected-policy-rate") ? "pan" : getChartDragMode(),
     };
 
     if (leftIndicator) {
@@ -4177,6 +4316,18 @@ function createComparisonSection(config) {
         theme,
         state.normalized ? theme.ink : getAxisGroupColor(leftIds, theme),
       );
+      if (
+        leftIds.some((id) =>
+          ["fed-funds-rate", "cme-expected-policy-rate"].includes(id),
+        )
+      ) {
+        layout.yaxis.griddash = "dot";
+        layout.yaxis.gridcolor = theme.guide;
+        if (layout.yaxis.type === "linear") {
+          layout.yaxis.tick0 = 0;
+          layout.yaxis.dtick = 0.25;
+        }
+      }
     } else {
       layout.yaxis = { visible: false };
     }
@@ -4189,11 +4340,27 @@ function createComparisonSection(config) {
         theme,
         getAxisGroupColor(rightIds, theme),
       );
+      if (
+        rightIds.some((id) =>
+          ["fed-funds-rate", "cme-expected-policy-rate"].includes(id),
+        )
+      ) {
+        layout.yaxis2.griddash = "dot";
+        layout.yaxis2.gridcolor = theme.guide;
+        layout.yaxis2.showgrid = true;
+        if (layout.yaxis2.type === "linear") {
+          layout.yaxis2.tick0 = 0;
+          layout.yaxis2.dtick = 0.25;
+        }
+      }
     }
 
-    layout.shapes = state.normalized
-      ? []
-      : getThresholdZoneShapes(selected, layout, axisById);
+    layout.shapes = [
+      ...(state.normalized
+        ? []
+        : getThresholdZoneShapes(selected, layout, axisById)),
+      ...getFomcMeetingShapes(selected, xBounds, theme),
+    ];
 
     if (elements.chart && window.Plotly) {
       Plotly.react(elements.chart, traces, layout, getPlotlyConfig()).then(() => {
@@ -4224,9 +4391,7 @@ function createComparisonSection(config) {
 
   elements.rangeButtons.forEach((button) => {
     button.addEventListener("click", () => {
-      state.activeRange = button.dataset.range;
-      validateLocalScale();
-      renderLocalAll();
+      setDashboardRange(button.dataset.range);
     });
   });
 
@@ -4313,6 +4478,14 @@ function createComparisonSection(config) {
     renderChart() {
       renderLocalChart();
     },
+    setRange(range) {
+      state.activeRange = range;
+      renderLocalRangeButtons();
+      if (state.loaded) {
+        validateLocalScale();
+        renderLocalAll();
+      }
+    },
     showError(error) {
       elements.grid.innerHTML = `<p class="error-message">${error.message}</p>`;
     },
@@ -4360,8 +4533,10 @@ const comparisonSections = [
     key: "breadth",
     label: "US Breadth",
     indicators: breadthIndicators,
-    defaultSelectedIds: ["breadth-sp500"],
-    defaultRange: "5Y",
+    defaultSelectedIds: breadthIndicators.map((indicator) => indicator.id),
+    defaultNonNormalizedSelectedIds: ["breadth-sp500"],
+    defaultNormalized: true,
+    defaultRange: DEFAULT_RANGE,
     storageKey: "breadthIndicatorColors",
     allowNormalized: true,
   }),
@@ -4369,8 +4544,10 @@ const comparisonSections = [
     key: "flows",
     label: "US Flows",
     indicators: flowsIndicators,
-    defaultSelectedIds: ["flows-rsp-spy"],
-    defaultRange: "5Y",
+    defaultSelectedIds: flowsIndicators.map((indicator) => indicator.id),
+    defaultNonNormalizedSelectedIds: ["flows-rsp-spy"],
+    defaultNormalized: true,
+    defaultRange: DEFAULT_RANGE,
     storageKey: "flowsIndicatorColors",
     allowNormalized: true,
   }),
@@ -4378,24 +4555,24 @@ const comparisonSections = [
     key: "us-rates",
     label: "US Rates",
     indicators: usRatesIndicators,
-    defaultSelectedIds: ["us-rates-10y-yield"],
-    defaultRange: "5Y",
+    defaultSelectedIds: ["fed-funds-rate", "cme-expected-policy-rate"],
+    defaultRange: DEFAULT_RANGE,
     storageKey: "usRatesIndicatorColors",
   }),
   createComparisonSection({
     key: "jp-rates",
     label: "JP Rates",
     indicators: jpRatesIndicators,
-    defaultSelectedIds: ["japan-10y-jgb-yield"],
-    defaultRange: "5Y",
+    defaultSelectedIds: ["boj-policy-rate"],
+    defaultRange: DEFAULT_RANGE,
     storageKey: "jpRatesIndicatorColors",
   }),
   createComparisonSection({
     key: "japan",
     label: "Japan",
     indicators: japanIndicators,
-    defaultSelectedIds: ["nikkei-225"],
-    defaultRange: "5Y",
+    defaultSelectedIds: ["topix"],
+    defaultRange: DEFAULT_RANGE,
     storageKey: "japanIndicatorColors",
   }),
   createComparisonSection({
@@ -4403,7 +4580,7 @@ const comparisonSections = [
     label: "Taiwan",
     indicators: taiwanIndicators,
     defaultSelectedIds: ["taiex"],
-    defaultRange: "5Y",
+    defaultRange: DEFAULT_RANGE,
     storageKey: "taiwanIndicatorColors",
   }),
 ];
@@ -5019,11 +5196,31 @@ function renderGlossaryError(error) {
 
 rangeButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    activeRange = button.dataset.range;
-    validateMacroScale();
-    renderAll();
+    setDashboardRange(button.dataset.range);
   });
 });
+
+function renderFxRangeButtons() {
+  fxRangeButtons.forEach((button) => {
+    const active = button.dataset.fxRange === activeFxRange;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+}
+
+function setDashboardRange(range) {
+  const sharedRange = range === "MAX" ? "Max" : range;
+  activeRange = sharedRange;
+  activeFxRange = sharedRange;
+
+  validateMacroScale();
+  renderAll();
+  renderFxRangeButtons();
+  if (fxData.length > 0) {
+    renderFxChart();
+  }
+  comparisonSections.forEach((section) => section.setRange(sharedRange));
+}
 
 function activateTab(tab) {
   tabButtons.forEach((item) => {
@@ -5070,13 +5267,7 @@ document.addEventListener("keydown", (event) => {
 
 fxRangeButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    activeFxRange = button.dataset.fxRange;
-    fxRangeButtons.forEach((item) => {
-      const active = item.dataset.fxRange === activeFxRange;
-      item.classList.toggle("active", active);
-      item.setAttribute("aria-pressed", String(active));
-    });
-    renderFxChart();
+    setDashboardRange(button.dataset.fxRange);
   });
 });
 
@@ -5295,6 +5486,8 @@ loadIndicatorData()
   .catch((error) => {
     indicatorGrid.innerHTML = `<p class="error-message">${error.message}</p>`;
   });
+
+renderFxRangeButtons();
 
 loadDataStatus().then(renderDataStatus).catch(renderDataStatusError);
 

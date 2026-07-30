@@ -21,6 +21,7 @@
   --warning-soft: #fffbeb;
   --neutral-soft: #f1f5f9;
   --chart-grid: #e5e7eb;
+  --chart-guide: #94a3b8;
   --chart-zero: #d1d5db;
   --modebar-bg: rgba(255, 255, 255, 0.96);
   --modebar-icon: #94a3b8;
@@ -501,32 +502,6 @@ h2 {
 .policy-change .change-value {
   margin-left: 0;
   white-space: nowrap;
-}
-
-.fedwatch-expectation {
-  display: grid;
-  justify-items: start;
-  row-gap: 0;
-  color: var(--text);
-}
-
-.metric-card .fedwatch-rate {
-  margin: 0;
-  font-size: 1.05rem;
-  line-height: 1.05;
-  white-space: nowrap;
-}
-
-.fedwatch-meeting {
-  color: var(--muted);
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-@media (max-width: 760px) {
-  .metric-card .fedwatch-rate {
-    font-size: 1.15rem;
-  }
 }
 
 .change-period b {
@@ -1791,6 +1766,7 @@ h2 {
     --warning-soft: rgba(180, 83, 9, 0.20);
     --neutral-soft: rgba(148, 163, 184, 0.16);
     --chart-grid: rgba(148, 163, 184, 0.22);
+    --chart-guide: rgba(148, 163, 184, 0.52);
     --chart-zero: rgba(148, 163, 184, 0.42);
     --modebar-bg: rgba(24, 24, 27, 0.92);
     --modebar-icon: #94a3b8;

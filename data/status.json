@@ -149,10 +149,6 @@
           "url": "https://fred.stlouisfed.org/series/DFEDTARU"
         },
         {
-          "label": "CME FedWatch",
-          "url": "https://www.cmegroup.com/fedwatch"
-        },
-        {
           "label": "Federal Reserve FOMC calendar",
           "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
         }
@@ -177,12 +173,42 @@
       "status": "Up to date",
       "error_message": null,
       "formula": null,
-      "release_note": "The chart uses the discontinued DFEDTAR target rate through 2008-12-15 and DFEDTARU thereafter. Daily as-of observations are drawn as a step line. The card also shows CME FedWatch's probability-weighted expected upper limit for the next FOMC target range. The next official update follows the scheduled FOMC decision date; unscheduled decisions can occur earlier.",
-      "expected_policy_rate": 3.9905,
-      "expected_policy_rate_basis": "Probability-weighted target-range upper limit",
-      "expected_policy_rate_observation_date": "2026-07-28",
-      "expected_policy_rate_meeting_date": "2026-09-16",
-      "expected_policy_rate_source_checked_at": "2026-07-30T01:08:51.626Z"
+      "release_note": "The chart uses the discontinued DFEDTAR target rate through 2008-12-15 and DFEDTARU thereafter. Daily as-of observations are drawn as a step line. The next official update follows the scheduled FOMC decision date; unscheduled decisions can occur earlier."
+    },
+    "CME_EXPECTED_POLICY_RATE": {
+      "display_name": "CME Implied Policy Rate",
+      "short_name": "CME Implied Rate",
+      "source_name": "CME FedWatch",
+      "source_url": "https://www.cmegroup.com/fedwatch",
+      "source_urls": [
+        {
+          "label": "CME FedWatch",
+          "url": "https://www.cmegroup.com/fedwatch"
+        }
+      ],
+      "latest_available_date": "2026-07-29",
+      "dashboard_latest_date": "2026-07-29",
+      "source_available_date": "2026-07-29",
+      "next_expected_update_date": "2026-07-30",
+      "next_expected_observation_date": "2026-07-30",
+      "expected_source_update_at": "2026-07-30T23:00:00.000Z",
+      "expected_source_update_date": "2026-07-31",
+      "expected_source_update_display": "2026-07-31 08:00 JST",
+      "source_checked_at": "2026-07-30T02:38:56.815Z",
+      "source_checked_display": "2026-07-30 11:38 JST",
+      "source_check_status": "success",
+      "source_available_checked_at": "2026-07-30T02:38:56.815Z",
+      "source_available_checked_display": "2026-07-30 11:38 JST",
+      "last_successful_refresh": "2026-07-30T02:38:56.815Z",
+      "last_successful_refresh_display": "2026-07-30 11:38 JST",
+      "frequency": "Daily, US trading days",
+      "unit": "Percent, probability-weighted target range upper limit",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": "Each observation is the probability-weighted upper limit expected for the next scheduled FOMC meeting at that time. The rolling series switches to the following meeting after an FOMC decision.",
+      "next_fomc_meeting_date": "2026-09-16",
+      "calculation_basis": "Probability-weighted target-range upper limit"
     },
     "DGS10": {
       "display_name": "US 10-Year Treasury Yield",

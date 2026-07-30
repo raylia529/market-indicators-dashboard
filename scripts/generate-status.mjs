@@ -91,10 +91,6 @@ const indicatorDefinitions = [
         url: "https://fred.stlouisfed.org/series/DFEDTARU",
       },
       {
-        label: "CME FedWatch",
-        url: "https://www.cmegroup.com/fedwatch",
-      },
-      {
         label: "Federal Reserve FOMC calendar",
         url: "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
       },
@@ -102,7 +98,7 @@ const indicatorDefinitions = [
     frequency: "Policy decisions, normally eight scheduled FOMC meetings per year",
     unit: "Percent, target range upper limit",
     releaseNote:
-      "The chart uses the discontinued DFEDTAR target rate through 2008-12-15 and DFEDTARU thereafter. Daily as-of observations are drawn as a step line. The card also shows CME FedWatch's probability-weighted expected upper limit for the next FOMC target range. The next official update follows the scheduled FOMC decision date; unscheduled decisions can occur earlier.",
+      "The chart uses the discontinued DFEDTAR target rate through 2008-12-15 and DFEDTARU thereafter. Daily as-of observations are drawn as a step line. The next official update follows the scheduled FOMC decision date; unscheduled decisions can occur earlier.",
     scheduledUpdateDates: [
       "2026-07-29",
       "2026-09-16",
@@ -123,6 +119,29 @@ const indicatorDefinitions = [
     sourceReleaseBusinessDays: 0,
     sourceReleaseTime: "14:00",
     sourceReleaseTimeZone: "America/New_York",
+  },
+  {
+    key: "CME_EXPECTED_POLICY_RATE",
+    displayName: "CME Implied Policy Rate",
+    shortName: "CME Implied Rate",
+    sourceName: "CME FedWatch",
+    sourceUrl: "https://www.cmegroup.com/fedwatch",
+    sourceUrls: [
+      {
+        label: "CME FedWatch",
+        url: "https://www.cmegroup.com/fedwatch",
+      },
+    ],
+    frequency: "Daily, US trading days",
+    unit: "Percent, probability-weighted target range upper limit",
+    releaseNote:
+      "Each observation is the probability-weighted upper limit expected for the next scheduled FOMC meeting at that time. The rolling series switches to the following meeting after an FOMC decision.",
+    file: "data/cme-expected-policy-rate.csv",
+    type: "single",
+    dailyLagDays: 5,
+    sourceReleaseBusinessDays: 0,
+    sourceReleaseTime: "18:00",
+    sourceReleaseTimeZone: "America/Chicago",
   },
   {
     key: "DGS10",
@@ -1280,6 +1299,17 @@ function buildMetadata() {
       previousIndicator?.source_available_checked_at ||
       previousIndicator?.last_successful_refresh ||
       null;
+    if (definition.key === "CME_EXPECTED_POLICY_RATE" && fedWatchExpectation) {
+      sourceCheckedAt =
+        fedWatchExpectation.source_checked_at || sourceCheckedAt;
+      sourceAvailableCheckedAt =
+        fedWatchExpectation.source_checked_at || sourceAvailableCheckedAt;
+      sourceAvailableDate =
+        fedWatchExpectation.observation_date || sourceAvailableDate;
+      sourceCheckStatus = "success";
+      lastSuccessfulRefresh =
+        fedWatchExpectation.source_checked_at || lastSuccessfulRefresh;
+    }
     if (!sourceCheckStatus && sourceAvailableCheckedAt) {
       sourceCheckStatus = "success";
     }
@@ -1338,13 +1368,10 @@ function buildMetadata() {
       error_message: errorMessage,
       formula: definition.formula || null,
       release_note: definition.releaseNote || null,
-      ...(definition.key === "DFEDTARU" && fedWatchExpectation
+      ...(definition.key === "CME_EXPECTED_POLICY_RATE" && fedWatchExpectation
         ? {
-            expected_policy_rate: fedWatchExpectation.expected_target_upper_rate,
-            expected_policy_rate_basis: fedWatchExpectation.method,
-            expected_policy_rate_observation_date: fedWatchExpectation.observation_date,
-            expected_policy_rate_meeting_date: fedWatchExpectation.meeting_date,
-            expected_policy_rate_source_checked_at: fedWatchExpectation.source_checked_at,
+            next_fomc_meeting_date: fedWatchExpectation.meeting_date,
+            calculation_basis: fedWatchExpectation.method,
           }
         : {}),
     };

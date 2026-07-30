@@ -1,12 +1,12 @@
-const CACHE_VERSION = "market-dashboard-v124";
+const CACHE_VERSION = "market-dashboard-v136";
 const APP_SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 
 const APP_SHELL_ASSETS = [
   "./",
   "./index.html",
-  "./style.css?v=fedwatch-card-v48",
-  "./app.js?v=us-section-labels-v57",
+  "./style.css?v=cme-implied-series-v51",
+  "./app.js?v=linked-range-v69",
   "./data/glossary.json",
   "./manifest.json",
   "./offline.html",
