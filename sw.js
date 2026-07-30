@@ -1,4 +1,4 @@
-const CACHE_VERSION = "market-dashboard-v136";
+const CACHE_VERSION = "market-dashboard-v137";
 const APP_SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 
