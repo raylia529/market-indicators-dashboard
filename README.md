@@ -38,7 +38,7 @@ The repository includes `.github/workflows/pages.yml`, which:
 - skips an indicator only after its source has been checked for the relevant publication cycle. A check made before the source's expected release time does not suppress the first later schedule after that release;
 - uses source-aware expected release dates for slow data, so a successful download of unchanged official data does not permanently suppress later overdue retries;
 - dispatches the isolated S&P 500 Breadth job alongside the 08:15 Cloudflare trigger, Tuesday through Saturday;
-- can be run manually from the GitHub Actions tab for `full`, `us`, `us-fast`, `us-market`, `us-slow`, `asia`, `breadth`, or `alpaca` with `workflow_dispatch`;
+- can be run manually from the GitHub Actions tab for `full`, `us`, `fred`, `asia`, `breadth`, or `alpaca` with `workflow_dispatch`;
 - deploys `index.html`, `style.css`, `app.js`, PWA assets, icons, and `data/` to Pages.
 
 GitHub Actions cron expressions use UTC. The comments and times above are the intended fixed Japan Standard Time schedule. Every scheduled run evaluates freshness indicator by indicator before downloading anything. Exchange holidays can keep a daily series pending until a later check, while already complete indicators are skipped. Downloaders make no delayed retries; each configured primary or fallback endpoint is requested at most once per scheduled check. Existing committed data is retained if a source remains unavailable.
