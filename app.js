@@ -1018,7 +1018,6 @@ let axisOrder = ["sp500"];
 let manualAxisOrder = false;
 let activeRange = DEFAULT_RANGE;
 let macroScale = "linear";
-let macroThresholdZonesVisible = true;
 let fxData = [];
 let activeFxRange = DEFAULT_RANGE;
 let visibleFxSeries = new Set(["USDJPY", "US_Japan_2Y_Spread", "BROAD_US_DOLLAR_INDEX"]);
@@ -3505,8 +3504,8 @@ function getThresholdEdgeShapes(zone, yref, min, max) {
   return shapes;
 }
 
-function getThresholdZoneShapes(selected, layout, axisById = null, visible = true) {
-  if (!visible) {
+function getThresholdZoneShapes(selected, layout, axisById = null) {
+  if (selected.length !== 1) {
     return [];
   }
 
@@ -3650,7 +3649,7 @@ function renderChart() {
     );
   }
 
-  layout.shapes = getThresholdZoneShapes(selected, layout, axisById, macroThresholdZonesVisible);
+  layout.shapes = getThresholdZoneShapes(selected, layout, axisById);
 
   if (chartElement && window.Plotly) {
     Plotly.react(chartElement, traces, layout, getPlotlyConfig()).then(() => {
@@ -3658,7 +3657,7 @@ function renderChart() {
         chartElement,
         macroLogScaleInput,
         null,
-        document.getElementById("macro-threshold-zones"),
+        null,
       );
 
       if (xBounds) {
@@ -3991,7 +3990,6 @@ function createComparisonSection(config) {
     activeRange: config.defaultRange || DEFAULT_RANGE,
     scale: "linear",
     normalized: defaultNormalized,
-    thresholdZonesVisible: true,
     selectionBeforeNormalized: defaultNormalized
       ? [...(config.defaultNonNormalizedSelectedIds || config.defaultSelectedIds.slice(0, 1))]
       : null,
@@ -4006,7 +4004,6 @@ function createComparisonSection(config) {
     noticeClose: document.getElementById(`${config.key}-selection-notice-close`),
     logScaleInput: document.getElementById(`${config.key}-log-scale`),
     normalizedInput: document.getElementById(`${config.key}-normalized`),
-    thresholdZonesInput: document.getElementById(`${config.key}-threshold-zones`),
     rangeButtons: Array.from(document.querySelectorAll(`[data-comparison-range="${config.key}"]`)),
   };
 
@@ -4015,9 +4012,6 @@ function createComparisonSection(config) {
   }
   if (elements.logScaleInput) {
     elements.logScaleInput.disabled = defaultNormalized;
-  }
-  if (elements.thresholdZonesInput) {
-    elements.thresholdZonesInput.checked = true;
   }
 
   function getLocalIndicator(id) {
@@ -4595,7 +4589,7 @@ function createComparisonSection(config) {
     layout.shapes = [
       ...(state.normalized
         ? []
-        : getThresholdZoneShapes(selected, layout, axisById, state.thresholdZonesVisible)),
+        : getThresholdZoneShapes(selected, layout, axisById)),
       ...getPolicyMeetingShapes(selected, xBounds, theme),
     ];
 
@@ -4605,7 +4599,7 @@ function createComparisonSection(config) {
           elements.chart,
           elements.logScaleInput,
           config.allowNormalized ? elements.normalizedInput : null,
-          elements.thresholdZonesInput,
+          null,
         );
 
         if (xBounds) {
@@ -4678,13 +4672,6 @@ function createComparisonSection(config) {
       state.manualAxisOrder = false;
       clearLocalNotice();
       renderLocalAll();
-    });
-  }
-
-  if (elements.thresholdZonesInput) {
-    elements.thresholdZonesInput.addEventListener("change", () => {
-      state.thresholdZonesVisible = elements.thresholdZonesInput.checked;
-      renderLocalChart();
     });
   }
 
@@ -5605,11 +5592,6 @@ if (macroLogScaleInput) {
     renderChart();
   });
 
-  const macroThresholdZonesInput = document.getElementById("macro-threshold-zones");
-  macroThresholdZonesInput?.addEventListener("change", () => {
-    macroThresholdZonesVisible = macroThresholdZonesInput.checked;
-    renderChart();
-  });
 }
 
 if (selectionNoticeClose) {
