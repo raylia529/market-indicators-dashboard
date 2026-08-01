@@ -569,40 +569,50 @@ const indicatorColorAliases = {
 
 const defaultIndicatorColors = {
   sp500: "#111111",
-  "high-yield-oas": "#d85f3f",
-  "hyg-ief": "#218c83",
-  vix: "#d44d5c",
-  move: "#6559bd",
-  skew: "#b7952f",
-  "margin-debt-yoy": "#339267",
-  "fed-balance-sheet": "#3f6fcb",
-  nfci: "#2b83ae",
-  "ism-manufacturing-pmi": "#9254aa",
-  "rsp-spy": "#d77d32",
-  "spy-tlt": "#3f6fcb",
-  "xly-xlp": "#9254aa",
-  "iwm-spy": "#d44d5c",
-  "smh-spy": "#2b83ae",
-  "new-high-low-breadth": "#6559bd",
-  "sp500-above-200dma": "#218c83",
-  "fed-funds-rate": "#d77d32",
-  "cme-expected-policy-rate": "#9254aa",
-  "us-10y-real-yield": "#0f766e",
-  "us-10y-breakeven-inflation": "#b45309",
-  "us-initial-jobless-claims": "#be185d",
-  "boj-policy-rate": "#111827",
-  "japan-overnight-call-rate": "#d77d32",
-  "boj-implied-rate": "#9f1239",
-  "japan-core-cpi-yoy": "#9254aa",
-  "tokyo-core-cpi-yoy": "#218c83",
-  "japan-cash-earnings-yoy": "#15803d",
-  BROAD_US_DOLLAR_INDEX: "#475569",
-  USDJPY: "#d77d32",
-  US_Japan_2Y_Spread: "#3f6fcb",
-  topix: "#2b83ae",
-  "nikkei-225": "#6559bd",
-  "japan-10y-jgb-yield": "#218c83",
-  "tsmc-revenue-yoy": "#d44d5c",
+  "high-yield-oas": "#d84b63",
+  "hyg-ief": "#4f78c9",
+  vix: "#ff3cac",
+  move: "#00d9ff",
+  skew: "#c0a34e",
+  "margin-debt-yoy": "#39ff88",
+  "fed-balance-sheet": "#945bb0",
+  nfci: "#e87952",
+  "ism-manufacturing-pmi": "#46b9c9",
+  "rsp-spy": "#dc944b",
+  "spy-tlt": "#6a61b7",
+  "xly-xlp": "#945bb0",
+  "iwm-spy": "#d84b63",
+  "smh-spy": "#39ff88",
+  "new-high-low-breadth": "#945bb0",
+  "sp500-above-200dma": "#39ff88",
+  "fed-funds-rate": "#dc944b",
+  "cme-expected-policy-rate": "#945bb0",
+  "us-2y-yield": "#46b9c9",
+  "us-rates-10y-yield": "#2a9d8f",
+  "us-rates-10y-2y-spread": "#e87952",
+  "us-10y-real-yield": "#65b779",
+  "us-10y-breakeven-inflation": "#c0a34e",
+  "us-10y-term-premium": "#6a61b7",
+  "us-initial-jobless-claims": "#ff3cac",
+  "boj-policy-rate": "#111111",
+  "japan-overnight-call-rate": "#dc944b",
+  "boj-implied-rate": "#d84b63",
+  "japan-2y-jgb-yield": "#46b9c9",
+  "japan-10y-jgb-yield": "#2a9d8f",
+  "japan-10y-2y-jgb-spread": "#6a61b7",
+  "japan-core-cpi-yoy": "#c0a34e",
+  "tokyo-core-cpi-yoy": "#ff3cac",
+  "japan-cash-earnings-yoy": "#65b779",
+  BROAD_US_DOLLAR_INDEX: "#6a61b7",
+  USDJPY: "#dc944b",
+  US_Japan_2Y_Spread: "#4f78c9",
+  topix: "#46b9c9",
+  "nikkei-225": "#945bb0",
+  "tsmc-revenue-yoy": "#2a9d8f",
+  "taiwan-foreign-investor-net-buying": "#39ff88",
+  usdtwd: "#945bb0",
+  "taiwan-margin-financing-balance-yoy": "#ff3cac",
+  "taiwan-electronics-exports-yoy": "#dc944b",
 };
 
 function getIndicatorColorKey(id) {
@@ -623,19 +633,19 @@ function getIndicatorColorKey(id) {
 
 const colorPalette = [
   "#111111",
-  "#d44d5c",
-  "#d85f3f",
-  "#d77d32",
-  "#b7952f",
-  "#789d3e",
+  "#d84b63",
+  "#e87952",
+  "#dc944b",
+  "#c0a34e",
+  "#a0ad51",
+  "#65b779",
   "#39ff88",
-  "#339267",
-  "#218c83",
+  "#2a9d8f",
+  "#46b9c9",
   "#00d9ff",
-  "#2b83ae",
-  "#3f6fcb",
-  "#6559bd",
-  "#9254aa",
+  "#4f78c9",
+  "#6a61b7",
+  "#945bb0",
   "#ff3cac",
 ];
 
@@ -999,6 +1009,13 @@ document.querySelectorAll(".mobile-view-switch").forEach((switchElement) => {
 let indicatorData = new Map();
 let fedWatchExpectation = null;
 const sharedIndicatorColorStorageKey = "marketIndicatorColorsV3";
+const legacyDefaultColorMigrations = new Map([
+  ["hyg-ief", new Set(["#218c83", "#2a9d8f"])],
+  ["margin-debt-yoy", new Set(["#339267"])],
+  ["nfci", new Set(["#2b83ae"])],
+  ["move", new Set(["#6559bd", "#4f78c9"])],
+  ["spy-tlt", new Set(["#3f6fcb"])],
+]);
 const sharedIndicatorColorDefaults = new Map([
   ...[
     ...indicators,
@@ -1386,7 +1403,9 @@ function loadSharedIndicatorColors(fallbackColors) {
   Object.entries(stored).forEach(([id, color]) => {
     const key = getIndicatorColorKey(id);
     if (typeof color === "string" && /^#[0-9a-f]{6}$/i.test(color)) {
-      colors.set(key, color.toLowerCase());
+      const normalizedColor = color.toLowerCase();
+      const isLegacyDefault = legacyDefaultColorMigrations.get(key)?.has(normalizedColor);
+      colors.set(key, isLegacyDefault ? defaultIndicatorColors[key] : normalizedColor);
     }
   });
 
