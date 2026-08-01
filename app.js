@@ -4806,7 +4806,7 @@ const comparisonSections = [
   }),
   createComparisonSection({
     key: "japan",
-    label: "Japan",
+    label: "JP Market",
     indicators: japanIndicators,
     defaultSelectedIds: ["topix"],
     defaultRange: DEFAULT_RANGE,
@@ -4814,7 +4814,7 @@ const comparisonSections = [
   }),
   createComparisonSection({
     key: "taiwan",
-    label: "Taiwan",
+    label: "TW Market",
     indicators: taiwanIndicators,
     defaultSelectedIds: ["taiex"],
     defaultRange: DEFAULT_RANGE,

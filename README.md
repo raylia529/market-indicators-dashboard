@@ -55,7 +55,7 @@ FRED-powered indicators require the repository Actions secret `FRED_API_KEY`. Sc
 
 ## Current Features
 
-- Macro, Breadth, Flows, US Rates, JP Rates, Japan, Taiwan, FX, Data Status, and Glossary tabs with matching responsive layouts where applicable.
+- Macro, Breadth, Flows, US Rates, JP Rates, JP Market, TW Market, FX, Data Status, and Glossary tabs with matching responsive layouts where applicable.
 - Data Status tab with compact expandable cards. `Dashboard latest` is the newest observation stored locally, `Source available` is the newest observation confirmed by a successful source request, and `Source checked` is the time of that successful confirmation. A failed connection does not replace the last successful source check.
 - `Up to date` requires the dashboard date to be at least the confirmed source date. Once an expected publication time has passed, it also requires a successful source check after that time; otherwise the status is `Update not run` or `Failed`.
 - Observation dates retain each source's local market or publication date; dashboard refresh timestamps are displayed in Japan Standard Time (`JST`).
@@ -67,7 +67,7 @@ FRED-powered indicators require the repository Actions secret `FRED_API_KEY`. Sc
 - FX comparison supports USD/JPY and the US-Japan 2Y yield spread.
 - Interactive Plotly charts with zoom, pan, hover tooltips, and range controls.
 - Range controls:
-  - Macro, Breadth, Flows, US Rates, JP Rates, Japan, Taiwan: 3M, 6M, 1Y, 3Y, 5Y, 10Y, Max
+  - Macro, Breadth, Flows, US Rates, JP Rates, JP Market, TW Market: 1M, 3M, 6M, 1Y, 3Y, 5Y, 10Y, Max
   - FX: 3M, 6M, 1Y, 2Y, 5Y, 10Y, MAX
 - Macro Max display starts at 1997/1.
 - Comparisons use original units by default. Shared percentage series use the right Y-axis; other valid two-series comparisons retain independent axes.
@@ -333,14 +333,14 @@ Japan 10-Year JGB Yield - Japan 2-Year JGB Yield
 - Japan Core CPI YoY and Tokyo Core CPI YoY are displayed in JP Rates alongside short-term and long-term Japanese rates; the FX tab remains focused on USD/JPY and the US-Japan 2Y spread.
 - S&P/JPX JGB VIX Index is intentionally not implemented. A stable, legal, public automated source suitable for GitHub Pages and committed CSV storage was not confirmed.
 
-### Japan
+### JP Market
 
 - Nikkei 225 preserves the existing historical archive and merges the latest three years of official daily closes from Nikkei Indexes.
 - TOPIX is not substituted with an ETF. Official daily closes are parsed from [JPX monthly statistics](https://www.jpx.co.jp/english/markets/statistics-equities/monthly/) PDFs, and the latest close comes from JPX's official current-index file.
 - Japan 10-Year JGB Yield and USD/JPY reuse canonical data files.
 - Foreign Investors Net Buying of Japanese Equities uses the weekly [JPX Trading by Type of Investors](https://www.jpx.co.jp/english/markets/statistics-equities/investor-type/) `Tokyo & Nagoya` value workbook. The series is `Foreigners` purchases minus sales, converted from thousand yen to JPY billions, with history from 2016.
 
-### Taiwan
+### TW Market
 
 - TAIEX preserves the existing historical archive and merges the latest official monthly observations from the Taiwan Stock Exchange historical report used by its public website.
 - TSMC Revenue YoY uses the canonical MOPSOV dataset shared by the Taiwan dashboard and update pipeline.

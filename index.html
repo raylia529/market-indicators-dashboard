@@ -15,7 +15,7 @@
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2" />
     <link rel="stylesheet" href="style.css?v=indicator-expansion-v57" />
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
-    <script src="app.js?v=indicator-expansion-v72" defer></script>
+    <script src="app.js?v=indicator-expansion-v73" defer></script>
   </head>
   <body>
     <main class="dashboard-shell">
@@ -25,8 +25,8 @@
         <button class="tab-button" type="button" data-tab="flows">US Flows</button>
         <button class="tab-button" type="button" data-tab="us-rates">US Rates</button>
         <button class="tab-button" type="button" data-tab="jp-rates">JP Rates</button>
-        <button class="tab-button" type="button" data-tab="japan">Japan</button>
-        <button class="tab-button" type="button" data-tab="taiwan">Taiwan</button>
+        <button class="tab-button" type="button" data-tab="japan">JP Market</button>
+        <button class="tab-button" type="button" data-tab="taiwan">TW Market</button>
         <button class="tab-button" type="button" data-tab="fx">FX</button>
         <button class="tab-button" type="button" data-tab="data-status">Data Status</button>
         <button class="tab-button" type="button" data-tab="glossary">Glossary</button>
@@ -353,19 +353,19 @@
         <section class="dashboard-section" aria-labelledby="japan-chart-title">
           <div class="panel-header">
             <div>
-              <p class="eyebrow">Japan</p>
+              <p class="eyebrow">JP Market</p>
               <h2 id="japan-chart-title">Loading indicators</h2>
             </div>
           </div>
           <div class="mobile-swipe-track" data-mobile-track="japan">
-            <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="Japan indicator cards">
-              <section class="metric-grid indicator-grid" id="japan-indicator-grid" aria-label="Japan indicator cards">
+            <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="JP Market indicator cards">
+              <section class="metric-grid indicator-grid" id="japan-indicator-grid" aria-label="JP Market indicator cards">
                 <p class="loading-message">Loading CSV data...</p>
               </section>
             </section>
-            <section class="mobile-pane chart-pane" data-mobile-pane="charts" aria-label="Japan charts">
+            <section class="mobile-pane chart-pane" data-mobile-pane="charts" aria-label="JP Market charts">
               <div class="chart-toolbar">
-                <div class="range-selector" aria-label="Japan date range selector">
+                <div class="range-selector" aria-label="JP Market date range selector">
                   <button class="range-button" type="button" data-comparison-range="japan" data-range="1M">1M</button>
                   <button class="range-button" type="button" data-comparison-range="japan" data-range="3M">3M</button>
                   <button class="range-button" type="button" data-comparison-range="japan" data-range="6M">6M</button>
@@ -386,10 +386,10 @@
                 <span id="japan-selection-notice-text"></span>
                 <button class="notice-close" id="japan-selection-notice-close" type="button" aria-label="Dismiss notice">x</button>
               </div>
-              <div class="comparison-chart" id="japan-chart" aria-label="Interactive Japan chart"></div>
+              <div class="comparison-chart" id="japan-chart" aria-label="Interactive JP Market chart"></div>
             </section>
           </div>
-          <div class="mobile-view-switch" aria-label="Japan mobile view">
+          <div class="mobile-view-switch" aria-label="JP Market mobile view">
             <button class="mobile-view-button active" type="button" data-mobile-view-button="japan" data-mobile-view="cards" aria-pressed="true">Cards</button>
             <button class="mobile-view-button" type="button" data-mobile-view-button="japan" data-mobile-view="charts" aria-pressed="false">Charts</button>
           </div>
@@ -400,19 +400,19 @@
         <section class="dashboard-section" aria-labelledby="taiwan-chart-title">
           <div class="panel-header">
             <div>
-              <p class="eyebrow">Taiwan</p>
+              <p class="eyebrow">TW Market</p>
               <h2 id="taiwan-chart-title">Loading indicators</h2>
             </div>
           </div>
           <div class="mobile-swipe-track" data-mobile-track="taiwan">
-            <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="Taiwan indicator cards">
-              <section class="metric-grid indicator-grid" id="taiwan-indicator-grid" aria-label="Taiwan indicator cards">
+            <section class="mobile-pane cards-pane active" data-mobile-pane="cards" aria-label="TW Market indicator cards">
+              <section class="metric-grid indicator-grid" id="taiwan-indicator-grid" aria-label="TW Market indicator cards">
                 <p class="loading-message">Loading CSV data...</p>
               </section>
             </section>
-            <section class="mobile-pane chart-pane" data-mobile-pane="charts" aria-label="Taiwan charts">
+            <section class="mobile-pane chart-pane" data-mobile-pane="charts" aria-label="TW Market charts">
               <div class="chart-toolbar">
-                <div class="range-selector" aria-label="Taiwan date range selector">
+                <div class="range-selector" aria-label="TW Market date range selector">
                   <button class="range-button" type="button" data-comparison-range="taiwan" data-range="1M">1M</button>
                   <button class="range-button" type="button" data-comparison-range="taiwan" data-range="3M">3M</button>
                   <button class="range-button" type="button" data-comparison-range="taiwan" data-range="6M">6M</button>
@@ -433,10 +433,10 @@
                 <span id="taiwan-selection-notice-text"></span>
                 <button class="notice-close" id="taiwan-selection-notice-close" type="button" aria-label="Dismiss notice">x</button>
               </div>
-              <div class="comparison-chart" id="taiwan-chart" aria-label="Interactive Taiwan chart"></div>
+              <div class="comparison-chart" id="taiwan-chart" aria-label="Interactive TW Market chart"></div>
             </section>
           </div>
-          <div class="mobile-view-switch" aria-label="Taiwan mobile view">
+          <div class="mobile-view-switch" aria-label="TW Market mobile view">
             <button class="mobile-view-button active" type="button" data-mobile-view-button="taiwan" data-mobile-view="cards" aria-pressed="true">Cards</button>
             <button class="mobile-view-button" type="button" data-mobile-view-button="taiwan" data-mobile-view="charts" aria-pressed="false">Charts</button>
           </div>
