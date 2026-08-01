@@ -939,7 +939,6 @@ const fxSelectionNoticeText = document.getElementById("fx-selection-notice-text"
 const fxSelectionNoticeClose = document.getElementById("fx-selection-notice-close");
 const dataStatusUpdated = document.getElementById("data-status-updated");
 const dataStatusBody = document.getElementById("data-status-body");
-const glossaryMeta = document.getElementById("glossary-meta");
 const glossaryBody = document.getElementById("glossary-body");
 const glossarySearchInput = document.getElementById("glossary-search");
 const glossaryLanguageButtons = Array.from(document.querySelectorAll("[data-glossary-global-language]"));
@@ -5362,11 +5361,6 @@ function renderGlossary(glossary) {
   );
   const visibleEntries = filterGlossaryEntries(glossaryEntries);
 
-  if (glossaryMeta) {
-    glossaryMeta.textContent = glossarySearchText
-      ? `${visibleEntries.length} of ${glossaryEntries.length} indicators`
-      : `${glossaryEntries.length} indicators`;
-  }
 
   syncGlossaryLanguageButtons();
 
@@ -5440,9 +5434,6 @@ function renderGlossary(glossary) {
 }
 
 function renderGlossaryError(error) {
-  if (glossaryMeta) {
-    glossaryMeta.textContent = "Glossary unavailable";
-  }
 
   if (glossaryBody) {
     glossaryBody.innerHTML = `

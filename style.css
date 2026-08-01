@@ -1631,11 +1631,12 @@ input,
 
   .glossary-header-tools {
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
   }
 
   .glossary-search-input {
-    flex: 1 1 160px;
+    flex: 1 1 100%;
+    width: 100%;
     min-width: 0;
   }
 
