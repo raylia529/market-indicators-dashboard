@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Update nationwide monthly cash earnings YoY from the official MHLW release table."""
+"""Update nationwide monthly cash earnings YoY from official MHLW release tables."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ import csv
 import re
 import ssl
 import tempfile
+from calendar import monthrange
 from datetime import date
 from pathlib import Path
 from urllib.parse import urljoin
@@ -40,26 +41,42 @@ def decode_html(payload: bytes) -> str:
     raise RuntimeError("Could not decode the MHLW release index.")
 
 
-def latest_preliminary_page(index_html: str) -> str:
-    matches = re.findall(r'href="([^"]+/r\d{2}/\d{4}p/\d{4}p\.html)"', index_html)
-    if not matches:
-        raise RuntimeError("Could not find a preliminary monthly cash-earnings release link.")
-    return sorted(set(matches))[-1]
+def latest_release_page(index_html: str) -> str:
+    matches = re.findall(r'href="([^"]+/r\d{2}/\d{4}[pr]/\d{4}[pr]\.html)"', index_html)
+    candidates: list[tuple[str, int, str]] = []
+
+    for page_path in set(matches):
+        match = re.search(r"/r(\d{2})/(\d{4})([pr])/(\d{4})([pr])\.html$", page_path)
+        if not match:
+            continue
+        reiwa_year, folder_period, folder_type, file_period, file_type = match.groups()
+        if folder_period != file_period or folder_type != file_type:
+            continue
+        year = 2018 + int(reiwa_year)
+        month = int(folder_period[-2:])
+        observation_date = date(year, month, monthrange(year, month)[1]).isoformat()
+        revision_priority = 1 if folder_type == "r" else 0
+        candidates.append((observation_date, revision_priority, page_path))
+
+    if not candidates:
+        raise RuntimeError("Could not find a monthly cash-earnings release link.")
+
+    return max(candidates)[2]
 
 
 def release_date_from_url(page_url: str) -> str:
-    match = re.search(r"/r(\d{2})/(\d{2})(\d{2})p/", page_url)
+    match = re.search(r"/r(\d{2})/(\d{2})(\d{2})[pr]/", page_url)
     if not match:
         raise RuntimeError(f"Could not determine release month from {page_url}")
     reiwa_year, year_suffix, month = map(int, match.groups())
     year = 2018 + reiwa_year
     if year % 100 != year_suffix:
         raise RuntimeError(f"Unexpected MHLW release year in {page_url}")
-    return date(year, month, 1).isoformat()
+    return date(year, month, monthrange(year, month)[1]).isoformat()
 
 
 def first_table_url(page_url: str, page_html: str) -> str:
-    match = re.search(r'href="([^"]*xls/\d{4}c01p\.xlsx)"', page_html)
+    match = re.search(r'href="([^"]*xls/\d{4}c01[pr]\.xlsx)"', page_html)
     if not match:
         raise RuntimeError("Could not find the official monthly cash-earnings workbook.")
     return urljoin(page_url, match.group(1))
@@ -106,14 +123,19 @@ def write_rows(rows: dict[str, float]) -> None:
 
 def main() -> None:
     index_html = decode_html(download(INDEX_URL))
-    page_url = urljoin(INDEX_URL, latest_preliminary_page(index_html))
+    page_url = urljoin(INDEX_URL, latest_release_page(index_html))
     page_html = decode_html(download(page_url))
     observation_date = release_date_from_url(page_url)
     value = read_total_cash_earnings_yoy(download(first_table_url(page_url, page_html)))
-    rows = read_existing()
+    rows = {
+        existing_date: existing_value
+        for existing_date, existing_value in read_existing().items()
+        if existing_date[:7] != observation_date[:7]
+    }
     rows[observation_date] = value
     write_rows(rows)
-    print(f"Japan Cash Earnings YoY: {observation_date} = {value:.1f}%")
+    release_type = "final" if re.search(r"\d{4}r/", page_url) else "preliminary"
+    print(f"Japan Cash Earnings YoY ({release_type}): {observation_date} = {value:.1f}%")
 
 
 if __name__ == "__main__":

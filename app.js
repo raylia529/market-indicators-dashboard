@@ -1837,6 +1837,10 @@ function shiftDateByRange(endDate, rangeKey) {
   return startDate;
 }
 
+function getDateTickFormat(rangeKey) {
+  return rangeKey === "1M" ? "%-m/%-d" : "%Y/%-m";
+}
+
 function getMacroXBounds() {
   const selected = axisOrder;
   const latestDateText = selected
@@ -3614,7 +3618,7 @@ function renderChart() {
       minallowed: xBounds?.start,
       maxallowed: xBounds?.end,
       showgrid: false,
-      tickformat: "%Y/%-m",
+      tickformat: getDateTickFormat(activeRange),
       hoverformat: "%Y/%-m/%-d",
       tickfont: { color: theme.muted, weight: 700 },
     },
@@ -3936,7 +3940,7 @@ function renderFxChart() {
         minallowed: xBounds?.start,
         maxallowed: xBounds?.end,
         showgrid: false,
-        tickformat: "%Y/%-m",
+        tickformat: getDateTickFormat(activeFxRange),
         hoverformat: "%Y/%-m/%-d",
         tickfont: { color: theme.muted, weight: 700 },
       },
@@ -4530,7 +4534,7 @@ function createComparisonSection(config) {
         minallowed: xBounds?.allowedStart || xBounds?.start,
         maxallowed: xBounds?.allowedEnd || xBounds?.end,
         showgrid: false,
-        tickformat: "%Y/%-m",
+        tickformat: getDateTickFormat(state.activeRange),
         hoverformat: "%Y/%-m/%-d",
         tickfont: { color: theme.muted, weight: 700 },
       },
