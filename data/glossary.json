@@ -702,14 +702,14 @@
     },
     {
       "id": "BOJ_IMPLIED_RATE_3M_TONA",
-      "short_name": "BOJ Implied Rate (3M TONA)",
+      "short_name": "BOJ Implied Rate",
       "full_name": "BOJ Implied Rate from 3-Month TONA Futures",
       "aliases": ["BOJ Implied Rate", "3M TONA", "3-Month TONA Futures"],
-      "headings": {"zh": "BOJ 隱含利率（3 個月 TONA）", "en": "BOJ Implied Rate (3M TONA)", "ja": "BOJインプライド金利（3か月TONA）"},
+      "headings": {"zh": "BOJ 隱含利率", "en": "BOJ Implied Rate", "ja": "BOJインプライド政策金利"},
       "descriptions": {
-        "zh": "BOJ Implied Rate 以最近期 3 個月 TONA 期貨的結算價計算（100 減結算價），反映市場對未來短期日圓利率的定價。它可用作 BOJ 政策路徑的市場代理，但不是 BOJ 的官方預測，也不是下一次會議機率的加權平均。",
-        "en": "The BOJ Implied Rate is calculated as 100 minus the settlement price of the nearest 3-Month TONA futures contract. It is a market price of future short-term yen rates and a useful proxy for the expected BOJ path, not an official forecast or a probability-weighted next-meeting decision.",
-        "ja": "BOJインプライド金利は、期近の3か月TONA先物の清算値を100から引いて算出します。将来の円短期金利に対する市場価格であり、BOJの政策経路の代理指標にはなりますが、公式予測や次回会合の確率加重予測ではありません。"
+        "zh": "BOJ Implied Rate（日本央行隱含政策利率）是根據利率期貨或隔夜指數交換（OIS）等金融商品價格推算出的市場預期政策利率。與目前的政策利率不同，它反映的是投資人對日本銀行（BOJ）未來貨幣政策路徑的集體預期，而非央行已經實施的利率。\n\n當市場預期日本將持續升息時，BOJ Implied Rate 通常會高於目前政策利率；若市場預期未來降息或政策轉趨寬鬆，則隱含利率可能低於現行政策利率。由於金融市場會提前反映未來預期，因此 BOJ Implied Rate 往往比官方政策利率更早反映市場對貨幣政策的看法。\n\n投資人可將 BOJ Implied Rate 與實際政策利率、日本 2 年期公債殖利率、Core CPI、Cash Earnings YoY 及 USD/JPY 一併觀察。若隱含利率持續上升，通常代表市場提高對未來升息的預期；若下降，則可能表示市場預期日本經濟或通膨動能轉弱。此 Dashboard 目前以最近期 3 個月 TONA 期貨結算價（100 減結算價）計算，因此是市場隱含短端利率代理，而非官方預測或下一次會議的機率加權平均。",
+        "en": "The BOJ Implied Rate is the market-implied policy interest rate derived from interest rate futures or Overnight Index Swap (OIS) pricing. Unlike the current policy rate set by the Bank of Japan (BOJ), it reflects investors' expectations for the future path of monetary policy.\n\nWhen markets expect the BOJ to continue raising interest rates, the implied rate typically trades above the current policy rate. Conversely, if investors anticipate future rate cuts or a more accommodative policy stance, the implied rate may fall below the current policy rate. Because financial markets price in future expectations, the BOJ Implied Rate often moves before any official policy decision.\n\nInvestors commonly compare the BOJ Implied Rate with the current BOJ policy rate, the Japan 2-Year Government Bond Yield, Core CPI, Cash Earnings YoY, and USD/JPY. A rising implied rate generally indicates increasing expectations for future rate hikes, while a declining implied rate suggests expectations of slower economic growth, easing inflation, or a more dovish policy outlook. This dashboard calculates the series as 100 minus the nearest 3-Month TONA futures settlement price, so it is a market proxy for future short-term yen rates rather than an official forecast or a probability-weighted next-meeting decision.",
+        "ja": "BOJインプライド政策金利は、金利先物やオーバーナイト・インデックス・スワップ（OIS）などの市場価格から算出される、市場が織り込む将来の政策金利です。現在の日本銀行（BOJ）の政策金利とは異なり、市場参加者が予想する今後の金融政策の方向性を反映しています。\n\n市場が追加利上げを予想している場合、インプライド政策金利は現在の政策金利を上回ることが多く、反対に利下げや金融緩和への転換を予想している場合は、現在の政策金利を下回ることがあります。金融市場は将来の見通しを先取りして価格に反映するため、BOJインプライド政策金利は実際の政策変更よりも早く変化することが一般的です。\n\nBOJインプライド政策金利は、日本銀行の政策金利、日本国債2年利回り、コアCPI、現金給与総額前年比（Cash Earnings YoY）、USD/JPYと併せて確認することで、金融政策に対する市場の期待や金利見通しをより正確に把握できます。上昇は追加利上げ期待の高まりを、低下は景気やインフレの鈍化、あるいは金融緩和期待を示唆することが一般的です。このDashboardでは期近の3か月TONA先物の清算値を100から引いて算出しており、公式予測や次回会合の確率加重予測ではなく、将来の円短期金利に対する市場代理指標です。"
       }
     }
   ]

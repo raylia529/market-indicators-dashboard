@@ -278,6 +278,16 @@ const usRatesIndicators = [
     decimals: 2,
   },
   {
+    id: "us-rates-10y-2y-spread",
+    name: "10Y-2Y Spread",
+    file: "data/us-10y-minus-2y-spread.csv",
+    unitLabel: "Percentage Points",
+    valueSuffix: " pp",
+    category: "spread",
+    color: "#8b5cf6",
+    decimals: 2,
+  },
+  {
     id: "us-10y-real-yield",
     name: "US 10Y Real Yield",
     file: "data/us-10y-real-yield.csv",
@@ -295,16 +305,6 @@ const usRatesIndicators = [
     valueSuffix: "%",
     category: "rate",
     color: "#b45309",
-    decimals: 2,
-  },
-  {
-    id: "us-rates-10y-2y-spread",
-    name: "10Y-2Y Spread",
-    file: "data/us-10y-minus-2y-spread.csv",
-    unitLabel: "Percentage Points",
-    valueSuffix: " pp",
-    category: "spread",
-    color: "#8b5cf6",
     decimals: 2,
   },
   {
@@ -338,16 +338,6 @@ const usRatesIndicators = [
     decimals: 0,
     cadence: "weekly",
   },
-  {
-    id: "us-rates-sp500",
-    name: "S&P 500",
-    file: "data/sp500.csv",
-    unitLabel: "Index",
-    valueSuffix: "",
-    category: "price",
-    color: "#2563eb",
-    decimals: 2,
-  },
 ];
 
 const jpRatesIndicators = [
@@ -364,6 +354,16 @@ const jpRatesIndicators = [
     lineShape: "hv",
   },
   {
+    id: "boj-implied-rate",
+    name: "BOJ Implied Rate",
+    file: "data/boj-implied-rate.csv",
+    unitLabel: "Percent",
+    valueSuffix: "%",
+    category: "rate",
+    color: "#9f1239",
+    decimals: 3,
+  },
+  {
     id: "japan-overnight-call-rate",
     name: "Japan Overnight Call Rate",
     file: "data/japan-overnight-call-rate.csv",
@@ -371,16 +371,6 @@ const jpRatesIndicators = [
     valueSuffix: "%",
     category: "rate",
     color: "#d77d32",
-    decimals: 3,
-  },
-  {
-    id: "boj-implied-rate",
-    name: "BOJ Implied Rate (3M TONA)",
-    file: "data/boj-implied-rate.csv",
-    unitLabel: "Percent",
-    valueSuffix: "%",
-    category: "rate",
-    color: "#9f1239",
     decimals: 3,
   },
   {
@@ -414,6 +404,17 @@ const jpRatesIndicators = [
     decimals: 3,
   },
   {
+    id: "japan-cash-earnings-yoy",
+    name: "Japan Cash Earnings YoY",
+    file: "data/japan-cash-earnings-yoy.csv",
+    unitLabel: "Percent YoY",
+    valueSuffix: "%",
+    category: "percentage",
+    color: "#15803d",
+    decimals: 1,
+    cadence: "monthly",
+  },
+  {
     id: "japan-core-cpi-yoy",
     name: "Japan Core CPI YoY",
     file: "data/japan-core-cpi-yoy.csv",
@@ -434,37 +435,6 @@ const jpRatesIndicators = [
     color: "#218c83",
     decimals: 1,
     cadence: "monthly",
-  },
-  {
-    id: "japan-cash-earnings-yoy",
-    name: "Japan Cash Earnings YoY",
-    file: "data/japan-cash-earnings-yoy.csv",
-    unitLabel: "Percent YoY",
-    valueSuffix: "%",
-    category: "percentage",
-    color: "#15803d",
-    decimals: 1,
-    cadence: "monthly",
-  },
-  {
-    id: "jp-rates-topix",
-    name: "TOPIX",
-    file: "data/topix.csv",
-    unitLabel: "Index",
-    valueSuffix: "",
-    category: "price",
-    color: "#64748b",
-    decimals: 2,
-  },
-  {
-    id: "jp-rates-nikkei-225",
-    name: "Nikkei 225",
-    file: "data/nikkei-225.csv",
-    unitLabel: "Index",
-    valueSuffix: "",
-    category: "price",
-    color: "#2563eb",
-    decimals: 2,
   },
 ];
 
@@ -591,10 +561,7 @@ const indicatorColorAliases = {
   "breadth-sp500": "sp500",
   "flows-rsp-spy": "rsp-spy",
   "flows-hyg-ief": "hyg-ief",
-  "us-rates-sp500": "sp500",
   "us-rates-move": "move",
-  "jp-rates-topix": "topix",
-  "jp-rates-nikkei-225": "nikkei-225",
   "japan-tab-usdjpy": "USDJPY",
   "japan-tab-10y-jgb-yield": "japan-10y-jgb-yield",
   "taiwan-tsmc-revenue-yoy": "tsmc-revenue-yoy",
@@ -801,7 +768,6 @@ const glossaryDisplayRank = new Map(
 const indicatorGlossaryIds = {
   sp500: "SP500",
   "breadth-sp500": "SP500",
-  "us-rates-sp500": "SP500",
   "high-yield-oas": "BAMLH0A0HYM2",
   "hyg-ief": "HYG_IEF",
   "flows-hyg-ief": "HYG_IEF",
@@ -842,9 +808,7 @@ const indicatorGlossaryIds = {
   "tokyo-core-cpi-yoy": "TOKYO_CORE_CPI_YOY",
   "japan-cash-earnings-yoy": "JAPAN_CASH_EARNINGS_YOY",
   topix: "TOPIX",
-  "jp-rates-topix": "TOPIX",
   "nikkei-225": "NIKKEI_225",
-  "jp-rates-nikkei-225": "NIKKEI_225",
   "japan-foreign-investor-net-buying": "JAPAN_FOREIGN_NET_BUYING",
   "japan-tab-usdjpy": "DEXJPUS",
   taiex: "TAIEX",
@@ -968,11 +932,8 @@ const indicatorChangeFormatOverrides = {
   "xly-xlp": "percent",
   "iwm-spy": "percent",
   "smh-spy": "percent",
-  "us-rates-sp500": "percent",
   topix: "percent",
-  "jp-rates-topix": "percent",
   "nikkei-225": "percent",
-  "jp-rates-nikkei-225": "percent",
   taiex: "percent",
   "japan-tab-usdjpy": "percent",
   usdtwd: "percent",
@@ -3295,7 +3256,25 @@ const axisLabelOverrides = {
   "japan-10y-jgb-yield": "Japan 10Y<br>Yield",
   "japan-tab-10y-jgb-yield": "Japan 10Y<br>Yield",
   "japan-foreign-investor-net-buying": "Japan<br>Foreign<br>Net Buying",
+  "us-initial-jobless-claims": "US Initial<br>Jobless<br>Claims",
 };
+
+// Official BOJ meeting end dates, published with the annual MPM schedule.
+const bojPolicyMeetingDates = [
+  "2025-01-24", "2025-03-19", "2025-05-01", "2025-06-17",
+  "2025-07-31", "2025-09-19", "2025-10-30", "2025-12-19",
+  "2026-01-23", "2026-03-19", "2026-04-28", "2026-06-16",
+  "2026-07-31", "2026-09-18", "2026-10-30", "2026-12-18",
+  "2027-01-22", "2027-03-18", "2027-04-28", "2027-06-11",
+  "2027-07-22", "2027-09-22", "2027-10-29", "2027-12-17",
+];
+
+const quarterPointRateIds = new Set([
+  "fed-funds-rate",
+  "cme-expected-policy-rate",
+  "boj-policy-rate",
+  "boj-implied-rate",
+]);
 
 function wrapHorizontalAxisLabel(indicator) {
   if (axisLabelOverrides[indicator.id]) {
@@ -3318,7 +3297,7 @@ function wrapHorizontalAxisLabel(indicator) {
   }
 
   const words = label.split(/\s+/);
-  const lineCount = label.length > 16 && words.length >= 3 ? 3 : 2;
+  const lineCount = label.length > 28 && words.length >= 4 ? 4 : label.length > 16 && words.length >= 3 ? 3 : 2;
   const lines = [];
   let start = 0;
 
@@ -4219,25 +4198,30 @@ function createComparisonSection(config) {
     return addDays(date, -1);
   }
 
-  function getFomcMeetingShapes(selected, xBounds, theme) {
-    if (
-      config.key !== "us-rates" ||
-      !selected.includes("cme-expected-policy-rate") ||
-      !xBounds
-    ) {
+  function getPolicyMeetingShapes(selected, xBounds, theme) {
+    if (!xBounds) {
       return [];
     }
 
-    const meetingDates = [
-      ...(state.data.get("cme-expected-policy-rate") || [])
-        .map((row) => row.meetingDate)
-        .filter(Boolean),
-      ...(fedWatchExpectation?.future_curve || []).map((item) => item.meeting_date),
-    ];
+    let markerDates = [];
+    if (config.key === "us-rates" && selected.includes("cme-expected-policy-rate")) {
+      markerDates = [
+        ...(state.data.get("cme-expected-policy-rate") || [])
+          .map((row) => row.meetingDate)
+          .filter(Boolean),
+        ...(fedWatchExpectation?.future_curve || []).map((item) => item.meeting_date),
+      ].map(shiftMeetingMarker);
+    }
 
-    return [...new Set(meetingDates)]
+    if (
+      config.key === "jp-rates" &&
+      selected.some((id) => ["boj-policy-rate", "boj-implied-rate"].includes(id))
+    ) {
+      markerDates = bojPolicyMeetingDates;
+    }
+
+    return [...new Set(markerDates)]
       .filter(Boolean)
-      .map(shiftMeetingMarker)
       .filter(
         (date) =>
           date >= (xBounds.allowedStart || xBounds.start) &&
@@ -4574,9 +4558,7 @@ function createComparisonSection(config) {
         state.normalized ? theme.ink : getAxisGroupColor(leftIds, theme),
       );
       if (
-        leftIds.some((id) =>
-          ["fed-funds-rate", "cme-expected-policy-rate"].includes(id),
-        )
+        leftIds.some((id) => quarterPointRateIds.has(id))
       ) {
         layout.yaxis.griddash = "dot";
         layout.yaxis.gridcolor = theme.guide;
@@ -4598,9 +4580,7 @@ function createComparisonSection(config) {
         getAxisGroupColor(rightIds, theme),
       );
       if (
-        rightIds.some((id) =>
-          ["fed-funds-rate", "cme-expected-policy-rate"].includes(id),
-        )
+        rightIds.some((id) => quarterPointRateIds.has(id))
       ) {
         layout.yaxis2.griddash = "dot";
         layout.yaxis2.gridcolor = theme.guide;
@@ -4616,7 +4596,7 @@ function createComparisonSection(config) {
       ...(state.normalized
         ? []
         : getThresholdZoneShapes(selected, layout, axisById, state.thresholdZonesVisible)),
-      ...getFomcMeetingShapes(selected, xBounds, theme),
+      ...getPolicyMeetingShapes(selected, xBounds, theme),
     ];
 
     if (elements.chart && window.Plotly) {

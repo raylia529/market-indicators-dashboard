@@ -442,11 +442,16 @@ input,
 .fx-card > .indicator-label {
   display: block;
   min-width: 0;
+  min-height: 2.4em;
   color: var(--muted);
   font-size: 0.86rem;
   font-weight: 800;
   line-height: 1.2;
   overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
 
 .indicator-title-row {
@@ -456,10 +461,12 @@ input,
   gap: 1px;
   width: 100%;
   max-width: 100%;
+  min-height: 2.4em;
 }
 
 .indicator-title-row .indicator-label {
   min-width: 0;
+  min-height: 0;
 }
 
 .indicator-label-detail {
@@ -481,6 +488,12 @@ input,
     line-height: 1.18;
     overflow-wrap: anywhere;
     text-wrap: balance;
+  }
+
+  .indicator-label,
+  .fx-card > .indicator-label,
+  .indicator-title-row {
+    min-height: 2.36em;
   }
 
 }
@@ -1722,7 +1735,7 @@ input,
   }
 
   .indicator-label {
-    min-height: auto;
+    min-height: 2.4em;
   }
 
   #indicator-chart,
