@@ -722,59 +722,6 @@ function combineRows(ids, getRows) {
   return ids.flatMap((id) => getRows(id));
 }
 
-const glossaryDisplayOrder = [
-  "SP500",
-  "BAMLH0A0HYM2",
-  "HYG_IEF",
-  "VIXCLS",
-  "MOVE",
-  "SKEW",
-  "FINRA_MARGIN_DEBT_YOY",
-  "WALCL",
-  "NFCI",
-  "ISM_MANUFACTURING_PMI",
-  "RSP_SPY",
-  "NEW_HIGH_LOW_BREADTH",
-  "SP500_ABOVE_200DMA",
-  "SPY_TLT",
-  "XLY_XLP",
-  "IWM_SPY",
-  "SMH_SPY",
-  "DFEDTARU",
-  "CME_EXPECTED_POLICY_RATE",
-  "DGS2",
-  "DGS10",
-  "DFII10",
-  "T10YIE",
-  "ICSA",
-  "T10Y2Y",
-  "ACMTP10",
-  "BOJ_POLICY_RATE",
-  "BOJ_OVERNIGHT_CALL_RATE",
-  "BOJ_IMPLIED_RATE_3M_TONA",
-  "JAPAN_2Y_JGB",
-  "JAPAN_10Y_JGB",
-  "JAPAN_10Y_2Y_SPREAD",
-  "JAPAN_CORE_CPI_YOY",
-  "TOKYO_CORE_CPI_YOY",
-  "JAPAN_CASH_EARNINGS_YOY",
-  "TOPIX",
-  "NIKKEI_225",
-  "JAPAN_FOREIGN_NET_BUYING",
-  "DEXJPUS",
-  "TAIEX",
-  "TSMC_REVENUE_YOY",
-  "TAIWAN_FOREIGN_NET_BUYING",
-  "USDTWD",
-  "DTWEXBGS",
-  "TAIWAN_MARGIN_FINANCING_BALANCE_YOY",
-  "TAIWAN_ELECTRONICS_EXPORTS_YOY",
-  "US_JAPAN_2Y_SPREAD",
-];
-const glossaryDisplayRank = new Map(
-  glossaryDisplayOrder.map((id, index) => [id, index]),
-);
-
 const indicatorGlossaryIds = {
   sp500: "SP500",
   "breadth-sp500": "SP500",
@@ -1037,7 +984,7 @@ let activeRange = DEFAULT_RANGE;
 let macroScale = "linear";
 let fxData = [];
 let activeFxRange = DEFAULT_RANGE;
-let visibleFxSeries = new Set(["USDJPY", "US_Japan_2Y_Spread", "BROAD_US_DOLLAR_INDEX"]);
+let visibleFxSeries = new Set(["USDJPY", "BROAD_US_DOLLAR_INDEX"]);
 let glossaryEntries = [];
 let glossarySearchText = "";
 let activeGlossaryLanguage = getGlossaryLanguageFromUrl();
@@ -3585,7 +3532,7 @@ function renderChart() {
       x: rows.map((row) => row.date),
       y: rows.map((row) => row.value),
       type: "scatter",
-      mode: "lines",
+      mode: rows.length === 1 ? "lines+markers" : "lines",
       name: indicator.name,
       yaxis: axisById.get(id),
       line: {
@@ -3594,6 +3541,9 @@ function renderChart() {
         dash: "solid",
         shape: indicator.lineShape || "linear",
       },
+      ...(rows.length === 1
+        ? { marker: { size: 8, color: getChartSeriesColor(indicator.id) } }
+        : {}),
       hovertemplate: `<b>${indicator.name}</b><br>%{y:.${indicator.decimals}f} ${indicator.unitLabel}<extra></extra>`,
     };
   });
@@ -3877,10 +3827,11 @@ function renderFxChart() {
       x: seriesRows.map((row) => row.date),
       y: seriesRows.map((row) => row[series.field]),
       type: "scatter",
-      mode: "lines",
+      mode: seriesRows.length === 1 ? "lines+markers" : "lines",
       name: series.name,
       yaxis: axisById.get(series.id),
       line: { color: series.color, width: 1.5 },
+      ...(seriesRows.length === 1 ? { marker: { size: 8, color: series.color } } : {}),
       hovertemplate: `<b>${series.name}</b><br>%{y:.${series.decimals}f}${series.suffix}<extra></extra>`,
     };
   });
@@ -4199,7 +4150,15 @@ function createComparisonSection(config) {
       selected.includes("cme-expected-policy-rate")
         ? (fedWatchExpectation?.future_curve || []).map((item) => item.meeting_date)
         : [];
-    const allowedEnd = futureFomcMeetings.filter(Boolean).sort().at(-1) || baseBounds.end;
+    const futureBojMeetings =
+      config.key === "jp-rates" &&
+      selected.some((id) => ["boj-policy-rate", "boj-implied-rate"].includes(id))
+        ? bojPolicyMeetingDates
+        : [];
+    const allowedEnd = [...futureFomcMeetings, ...futureBojMeetings]
+      .filter(Boolean)
+      .sort()
+      .at(-1) || baseBounds.end;
 
     return {
       start: displayStart && displayStart < baseBounds.start
@@ -4470,7 +4429,7 @@ function createComparisonSection(config) {
         y: rows.map((row) => row.value),
         customdata: rows.map((row) => [row.originalValue ?? row.value, row.baseDate ?? ""]),
         type: "scatter",
-        mode: "lines",
+        mode: rows.length === 1 ? "lines+markers" : "lines",
         name: indicator.name,
         yaxis: axisById.get(id),
         line: {
@@ -4479,6 +4438,9 @@ function createComparisonSection(config) {
           dash: "solid",
           shape: indicator.lineShape || "linear",
         },
+        ...(rows.length === 1
+          ? { marker: { size: 8, color: getChartSeriesColor(indicator.id) } }
+          : {}),
         hovertemplate: normalizedHover,
       };
     });
@@ -4563,7 +4525,12 @@ function createComparisonSection(config) {
         font: { color: theme.ink },
       },
       hovermode: "x unified",
-      dragmode: selected.includes("cme-expected-policy-rate") ? "pan" : getChartDragMode(),
+      dragmode:
+        selected.includes("cme-expected-policy-rate") ||
+        (config.key === "jp-rates" &&
+          selected.some((id) => ["boj-policy-rate", "boj-implied-rate"].includes(id)))
+          ? "pan"
+          : getChartDragMode(),
     };
 
     if (leftIndicator) {
@@ -4789,7 +4756,7 @@ const comparisonSections = [
     key: "breadth",
     label: "US Breadth",
     indicators: breadthIndicators,
-    defaultSelectedIds: breadthIndicators.map((indicator) => indicator.id),
+    defaultSelectedIds: ["breadth-sp500", "rsp-spy", "sp500-above-200dma"],
     defaultNonNormalizedSelectedIds: ["breadth-sp500"],
     defaultNormalized: true,
     defaultRange: DEFAULT_RANGE,
@@ -4819,7 +4786,7 @@ const comparisonSections = [
     key: "jp-rates",
     label: "JP Rates",
     indicators: jpRatesIndicators,
-    defaultSelectedIds: ["boj-policy-rate"],
+    defaultSelectedIds: ["boj-policy-rate", "boj-implied-rate"],
     defaultRange: DEFAULT_RANGE,
     storageKey: "jpRatesIndicatorColors",
   }),
@@ -5007,12 +4974,18 @@ async function loadGlossary() {
   return response.json();
 }
 
-function renderIndicatorLinks(indicator) {
+function getStatusIndicatorNames(id, indicator) {
+  const glossaryEntry = glossaryEntries.find((entry) => entry.id === id);
+  return {
+    fullName: glossaryEntry?.full_name || indicator.display_name,
+    shortName: glossaryEntry?.short_name || indicator.short_name || indicator.display_name,
+  };
+}
+
+function renderIndicatorLinks(indicator, id) {
+  const names = getStatusIndicatorNames(id, indicator);
   return `
-    <strong>
-      <span class="status-name-full">${escapeHtml(indicator.display_name)}</span>
-      <span class="status-name-short">${escapeHtml(indicator.short_name || indicator.display_name)}</span>
-    </strong>
+    <strong>${escapeHtml(names.shortName)}</strong>
   `;
 }
 
@@ -5086,13 +5059,37 @@ function renderStatusExpandedDetails(indicator) {
   `;
 }
 
+function getAlphabeticalIndicatorLabel(indicator) {
+  return String(
+    indicator?.short_name || indicator?.display_name || indicator?.full_name || indicator?.id || "",
+  );
+}
+
+function compareAlphabeticalIndicators(left, right) {
+  const labelComparison = getAlphabeticalIndicatorLabel(left).localeCompare(
+    getAlphabeticalIndicatorLabel(right),
+    "en",
+    { sensitivity: "base", numeric: true },
+  );
+  if (labelComparison !== 0) {
+    return labelComparison;
+  }
+
+  return String(left?.id || "").localeCompare(String(right?.id || ""), "en", {
+    sensitivity: "base",
+    numeric: true,
+  });
+}
 function renderDataStatus(metadata) {
   if (!metadata || !metadata.indicators) {
     throw new Error("Data status metadata is missing indicators.");
   }
 
   dataStatusMetadata = metadata;
-  const indicators = Object.entries(metadata.indicators);
+  const indicators = Object.entries(metadata.indicators).sort(
+    ([leftKey, left], [rightKey, right]) =>
+      compareAlphabeticalIndicators(left, right) || leftKey.localeCompare(rightKey),
+  );
   if (dataStatusUpdated) {
     dataStatusUpdated.textContent = metadata.last_dashboard_refresh_display
       ? `Last dashboard refresh ${metadata.last_dashboard_refresh_display}`
@@ -5103,6 +5100,7 @@ function renderDataStatus(metadata) {
     dataStatusBody.innerHTML = indicators
       .map(([key, indicator]) => {
         const expanded = expandedStatusKey === key;
+        const names = getStatusIndicatorNames(key, indicator);
         const dashboardLatestDate =
           indicator.dashboard_latest_date || indicator.latest_available_date || "--";
         const formula = indicator.formula
@@ -5135,7 +5133,7 @@ function renderDataStatus(metadata) {
             <td>
               <div class="status-card-head">
                 <div class="status-card-summary">
-                  <div class="indicator-source-links">${renderIndicatorLinks(indicator)}</div>
+                  <div class="indicator-source-links">${renderIndicatorLinks(indicator, key)}</div>
                   <span class="status-dashboard-date">
                     <strong>Dashboard latest</strong> ${escapeHtml(dashboardLatestDate)}
                   </span>
@@ -5146,7 +5144,7 @@ function renderDataStatus(metadata) {
                     class="glossary-expand-button"
                     type="button"
                     data-status-expand="${escapeHtml(key)}"
-                    aria-label="${expanded ? "Collapse" : "Expand"} ${escapeHtml(indicator.short_name || indicator.display_name)} data status"
+                    aria-label="${expanded ? "Collapse" : "Expand"} ${escapeHtml(names.shortName)} data status"
                     aria-expanded="${expanded}"
                   >
                     ▾
@@ -5331,11 +5329,9 @@ function filterGlossaryEntries(entries) {
 function sortGlossaryEntries(entries) {
   return entries
     .map((entry, sourceIndex) => ({ entry, sourceIndex }))
-    .sort((left, right) => {
-      const leftRank = glossaryDisplayRank.get(left.entry.id) ?? Number.MAX_SAFE_INTEGER;
-      const rightRank = glossaryDisplayRank.get(right.entry.id) ?? Number.MAX_SAFE_INTEGER;
-      return leftRank - rightRank || left.sourceIndex - right.sourceIndex;
-    })
+    .sort((left, right) =>
+      compareAlphabeticalIndicators(left.entry, right.entry) || left.sourceIndex - right.sourceIndex,
+    )
     .map(({ entry }) => entry);
 }
 
@@ -5760,7 +5756,12 @@ renderFxRangeButtons();
 
 loadDataStatus().then(renderDataStatus).catch(renderDataStatusError);
 
-loadGlossary().then(renderGlossary).catch(renderGlossaryError);
+loadGlossary()
+  .then((glossary) => {
+    renderGlossary(glossary);
+    if (dataStatusMetadata) renderDataStatus(dataStatusMetadata);
+  })
+  .catch(renderGlossaryError);
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {

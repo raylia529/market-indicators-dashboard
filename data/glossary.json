@@ -578,6 +578,21 @@
       }
     },
     {
+      "id": "TOKYO_CORE_CPI_YOY",
+      "short_name": "Tokyo Core CPI YoY",
+      "full_name": "Ku-area of Tokyo Consumer Price Index, All Items Less Fresh Food, Year-over-Year",
+      "headings": {
+        "zh": "Tokyo Core CPI YoY",
+        "en": "Tokyo Core CPI YoY",
+        "ja": "東京都区部コアCPI前年比"
+      },
+      "descriptions": {
+        "zh": "Tokyo Core CPI YoY 是東京都區部「生鮮食品除外綜合」消費者物價指數的年增率，由日本總務省統計局每月先行公布。它通常早於全國 CPI 發布，因此常被用來預判日本全國通膨的方向。\n\n東京都區部的消費結構、房租與服務價格和全國不同，單月也可能受政策補貼或樣本變動影響，因此它是領先訊號而不是全國數字的替代品。Tokyo Core CPI 與 Japan Core CPI 同向且趨勢持續時，通膨訊號通常更可靠。",
+        "en": "Tokyo Core CPI YoY is the year-over-year change in consumer prices for all items less fresh food in the Ku-area of Tokyo. Published monthly by the Statistics Bureau of Japan, it is released before the nationwide CPI and is widely used as an early signal of Japan's inflation trend.\n\nTokyo's spending mix, rents, and service prices differ from the country as a whole, and monthly readings can be affected by subsidies or sample changes. It should therefore be treated as a leading indicator rather than a substitute for Japan Core CPI. A persistent move in the same direction across both series provides a stronger inflation signal.",
+        "ja": "東京都区部コアCPI前年比は、東京都区部の消費者物価指数のうち、生鮮食品を除く総合指数の前年同月比です。総務省統計局が全国CPIより先に毎月公表するため、日本の物価動向を早期に確認する指標として広く利用されています。\n\n東京都区部は全国と比べて消費構成、家賃、サービス価格が異なり、補助金や標本変更の影響を受けることもあります。そのため全国コアCPIの代替ではなく先行指標として扱い、両系列が同じ方向に継続して動くかを確認することが重要です。"
+      }
+    },
+    {
       "id": "SPY_TLT",
       "short_name": "SPY/TLT",
       "full_name": "SPY/TLT Stocks vs Bonds Ratio",
