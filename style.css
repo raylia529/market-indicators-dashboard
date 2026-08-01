@@ -354,6 +354,27 @@ h2 {
   user-select: none;
 }
 
+button,
+label,
+input,
+.range-selector,
+.chart-toolbar,
+.chart-actions,
+.color-control,
+.js-plotly-plot,
+.js-plotly-plot * {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.glossary-description,
+.glossary-description * {
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 .indicator-card,
 .fx-card {
   text-align: left;

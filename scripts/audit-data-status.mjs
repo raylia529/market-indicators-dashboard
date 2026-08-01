@@ -17,8 +17,8 @@ const metadata = JSON.parse(fs.readFileSync(statusFile, "utf8"));
 const indicators = metadata.indicators || {};
 const entries = Object.entries(indicators);
 
-if (entries.length !== 41) {
-  fail(`expected 41 indicators, found ${entries.length}.`);
+if (entries.length !== 47) {
+  fail(`expected 47 indicators, found ${entries.length}.`);
 }
 
 for (const [key, indicator] of entries) {

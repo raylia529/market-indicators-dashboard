@@ -278,6 +278,26 @@ const usRatesIndicators = [
     decimals: 2,
   },
   {
+    id: "us-10y-real-yield",
+    name: "US 10Y Real Yield",
+    file: "data/us-10y-real-yield.csv",
+    unitLabel: "Percent",
+    valueSuffix: "%",
+    category: "rate",
+    color: "#0f766e",
+    decimals: 2,
+  },
+  {
+    id: "us-10y-breakeven-inflation",
+    name: "US 10Y Breakeven Inflation",
+    file: "data/us-10y-breakeven-inflation.csv",
+    unitLabel: "Percent",
+    valueSuffix: "%",
+    category: "rate",
+    color: "#b45309",
+    decimals: 2,
+  },
+  {
     id: "us-rates-10y-2y-spread",
     name: "10Y-2Y Spread",
     file: "data/us-10y-minus-2y-spread.csv",
@@ -306,6 +326,17 @@ const usRatesIndicators = [
     category: "spread",
     color: "#f97316",
     decimals: 2,
+  },
+  {
+    id: "us-initial-jobless-claims",
+    name: "US Initial Jobless Claims",
+    file: "data/us-initial-jobless-claims.csv",
+    unitLabel: "Claims",
+    valueSuffix: "",
+    category: "flow",
+    color: "#be185d",
+    decimals: 0,
+    cadence: "weekly",
   },
   {
     id: "us-rates-sp500",
@@ -340,6 +371,16 @@ const jpRatesIndicators = [
     valueSuffix: "%",
     category: "rate",
     color: "#d77d32",
+    decimals: 3,
+  },
+  {
+    id: "boj-implied-rate",
+    name: "BOJ Implied Rate (3M TONA)",
+    file: "data/boj-implied-rate.csv",
+    unitLabel: "Percent",
+    valueSuffix: "%",
+    category: "rate",
+    color: "#9f1239",
     decimals: 3,
   },
   {
@@ -391,6 +432,17 @@ const jpRatesIndicators = [
     valueSuffix: "%",
     category: "percentage",
     color: "#218c83",
+    decimals: 1,
+    cadence: "monthly",
+  },
+  {
+    id: "japan-cash-earnings-yoy",
+    name: "Japan Cash Earnings YoY",
+    file: "data/japan-cash-earnings-yoy.csv",
+    unitLabel: "Percent YoY",
+    valueSuffix: "%",
+    category: "percentage",
+    color: "#15803d",
     decimals: 1,
     cadence: "monthly",
   },
@@ -568,10 +620,16 @@ const defaultIndicatorColors = {
   "sp500-above-200dma": "#218c83",
   "fed-funds-rate": "#d77d32",
   "cme-expected-policy-rate": "#9254aa",
+  "us-10y-real-yield": "#0f766e",
+  "us-10y-breakeven-inflation": "#b45309",
+  "us-initial-jobless-claims": "#be185d",
   "boj-policy-rate": "#111827",
   "japan-overnight-call-rate": "#d77d32",
+  "boj-implied-rate": "#9f1239",
   "japan-core-cpi-yoy": "#9254aa",
   "tokyo-core-cpi-yoy": "#218c83",
+  "japan-cash-earnings-yoy": "#15803d",
+  BROAD_US_DOLLAR_INDEX: "#475569",
   USDJPY: "#d77d32",
   US_Japan_2Y_Spread: "#3f6fcb",
   topix: "#2b83ae",
@@ -639,6 +697,18 @@ const fxSeriesDefinitions = [
     decimals: 2,
     suffix: " pp",
   },
+  {
+    id: "BROAD_US_DOLLAR_INDEX",
+    name: "Broad U.S. Dollar Index",
+    unitLabel: "Index",
+    field: "BROAD_US_DOLLAR_INDEX",
+    valueElementId: "fx-broad-dollar-value",
+    changeElementId: "fx-broad-dollar-change",
+    category: "price",
+    changeIndicatorId: "broad-us-dollar-index",
+    decimals: 2,
+    suffix: "",
+  },
 ];
 
 function usesPercentageAxis(indicator) {
@@ -697,15 +767,20 @@ const glossaryDisplayOrder = [
   "CME_EXPECTED_POLICY_RATE",
   "DGS2",
   "DGS10",
+  "DFII10",
+  "T10YIE",
+  "ICSA",
   "T10Y2Y",
   "ACMTP10",
   "BOJ_POLICY_RATE",
   "BOJ_OVERNIGHT_CALL_RATE",
+  "BOJ_IMPLIED_RATE_3M_TONA",
   "JAPAN_2Y_JGB",
   "JAPAN_10Y_JGB",
   "JAPAN_10Y_2Y_SPREAD",
   "JAPAN_CORE_CPI_YOY",
   "TOKYO_CORE_CPI_YOY",
+  "JAPAN_CASH_EARNINGS_YOY",
   "TOPIX",
   "NIKKEI_225",
   "JAPAN_FOREIGN_NET_BUYING",
@@ -714,6 +789,7 @@ const glossaryDisplayOrder = [
   "TSMC_REVENUE_YOY",
   "TAIWAN_FOREIGN_NET_BUYING",
   "USDTWD",
+  "DTWEXBGS",
   "TAIWAN_MARGIN_FINANCING_BALANCE_YOY",
   "TAIWAN_ELECTRONICS_EXPORTS_YOY",
   "US_JAPAN_2Y_SPREAD",
@@ -750,16 +826,21 @@ const indicatorGlossaryIds = {
   "cme-expected-policy-rate": "CME_EXPECTED_POLICY_RATE",
   "us-2y-yield": "DGS2",
   "us-rates-10y-yield": "DGS10",
+  "us-10y-real-yield": "DFII10",
+  "us-10y-breakeven-inflation": "T10YIE",
   "us-rates-10y-2y-spread": "T10Y2Y",
   "us-10y-term-premium": "ACMTP10",
+  "us-initial-jobless-claims": "ICSA",
   "boj-policy-rate": "BOJ_POLICY_RATE",
   "japan-overnight-call-rate": "BOJ_OVERNIGHT_CALL_RATE",
+  "boj-implied-rate": "BOJ_IMPLIED_RATE_3M_TONA",
   "japan-2y-jgb-yield": "JAPAN_2Y_JGB",
   "japan-10y-jgb-yield": "JAPAN_10Y_JGB",
   "japan-tab-10y-jgb-yield": "JAPAN_10Y_JGB",
   "japan-10y-2y-jgb-spread": "JAPAN_10Y_2Y_SPREAD",
   "japan-core-cpi-yoy": "JAPAN_CORE_CPI_YOY",
   "tokyo-core-cpi-yoy": "TOKYO_CORE_CPI_YOY",
+  "japan-cash-earnings-yoy": "JAPAN_CASH_EARNINGS_YOY",
   topix: "TOPIX",
   "jp-rates-topix": "TOPIX",
   "nikkei-225": "NIKKEI_225",
@@ -769,6 +850,7 @@ const indicatorGlossaryIds = {
   taiex: "TAIEX",
   "taiwan-foreign-investor-net-buying": "TAIWAN_FOREIGN_NET_BUYING",
   usdtwd: "USDTWD",
+  "broad-us-dollar-index": "DTWEXBGS",
   "taiwan-margin-financing-balance-yoy": "TAIWAN_MARGIN_FINANCING_BALANCE_YOY",
   "taiwan-electronics-exports-yoy": "TAIWAN_ELECTRONICS_EXPORTS_YOY",
 };
@@ -808,6 +890,9 @@ const glossaryDashboardTargets = {
   },
   DGS2: { tab: "us-rates", selector: '[data-us-rates-indicator="us-2y-yield"]' },
   DGS10: { tab: "us-rates", selector: '[data-us-rates-indicator="us-rates-10y-yield"]' },
+  DFII10: { tab: "us-rates", selector: '[data-us-rates-indicator="us-10y-real-yield"]' },
+  T10YIE: { tab: "us-rates", selector: '[data-us-rates-indicator="us-10y-breakeven-inflation"]' },
+  ICSA: { tab: "us-rates", selector: '[data-us-rates-indicator="us-initial-jobless-claims"]' },
   T10Y2Y: { tab: "us-rates", selector: '[data-us-rates-indicator="us-rates-10y-2y-spread"]' },
   ACMTP10: { tab: "us-rates", selector: '[data-us-rates-indicator="us-10y-term-premium"]' },
   BOJ_POLICY_RATE: {
@@ -817,6 +902,10 @@ const glossaryDashboardTargets = {
   BOJ_OVERNIGHT_CALL_RATE: {
     tab: "jp-rates",
     selector: '[data-jp-rates-indicator="japan-overnight-call-rate"]',
+  },
+  BOJ_IMPLIED_RATE_3M_TONA: {
+    tab: "jp-rates",
+    selector: '[data-jp-rates-indicator="boj-implied-rate"]',
   },
   JAPAN_2Y_JGB: { tab: "jp-rates", selector: '[data-jp-rates-indicator="japan-2y-jgb-yield"]' },
   JAPAN_10Y_JGB: { tab: "jp-rates", selector: '[data-jp-rates-indicator="japan-10y-jgb-yield"]' },
@@ -832,6 +921,10 @@ const glossaryDashboardTargets = {
     tab: "jp-rates",
     selector: '[data-jp-rates-indicator="tokyo-core-cpi-yoy"]',
   },
+  JAPAN_CASH_EARNINGS_YOY: {
+    tab: "jp-rates",
+    selector: '[data-jp-rates-indicator="japan-cash-earnings-yoy"]',
+  },
   TOPIX: { tab: "japan", selector: '[data-japan-indicator="topix"]' },
   NIKKEI_225: { tab: "japan", selector: '[data-japan-indicator="nikkei-225"]' },
   JAPAN_FOREIGN_NET_BUYING: {
@@ -839,6 +932,7 @@ const glossaryDashboardTargets = {
     selector: '[data-japan-indicator="japan-foreign-investor-net-buying"]',
   },
   DEXJPUS: { tab: "fx", selector: '[data-fx-card="USDJPY"]' },
+  DTWEXBGS: { tab: "fx", selector: '[data-fx-card="BROAD_US_DOLLAR_INDEX"]' },
   US_JAPAN_2Y_SPREAD: { tab: "fx", selector: '[data-fx-card="US_Japan_2Y_Spread"]' },
   TAIEX: { tab: "taiwan", selector: '[data-taiwan-indicator="taiex"]' },
   TAIWAN_FOREIGN_NET_BUYING: {
@@ -963,9 +1057,10 @@ let axisOrder = ["sp500"];
 let manualAxisOrder = false;
 let activeRange = DEFAULT_RANGE;
 let macroScale = "linear";
+let macroThresholdZonesVisible = true;
 let fxData = [];
 let activeFxRange = DEFAULT_RANGE;
-let visibleFxSeries = new Set(["USDJPY", "US_Japan_2Y_Spread"]);
+let visibleFxSeries = new Set(["USDJPY", "US_Japan_2Y_Spread", "BROAD_US_DOLLAR_INDEX"]);
 let glossaryEntries = [];
 let glossarySearchText = "";
 let activeGlossaryLanguage = getGlossaryLanguageFromUrl();
@@ -1247,7 +1342,7 @@ function resetChartToInitialRanges(chartNode) {
   Plotly.relayout(chartNode, update);
 }
 
-function setupChartModebar(chartNode, logScaleInput = null, normalizedInput = null) {
+function setupChartModebar(chartNode, logScaleInput = null, normalizedInput = null, zoneControl = null) {
   if (!chartNode) {
     return;
   }
@@ -1291,6 +1386,11 @@ function setupChartModebar(chartNode, logScaleInput = null, normalizedInput = nu
   if (normalizedControl) {
     normalizedControl.classList.add("modebar-toggle-control", "modebar-normalized-control");
     modebarGroup.append(normalizedControl);
+  }
+
+  if (zoneControl) {
+    zoneControl.classList.add("modebar-toggle-control", "modebar-zone-control");
+    modebarGroup.append(zoneControl);
   }
 
   modebar.replaceChildren(modebarGroup);
@@ -1456,9 +1556,11 @@ function parseCsv(csvText) {
     .slice(1)
     .map((line) => {
       const [date, value, meetingDate] = line.split(",");
+      const rawValue = value?.trim();
       return {
         date: date.trim(),
-        value: Number(value),
+        rawValue,
+        value: rawValue === "" ? Number.NaN : Number(rawValue),
         meetingDate: meetingDate?.trim() || null,
       };
     })
@@ -2897,6 +2999,140 @@ function setupMobileYAxisGestures(chartNode) {
   });
 }
 
+function setupMobileXAxisGestures(chartNode) {
+  if (!chartNode || chartNode.dataset.mobileXAxisGesturesReady === "true") {
+    return;
+  }
+
+  chartNode.dataset.mobileXAxisGesturesReady = "true";
+  const doubleTapWindowMs = 420;
+  const doubleTapDistancePx = 34;
+  let lastTap = null;
+  let state = null;
+
+  function isXAxisTarget(touch) {
+    const layout = chartNode._fullLayout;
+    const size = layout?._size;
+    const rect = chartNode.getBoundingClientRect();
+    if (!size) return false;
+    const localX = touch.clientX - rect.left;
+    const localY = touch.clientY - rect.top;
+    return (
+      localX >= size.l &&
+      localX <= size.l + size.w &&
+      localY >= size.t + size.h - 24 &&
+      localY <= size.t + size.h + 38
+    );
+  }
+
+  function rangeToMillis(range) {
+    const values = range?.map((value) => Date.parse(value));
+    return values?.length === 2 && values.every(Number.isFinite) ? values : null;
+  }
+
+  function clampRange(range) {
+    const axis = chartNode._fullLayout?.xaxis;
+    const min = Date.parse(axis?.minallowed);
+    const max = Date.parse(axis?.maxallowed);
+    if (!Number.isFinite(min) || !Number.isFinite(max)) return range;
+    const span = Math.min(range[1] - range[0], max - min);
+    let start = range[0];
+    let end = start + span;
+    if (start < min) {
+      start = min;
+      end = start + span;
+    }
+    if (end > max) {
+      end = max;
+      start = end - span;
+    }
+    return [start, end];
+  }
+
+  function applyRange(range) {
+    const [start, end] = clampRange(range);
+    Plotly.relayout(chartNode, {
+      "xaxis.autorange": false,
+      "xaxis.range": [toIsoDate(new Date(start)), toIsoDate(new Date(end))],
+    });
+  }
+
+  chartNode.addEventListener(
+    "touchstart",
+    (event) => {
+      if (!usesTouchChartMode() || event.touches.length < 1 || event.touches.length > 2) return;
+      const touches = Array.from(event.touches);
+      if (!touches.every(isXAxisTarget)) return;
+      const centerX = touches.reduce((total, touch) => total + touch.clientX, 0) / touches.length;
+      const range = rangeToMillis(chartNode._fullLayout?.xaxis?.range);
+      if (!range) return;
+      const now = Date.now();
+      const isDoubleTap =
+        touches.length === 1 &&
+        lastTap &&
+        now - lastTap.time <= doubleTapWindowMs &&
+        Math.abs(centerX - lastTap.x) <= doubleTapDistancePx;
+      state = {
+        mode: touches.length === 2 || isDoubleTap ? "zoom" : "pan",
+        startX: centerX,
+        startRange: range,
+        startDistance: touches.length === 2 ? Math.max(Math.abs(touches[0].clientX - touches[1].clientX), 24) : null,
+        touchCount: touches.length,
+        moved: false,
+      };
+      lastTap = null;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    },
+    { capture: true, passive: false },
+  );
+
+  chartNode.addEventListener(
+    "touchmove",
+    (event) => {
+      if (!state || event.touches.length !== state.touchCount) return;
+      const touches = Array.from(event.touches);
+      const centerX = touches.reduce((total, touch) => total + touch.clientX, 0) / touches.length;
+      const plotWidth = Math.max(chartNode._fullLayout?._size?.w || chartNode.clientWidth, 1);
+      const span = state.startRange[1] - state.startRange[0];
+      state.moved ||= Math.abs(centerX - state.startX) > 4;
+      if (state.mode === "pan") {
+        const shift = ((centerX - state.startX) / plotWidth) * span;
+        applyRange([state.startRange[0] - shift, state.startRange[1] - shift]);
+      } else {
+        const distance = state.touchCount === 2
+          ? Math.max(Math.abs(touches[0].clientX - touches[1].clientX), 24)
+          : Math.max(Math.abs(centerX - state.startX), 24);
+        const scale = state.touchCount === 2
+          ? Math.min(Math.max(state.startDistance / distance, 0.15), 6)
+          : Math.min(Math.max(Math.exp((centerX - state.startX) / 180), 0.15), 6);
+        const center = (state.startRange[0] + state.startRange[1]) / 2;
+        const halfSpan = (span / 2) * scale;
+        applyRange([center - halfSpan, center + halfSpan]);
+      }
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    },
+    { capture: true, passive: false },
+  );
+
+  ["touchend", "touchcancel"].forEach((eventName) => {
+    chartNode.addEventListener(
+      eventName,
+      (event) => {
+        if (!state) return;
+        if (eventName === "touchend" && state.touchCount === 1 && !state.moved) {
+          lastTap = { time: Date.now(), x: state.startX };
+        }
+        state = null;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      },
+      { capture: true, passive: false },
+    );
+  });
+}
+
 function canUseLog(rows) {
   return rows.length > 0 && rows.every((row) => row.value > 0);
 }
@@ -3290,8 +3526,17 @@ function getThresholdEdgeShapes(zone, yref, min, max) {
   return shapes;
 }
 
-function getThresholdZoneShapes(selected, layout, axisById = null) {
-  return selected.flatMap((indicatorId, index) => {
+function getThresholdZoneShapes(selected, layout, axisById = null, visible = true) {
+  if (!visible) {
+    return [];
+  }
+
+  const selectedWithZones = selected.filter((indicatorId) => indicatorThresholdZones[indicatorId]);
+  if (selectedWithZones.length !== 1) {
+    return [];
+  }
+
+  return selectedWithZones.flatMap((indicatorId) => {
     const zones = indicatorThresholdZones[indicatorId];
     const indicator = getChartIndicatorDefinition(indicatorId);
 
@@ -3299,7 +3544,7 @@ function getThresholdZoneShapes(selected, layout, axisById = null) {
       return [];
     }
 
-    const assignedAxis = axisById?.get(indicatorId) || (index === 0 ? "y" : "y2");
+    const assignedAxis = axisById?.get(indicatorId) || "y";
     const axisName = assignedAxis === "y" ? "yaxis" : "yaxis2";
     const yref = assignedAxis;
     const range = getLinearAxisRange(layout[axisName]);
@@ -3426,11 +3671,16 @@ function renderChart() {
     );
   }
 
-  layout.shapes = getThresholdZoneShapes(selected, layout, axisById);
+  layout.shapes = getThresholdZoneShapes(selected, layout, axisById, macroThresholdZonesVisible);
 
   if (chartElement && window.Plotly) {
     Plotly.react(chartElement, traces, layout, getPlotlyConfig()).then(() => {
-      setupChartModebar(chartElement, macroLogScaleInput);
+      setupChartModebar(
+        chartElement,
+        macroLogScaleInput,
+        null,
+        document.getElementById("macro-threshold-zones"),
+      );
 
       if (xBounds) {
         chartElement.dataset.promptStart = xBounds.start;
@@ -3439,6 +3689,7 @@ function renderChart() {
 
       setupBoundedXAxis(chartElement, getMacroXBounds);
       setupMobileYAxisGestures(chartElement);
+      setupMobileXAxisGestures(chartElement);
       setupPromptCopy(chartElement, buildMacroPrompt);
     });
   }
@@ -3732,6 +3983,7 @@ function renderFxChart() {
 
     setupBoundedXAxis(fxChartElement, getFxXBounds);
     setupMobileYAxisGestures(fxChartElement);
+    setupMobileXAxisGestures(fxChartElement);
     setupPromptCopy(fxChartElement, buildFxPrompt);
   });
 }
@@ -3760,6 +4012,7 @@ function createComparisonSection(config) {
     activeRange: config.defaultRange || DEFAULT_RANGE,
     scale: "linear",
     normalized: defaultNormalized,
+    thresholdZonesVisible: true,
     selectionBeforeNormalized: defaultNormalized
       ? [...(config.defaultNonNormalizedSelectedIds || config.defaultSelectedIds.slice(0, 1))]
       : null,
@@ -3774,6 +4027,7 @@ function createComparisonSection(config) {
     noticeClose: document.getElementById(`${config.key}-selection-notice-close`),
     logScaleInput: document.getElementById(`${config.key}-log-scale`),
     normalizedInput: document.getElementById(`${config.key}-normalized`),
+    thresholdZonesInput: document.getElementById(`${config.key}-threshold-zones`),
     rangeButtons: Array.from(document.querySelectorAll(`[data-comparison-range="${config.key}"]`)),
   };
 
@@ -3782,6 +4036,9 @@ function createComparisonSection(config) {
   }
   if (elements.logScaleInput) {
     elements.logScaleInput.disabled = defaultNormalized;
+  }
+  if (elements.thresholdZonesInput) {
+    elements.thresholdZonesInput.checked = true;
   }
 
   function getLocalIndicator(id) {
@@ -4358,7 +4615,7 @@ function createComparisonSection(config) {
     layout.shapes = [
       ...(state.normalized
         ? []
-        : getThresholdZoneShapes(selected, layout, axisById)),
+        : getThresholdZoneShapes(selected, layout, axisById, state.thresholdZonesVisible)),
       ...getFomcMeetingShapes(selected, xBounds, theme),
     ];
 
@@ -4368,6 +4625,7 @@ function createComparisonSection(config) {
           elements.chart,
           elements.logScaleInput,
           config.allowNormalized ? elements.normalizedInput : null,
+          elements.thresholdZonesInput,
         );
 
         if (xBounds) {
@@ -4377,6 +4635,7 @@ function createComparisonSection(config) {
 
         setupBoundedXAxis(elements.chart, () => getDisplayXBounds(state.axisOrder));
         setupMobileYAxisGestures(elements.chart);
+        setupMobileXAxisGestures(elements.chart);
         setupPromptCopy(elements.chart, (dateText) => buildComparisonPrompt(config.label, state, config.indicators, dateText));
       });
     }
@@ -4439,6 +4698,13 @@ function createComparisonSection(config) {
       state.manualAxisOrder = false;
       clearLocalNotice();
       renderLocalAll();
+    });
+  }
+
+  if (elements.thresholdZonesInput) {
+    elements.thresholdZonesInput.addEventListener("change", () => {
+      state.thresholdZonesVisible = elements.thresholdZonesInput.checked;
+      renderLocalChart();
     });
   }
 
@@ -4716,7 +4982,19 @@ async function loadFedWatchExpectation() {
 }
 
 async function loadFxData() {
-  fxData = parseFxCsv(await fetchLocalText("data/fx.csv"));
+  const [fxText, broadDollarText] = await Promise.all([
+    fetchLocalText("data/fx.csv"),
+    fetchLocalText("data/broad-us-dollar-index.csv"),
+  ]);
+  const rowsByDate = new Map(parseFxCsv(fxText).map((row) => [row.date, { ...row }]));
+
+  parseCsv(broadDollarText).forEach((row) => {
+    const target = rowsByDate.get(row.date) || { date: row.date };
+    target.BROAD_US_DOLLAR_INDEX = row.value;
+    rowsByDate.set(row.date, target);
+  });
+
+  fxData = Array.from(rowsByDate.values()).sort((left, right) => left.date.localeCompare(right.date));
 }
 
 async function loadDataStatus() {
@@ -5344,6 +5622,12 @@ if (macroLogScaleInput) {
 
     macroScale = macroLogScaleInput.checked ? "log" : "linear";
     clearNotice();
+    renderChart();
+  });
+
+  const macroThresholdZonesInput = document.getElementById("macro-threshold-zones");
+  macroThresholdZonesInput?.addEventListener("change", () => {
+    macroThresholdZonesVisible = macroThresholdZonesInput.checked;
     renderChart();
   });
 }

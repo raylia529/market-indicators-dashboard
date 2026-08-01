@@ -639,6 +639,78 @@
         "en": "SMH/SPY is a Relative Strength ratio calculated by dividing the VanEck Semiconductor ETF (SMH) by the SPDR S&P 500 ETF (SPY). Rather than measuring whether the stock market is rising or falling, it measures whether the semiconductor sector is outperforming or underperforming the broader U.S. equity market. In other words, it answers one important question: Is capital flowing into AI and semiconductors, or rotating elsewhere?\n\nSMH is one of the most widely followed semiconductor ETFs and holds many of the world’s leading chip companies, including NVIDIA, TSMC, Broadcom, ASML, AMD, Qualcomm, and Micron. Because these companies form the backbone of AI infrastructure, cloud computing, high-performance computing (HPC), and advanced manufacturing, SMH has become one of the best market proxies for the AI investment cycle. SPY, on the other hand, represents the overall U.S. large-cap equity market. Comparing SMH against SPY therefore reveals whether AI-related companies are leading or lagging behind the market.\n\nWhen SMH/SPY rises, semiconductor stocks are outperforming the S&P 500. This typically reflects strong investor confidence in AI, data centers, cloud infrastructure, and long-term technology spending. Rising corporate capital expenditure, improving earnings expectations, and strong risk appetite often support a higher ratio. Even if the S&P 500 itself only moves sideways, a rising SMH/SPY suggests that AI remains the market’s primary leadership group.\n\nConversely, a declining SMH/SPY indicates that semiconductor stocks are underperforming the broader market. Importantly, this does not automatically signal a bear market. In many cases, it reflects sector rotation, where investors reduce exposure to AI and technology while increasing allocations to financials, industrials, healthcare, energy, or other value-oriented sectors. During these periods, the S&P 500 may remain relatively stable even while AI stocks experience significant corrections.\n\nOne advantage of SMH/SPY over simply monitoring the Philadelphia Semiconductor Index (SOX) is that it measures relative performance instead of absolute price movement. A rising SOX only tells investors that semiconductor stocks are gaining value. However, if the entire market is rallying by a similar amount, semiconductors are not necessarily attracting additional capital. SMH/SPY removes this problem by directly comparing semiconductors against the overall market, making capital rotation much easier to identify.\n\nSome investors also use SOXX/SPY or QQQ/SPY. SOXX provides broader diversification across semiconductor companies, while QQQ represents large-cap technology and growth stocks but includes software, internet platforms, and consumer technology businesses that are not directly tied to semiconductor demand. Because SMH has a more concentrated allocation toward global semiconductor leaders, it generally responds more quickly to changes in AI-related investment trends, making it a preferred indicator for tracking AI capital flows.\n\nSMH/SPY becomes even more powerful when combined with other Relative Strength indicators. For example, SMH/SPY rising while RSP/SPY falls suggests that only a handful of AI mega-cap stocks are driving market performance. SMH/SPY falling while RSP/SPY improves often signals that leadership is broadening as money rotates away from AI into the rest of the market. If SMH/SPY, SPY/TLT, and HYG/IEF all decline together, investors are likely reducing overall equity exposure rather than merely rotating sectors, indicating a broader Risk-off environment.\n\nDespite its usefulness, SMH/SPY has limitations. SMH is market-cap weighted, meaning companies such as NVIDIA and TSMC carry significant influence over the ETF’s performance. Company-specific events, earnings surprises, or valuation adjustments can therefore affect the ratio substantially. Furthermore, SMH represents the semiconductor industry rather than the entire technology sector. For this reason, SMH/SPY should be viewed as a leading indicator of AI capital flows and market leadership, but it should always be interpreted alongside broader market breadth and asset allocation indicators.",
         "ja": "SMH/SPY は、VanEck Semiconductor ETF（SMH） を SPDR S&P 500 ETF（SPY） で割った Relative Strength（相対強度）指標です。この比率は、市場全体が上昇しているかどうかではなく、半導体セクターが米国株式市場全体に対して強いのか、それとも弱いのか を示します。言い換えれば、「資金が AI・半導体へ流入しているのか、それとも他の業種へ移動しているのか」を把握するための代表的な指標です。\n\nSMH は世界で最も代表的な半導体 ETF の一つであり、NVIDIA、TSMC、Broadcom、ASML、AMD、Qualcomm、Micron など、世界を代表する半導体企業で構成されています。これらの企業は AI、クラウド、データセンター、高性能コンピューティング（HPC）の中核を担っているため、SMH は現在では AI 投資サイクルを最もよく表す ETF の一つと考えられています。一方、SPY は米国大型株市場全体を表す ETF であるため、SMH/SPY は「AI・半導体が市場全体より強いかどうか」を確認するための指標となります。\n\nSMH/SPY が上昇している場合、半導体株が S&P500 を上回るパフォーマンスを示していることを意味します。これは投資家が AI、クラウド、データセンター、先端半導体などの成長分野へ積極的に資金を配分している状態です。企業の設備投資拡大、AI 関連需要の増加、市場全体の Risk-on ムードなどが背景となることが多く、S&P500 が横ばいでも SMH/SPY が上昇していれば、市場のリーダーシップは依然として AI セクターにあると考えられます。\n\n一方で SMH/SPY が低下している場合、半導体株が市場全体より弱くなっていることを示します。しかし、これは必ずしも弱気相場を意味するわけではありません。多くの場合は セクターローテーション が起きており、投資家が AI・半導体から金融、工業、ヘルスケア、エネルギーなどへ資金を移している状況を反映しています。そのため、AI 株が大きく下落していても、S&P500 自体は横ばい、あるいは小幅高で推移することも珍しくありません。\n\nSMH/SPY の大きな利点は、SOX 指数のような絶対的な価格ではなく、「市場全体に対する相対的な強さ」を測定できることです。SOX が上昇していても、市場全体が同じように上昇しているのであれば、半導体へ特別に資金が集まっているとは言えません。SMH/SPY は半導体と市場全体を直接比較するため、AI が本当に市場をリードしているかどうかをより明確に判断できます。\n\n類似指標として SOXX/SPY や QQQ/SPY が利用されることもあります。SOXX はより分散された半導体 ETF、QQQ は大型ハイテク株全体を表しますが、ソフトウェアやインターネット企業も多く含まれています。一方、SMH は世界の主要半導体企業への集中度が高く、AI 投資サイクルへの感応度が最も高いため、AI の資金フローを観察する指標として特に有効です。\n\nSMH/SPY は他の Relative Strength 指標と組み合わせることで、さらに有用になります。例えば SMH/SPY が上昇し、RSP/SPY が低下している場合は、一部の AI メガキャップ企業だけが市場を牽引している可能性があります。逆に SMH/SPY が低下し、RSP/SPY が改善している場合は、AI から他セクターへの資金循環が進んでいると考えられます。また SMH/SPY、SPY/TLT、HYG/IEF が同時に低下する場合は、AI だけでなく株式市場全体から資金が流出し、安全資産へ向かう Risk-off 局面の可能性が高まります。\n\nただし、SMH/SPY にも注意点があります。SMH は時価総額加重型 ETF であるため、NVIDIA や TSMC のような大型銘柄の影響を大きく受けます。また、半導体業界全体を表す指標ではあるものの、ソフトウェアやクラウドサービスなどを含むテクノロジーセクター全体を代表するものではありません。そのため、SMH/SPY は AI 資金フローを示す重要な先行指標ですが、市場全体を判断する際には Breadth 指標や他の Capital Flow 指標と組み合わせて総合的に解釈することが重要です。"
       }
+    },
+    {
+      "id": "DFII10",
+      "short_name": "US 10Y Real Yield",
+      "full_name": "US 10-Year Treasury Real Yield",
+      "aliases": ["US 10Y Real Yield", "DFII10"],
+      "headings": {"zh": "美國 10 年期實質殖利率", "en": "US 10-Year Real Yield", "ja": "米国10年実質利回り"},
+      "descriptions": {
+        "zh": "US 10Y Real Yield 是扣除通膨預期後的 10 年期美國國債殖利率，可視為長期實質資金成本。它對成長股估值、黃金與美元特別重要：實質殖利率上升通常提高未來現金流的折現率，並可能壓抑非收益資產。",
+        "en": "The US 10-Year Real Yield is the inflation-adjusted yield on a 10-year Treasury security. It is a useful measure of long-term real funding costs: rising real yields tend to raise discount rates for long-duration equities and can weigh on non-yielding assets such as gold.",
+        "ja": "米国10年実質利回りは、インフレ期待を除いた10年米国債の利回りで、長期の実質資金コストを示します。上昇は長期成長株の割引率を押し上げ、金など無利息資産の逆風となることがあります。"
+      }
+    },
+    {
+      "id": "T10YIE",
+      "short_name": "US 10Y Breakeven Inflation",
+      "full_name": "US 10-Year Breakeven Inflation Rate",
+      "aliases": ["US 10Y Breakeven Inflation", "T10YIE"],
+      "headings": {"zh": "美國 10 年期損益兩平通膨率", "en": "US 10-Year Breakeven Inflation", "ja": "米国10年ブレークイーブン・インフレ率"},
+      "descriptions": {
+        "zh": "US 10Y Breakeven Inflation 是一般 10 年期美債殖利率與 10 年期實質殖利率之差，反映市場隱含的長期平均通膨補償。和實質殖利率一起看，可分辨名目殖利率上升主要來自實質利率，還是通膨預期。",
+        "en": "US 10-Year Breakeven Inflation is the spread between nominal and inflation-protected 10-year Treasury yields. It is a market-implied measure of long-run inflation compensation and helps distinguish whether higher nominal yields reflect real rates or inflation expectations.",
+        "ja": "米国10年ブレークイーブン・インフレ率は、名目10年国債利回りと実質10年国債利回りの差です。名目金利の上昇が実質金利によるものか、インフレ期待によるものかを見分ける際に役立ちます。"
+      }
+    },
+    {
+      "id": "ICSA",
+      "short_name": "US Initial Claims",
+      "full_name": "US Initial Jobless Claims",
+      "aliases": ["US Initial Jobless Claims", "Initial Claims", "ICSA"],
+      "headings": {"zh": "美國初次申請失業救濟金人數", "en": "US Initial Jobless Claims", "ja": "米国新規失業保険申請件数"},
+      "descriptions": {
+        "zh": "US Initial Jobless Claims 是每週首次申請失業保險的人數，通常比月度失業率更早反映就業市場轉折。持續上升可能表示裁員擴大與景氣放緩，但單週波動很大，宜觀察數週趨勢。",
+        "en": "US Initial Jobless Claims count people filing for unemployment insurance for the first time each week. They can signal labour-market deterioration earlier than the monthly unemployment rate, although week-to-week readings are noisy and should be read as a trend.",
+        "ja": "米国新規失業保険申請件数は、毎週初めて失業保険を申請した人数です。月次失業率より早く雇用悪化を示すことがありますが、週ごとの振れが大きいため数週間の傾向を見ることが重要です。"
+      }
+    },
+    {
+      "id": "DTWEXBGS",
+      "short_name": "Broad U.S. Dollar Index",
+      "full_name": "Trade Weighted U.S. Dollar Index: Broad",
+      "aliases": ["Broad U.S. Dollar Index", "Broad Dollar", "DTWEXBGS"],
+      "headings": {"zh": "廣義美元指數", "en": "Broad U.S. Dollar Index", "ja": "広義米ドル指数"},
+      "descriptions": {
+        "zh": "廣義美元指數以美國多個主要貿易夥伴貨幣加權，衡量美元是否全面走強或走弱。它補足 USD/JPY 與 USD/TWD 等雙邊匯率，適合辨別美元趨勢是全球性的還是單一貨幣因素。",
+        "en": "The Broad U.S. Dollar Index is a trade-weighted measure of the dollar against a broad set of trading-partner currencies. It complements bilateral pairs such as USD/JPY by showing whether dollar strength or weakness is broadly based.",
+        "ja": "広義米ドル指数は、複数の貿易相手国通貨に対する加重平均でドルの強弱を示します。USD/JPYのような二国間レートを補完し、ドルの動きが世界的か個別要因かを見分けるのに役立ちます。"
+      }
+    },
+    {
+      "id": "JAPAN_CASH_EARNINGS_YOY",
+      "short_name": "Japan Cash Earnings YoY",
+      "full_name": "Japan Total Cash Earnings Year-over-Year",
+      "aliases": ["Japan Cash Earnings YoY", "Cash Earnings"],
+      "headings": {"zh": "日本現金薪資年增率", "en": "Japan Cash Earnings YoY", "ja": "日本の現金給与総額前年比"},
+      "descriptions": {
+        "zh": "Japan Cash Earnings YoY 是日本每月勤勞統計中的全產業現金薪資總額年增率。薪資成長能否持續，是判斷通膨是否可持續與 BOJ 是否有進一步正常化空間的重要背景；月度數字可能受獎金與樣本變動影響。",
+        "en": "Japan Cash Earnings YoY is the year-over-year change in total cash earnings for all industries in the Monthly Labour Survey. Sustained wage growth matters for durable inflation and the scope for BOJ policy normalization, but monthly figures can be affected by bonuses and sampling changes.",
+        "ja": "日本の現金給与総額前年比は、毎月勤労統計における全産業の現金給与総額の前年比です。持続的な賃金上昇は基調インフレとBOJの政策正常化を判断する重要な材料ですが、賞与や標本変更の影響を受けることがあります。"
+      }
+    },
+    {
+      "id": "BOJ_IMPLIED_RATE_3M_TONA",
+      "short_name": "BOJ Implied Rate (3M TONA)",
+      "full_name": "BOJ Implied Rate from 3-Month TONA Futures",
+      "aliases": ["BOJ Implied Rate", "3M TONA", "3-Month TONA Futures"],
+      "headings": {"zh": "BOJ 隱含利率（3 個月 TONA）", "en": "BOJ Implied Rate (3M TONA)", "ja": "BOJインプライド金利（3か月TONA）"},
+      "descriptions": {
+        "zh": "BOJ Implied Rate 以最近期 3 個月 TONA 期貨的結算價計算（100 減結算價），反映市場對未來短期日圓利率的定價。它可用作 BOJ 政策路徑的市場代理，但不是 BOJ 的官方預測，也不是下一次會議機率的加權平均。",
+        "en": "The BOJ Implied Rate is calculated as 100 minus the settlement price of the nearest 3-Month TONA futures contract. It is a market price of future short-term yen rates and a useful proxy for the expected BOJ path, not an official forecast or a probability-weighted next-meeting decision.",
+        "ja": "BOJインプライド金利は、期近の3か月TONA先物の清算値を100から引いて算出します。将来の円短期金利に対する市場価格であり、BOJの政策経路の代理指標にはなりますが、公式予測や次回会合の確率加重予測ではありません。"
+      }
     }
   ]
 }

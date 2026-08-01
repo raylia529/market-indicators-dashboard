@@ -13,9 +13,9 @@
     <title>Market Indicators Dashboard</title>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2" />
-    <link rel="stylesheet" href="style.css?v=cme-implied-series-v51" />
+    <link rel="stylesheet" href="style.css?v=indicator-expansion-v52" />
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
-    <script src="app.js?v=linked-range-v69" defer></script>
+    <script src="app.js?v=indicator-expansion-v70" defer></script>
   </head>
   <body>
     <main class="dashboard-shell">
@@ -66,6 +66,10 @@
                     <input type="checkbox" id="macro-log-scale" />
                     Log scale
                   </label>
+                  <label class="toggle-pill">
+                    <input type="checkbox" id="macro-threshold-zones" checked />
+                    Zones
+                  </label>
                 </div>
               </div>
               <div class="selection-notice" id="selection-notice" hidden>
@@ -108,6 +112,12 @@
                 <strong id="fx-spread-value">--</strong>
                 <div id="fx-spread-change"></div>
                 <div class="color-control" data-fx-color-control="US_Japan_2Y_Spread"></div>
+              </article>
+              <article class="metric-card fx-card" data-fx-card="BROAD_US_DOLLAR_INDEX" data-glossary-id="DTWEXBGS" tabindex="0">
+                <span class="indicator-label">Broad U.S. Dollar Index</span>
+                <strong id="fx-broad-dollar-value">--</strong>
+                <div id="fx-broad-dollar-change"></div>
+                <div class="color-control" data-fx-color-control="BROAD_US_DOLLAR_INDEX"></div>
               </article>
             </div>
           </section>
@@ -172,6 +182,10 @@
                     Log scale
                   </label>
                   <label class="toggle-pill">
+                    <input type="checkbox" id="breadth-threshold-zones" checked />
+                    Zones
+                  </label>
+                  <label class="toggle-pill">
                     <input type="checkbox" id="breadth-normalized" />
                     Normalized
                   </label>
@@ -226,6 +240,10 @@
                     Log scale
                   </label>
                   <label class="toggle-pill">
+                    <input type="checkbox" id="flows-threshold-zones" checked />
+                    Zones
+                  </label>
+                  <label class="toggle-pill">
                     <input type="checkbox" id="flows-normalized" />
                     Normalized
                   </label>
@@ -275,6 +293,10 @@
                     <input type="checkbox" id="us-rates-log-scale" />
                     Log scale
                   </label>
+                  <label class="toggle-pill">
+                    <input type="checkbox" id="us-rates-threshold-zones" checked />
+                    Zones
+                  </label>
                 </div>
               </div>
               <div class="selection-notice" id="us-rates-selection-notice" hidden>
@@ -320,6 +342,10 @@
                   <label class="toggle-pill">
                     <input type="checkbox" id="jp-rates-log-scale" />
                     Log scale
+                  </label>
+                  <label class="toggle-pill">
+                    <input type="checkbox" id="jp-rates-threshold-zones" checked />
+                    Zones
                   </label>
                 </div>
               </div>
@@ -367,6 +393,10 @@
                     <input type="checkbox" id="japan-log-scale" />
                     Log scale
                   </label>
+                  <label class="toggle-pill">
+                    <input type="checkbox" id="japan-threshold-zones" checked />
+                    Zones
+                  </label>
                 </div>
               </div>
               <div class="selection-notice" id="japan-selection-notice" hidden>
@@ -412,6 +442,10 @@
                   <label class="toggle-pill">
                     <input type="checkbox" id="taiwan-log-scale" />
                     Log scale
+                  </label>
+                  <label class="toggle-pill">
+                    <input type="checkbox" id="taiwan-threshold-zones" checked />
+                    Zones
                   </label>
                 </div>
               </div>

@@ -21,6 +21,28 @@ const series = [
     label: "US 10-Year Treasury yield",
   },
   {
+    id: "DFII10",
+    outputFile: path.join("data", "us-10y-real-yield.csv"),
+    label: "US 10-Year Real Yield",
+  },
+  {
+    id: "T10YIE",
+    outputFile: path.join("data", "us-10y-breakeven-inflation.csv"),
+    label: "US 10-Year Breakeven Inflation",
+  },
+  {
+    id: "ICSA",
+    outputFile: path.join("data", "us-initial-jobless-claims.csv"),
+    label: "US Initial Jobless Claims",
+    decimals: 0,
+  },
+  {
+    id: "DTWEXBGS",
+    outputFile: path.join("data", "broad-us-dollar-index.csv"),
+    label: "Broad U.S. Dollar Index",
+    decimals: 2,
+  },
+  {
     id: "WALCL",
     outputFile: path.join("data", "fed-balance-sheet.csv"),
     label: "Fed Balance Sheet",

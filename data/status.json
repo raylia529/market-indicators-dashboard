@@ -3,8 +3,8 @@
   "last_dashboard_refresh_display": "2026-08-01 10:18 JST",
   "update_duration_seconds": 10,
   "dashboard_version": "1.0.0",
-  "last_git_commit": "14c9b4d",
-  "python_version": "Python 3.12.13",
+  "last_git_commit": "57e47cf",
+  "python_version": "Python 3.13.3",
   "indicators": {
     "SP500": {
       "display_name": "S&P 500 Index",
@@ -239,6 +239,138 @@
       "frequency": "Daily",
       "unit": "Percent",
       "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": null
+    },
+    "DFII10": {
+      "display_name": "US 10-Year Real Yield",
+      "short_name": "US 10Y Real Yield",
+      "source_name": "FRED",
+      "source_url": "https://fred.stlouisfed.org/series/DFII10",
+      "source_urls": [
+        {
+          "label": "FRED DFII10",
+          "url": "https://fred.stlouisfed.org/series/DFII10"
+        }
+      ],
+      "latest_available_date": "2026-07-30",
+      "dashboard_latest_date": "2026-07-30",
+      "source_available_date": null,
+      "next_expected_update_date": "2026-07-31",
+      "next_expected_observation_date": "2026-07-31",
+      "expected_source_update_at": "2026-08-03T20:15:00.000Z",
+      "expected_source_update_date": "2026-08-04",
+      "expected_source_update_display": "2026-08-04 05:15 JST",
+      "source_checked_at": null,
+      "source_checked_display": null,
+      "source_check_status": null,
+      "source_available_checked_at": null,
+      "source_available_checked_display": null,
+      "last_successful_refresh": null,
+      "last_successful_refresh_display": null,
+      "frequency": "Daily, US trading days",
+      "unit": "Percent",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": null
+    },
+    "T10YIE": {
+      "display_name": "US 10-Year Breakeven Inflation Rate",
+      "short_name": "US 10Y Breakeven Inflation",
+      "source_name": "FRED",
+      "source_url": "https://fred.stlouisfed.org/series/T10YIE",
+      "source_urls": [
+        {
+          "label": "FRED T10YIE",
+          "url": "https://fred.stlouisfed.org/series/T10YIE"
+        }
+      ],
+      "latest_available_date": "2026-07-31",
+      "dashboard_latest_date": "2026-07-31",
+      "source_available_date": null,
+      "next_expected_update_date": "2026-08-03",
+      "next_expected_observation_date": "2026-08-03",
+      "expected_source_update_at": "2026-08-04T20:15:00.000Z",
+      "expected_source_update_date": "2026-08-05",
+      "expected_source_update_display": "2026-08-05 05:15 JST",
+      "source_checked_at": null,
+      "source_checked_display": null,
+      "source_check_status": null,
+      "source_available_checked_at": null,
+      "source_available_checked_display": null,
+      "last_successful_refresh": null,
+      "last_successful_refresh_display": null,
+      "frequency": "Daily, US trading days",
+      "unit": "Percent",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": null
+    },
+    "ICSA": {
+      "display_name": "US Initial Jobless Claims",
+      "short_name": "US Initial Claims",
+      "source_name": "FRED",
+      "source_url": "https://fred.stlouisfed.org/series/ICSA",
+      "source_urls": [
+        {
+          "label": "FRED ICSA",
+          "url": "https://fred.stlouisfed.org/series/ICSA"
+        }
+      ],
+      "latest_available_date": "2026-07-25",
+      "dashboard_latest_date": "2026-07-25",
+      "source_available_date": null,
+      "next_expected_update_date": "2026-08-01",
+      "next_expected_observation_date": "2026-08-01",
+      "expected_source_update_at": null,
+      "expected_source_update_date": null,
+      "expected_source_update_display": null,
+      "source_checked_at": null,
+      "source_checked_display": null,
+      "source_check_status": null,
+      "source_available_checked_at": null,
+      "source_available_checked_display": null,
+      "last_successful_refresh": null,
+      "last_successful_refresh_display": null,
+      "frequency": "Weekly, Thursday release",
+      "unit": "Claims",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": "Weekly initial unemployment-insurance claims. The observation date is the Saturday ending the reported week, not the Thursday release date."
+    },
+    "DTWEXBGS": {
+      "display_name": "Broad U.S. Dollar Index",
+      "short_name": "Broad U.S. Dollar Index",
+      "source_name": "Federal Reserve Board via FRED",
+      "source_url": "https://fred.stlouisfed.org/series/DTWEXBGS",
+      "source_urls": [
+        {
+          "label": "FRED DTWEXBGS",
+          "url": "https://fred.stlouisfed.org/series/DTWEXBGS"
+        }
+      ],
+      "latest_available_date": "2026-07-24",
+      "dashboard_latest_date": "2026-07-24",
+      "source_available_date": null,
+      "next_expected_update_date": "2026-07-27",
+      "next_expected_observation_date": "2026-07-27",
+      "expected_source_update_at": "2026-07-28T20:15:00.000Z",
+      "expected_source_update_date": "2026-07-29",
+      "expected_source_update_display": "2026-07-29 05:15 JST",
+      "source_checked_at": null,
+      "source_checked_display": null,
+      "source_check_status": null,
+      "source_available_checked_at": null,
+      "source_available_checked_display": null,
+      "last_successful_refresh": null,
+      "last_successful_refresh_display": null,
+      "frequency": "Daily, US trading days",
+      "unit": "Index",
+      "status": "Update not run",
       "error_message": null,
       "formula": null,
       "release_note": null
@@ -914,6 +1046,39 @@
       "formula": null,
       "release_note": "Official FM01'STRDCLUCON daily average. This is the observed uncollateralized overnight market rate, not the BOJ policy target. Missing non-business days are not filled."
     },
+    "BOJ_IMPLIED_RATE_3M_TONA": {
+      "display_name": "BOJ Implied Rate from 3-Month TONA Futures",
+      "short_name": "BOJ Implied Rate (3M TONA)",
+      "source_name": "JPX settlement prices",
+      "source_url": "https://www.jpx.co.jp/english/markets/derivatives/settlement-price/index.html",
+      "source_urls": [
+        {
+          "label": "JPX settlement prices",
+          "url": "https://www.jpx.co.jp/english/markets/derivatives/settlement-price/index.html"
+        }
+      ],
+      "latest_available_date": "2026-07-31",
+      "dashboard_latest_date": "2026-07-31",
+      "source_available_date": null,
+      "next_expected_update_date": "2026-08-03",
+      "next_expected_observation_date": "2026-08-03",
+      "expected_source_update_at": "2026-08-03T07:45:00.000Z",
+      "expected_source_update_date": "2026-08-03",
+      "expected_source_update_display": "2026-08-03 16:45 JST",
+      "source_checked_at": null,
+      "source_checked_display": null,
+      "source_check_status": null,
+      "source_available_checked_at": null,
+      "source_available_checked_display": null,
+      "last_successful_refresh": null,
+      "last_successful_refresh_display": null,
+      "frequency": "Daily, Japan business days",
+      "unit": "Percent",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": "Calculated as 100 minus the settlement price of the nearest listed 3-Month TONA futures contract. It is a market-implied short-rate proxy, not an official BOJ policy-rate forecast."
+    },
     "JAPAN_CORE_CPI_YOY": {
       "display_name": "Japan Core Consumer Price Index Year-over-Year",
       "short_name": "Japan Core CPI YoY",
@@ -987,6 +1152,39 @@
       "error_message": null,
       "formula": null,
       "release_note": "Official Ku-area of Tokyo all-items CPI excluding fresh food. It is normally published before the nationwide CPI. No interpolation or forward fill is used."
+    },
+    "JAPAN_CASH_EARNINGS_YOY": {
+      "display_name": "Japan Total Cash Earnings Year-over-Year",
+      "short_name": "Japan Cash Earnings YoY",
+      "source_name": "Japan Ministry of Health, Labour and Welfare",
+      "source_url": "https://www.mhlw.go.jp/toukei/list/30-1a.html",
+      "source_urls": [
+        {
+          "label": "MHLW Monthly Labour Survey",
+          "url": "https://www.mhlw.go.jp/toukei/list/30-1a.html"
+        }
+      ],
+      "latest_available_date": "2026-05-01",
+      "dashboard_latest_date": "2026-05-01",
+      "source_available_date": null,
+      "next_expected_update_date": "2026-06-08",
+      "next_expected_observation_date": "2026-06-08",
+      "expected_source_update_at": null,
+      "expected_source_update_date": null,
+      "expected_source_update_display": null,
+      "source_checked_at": null,
+      "source_checked_display": null,
+      "source_check_status": null,
+      "source_available_checked_at": null,
+      "source_available_checked_display": null,
+      "last_successful_refresh": null,
+      "last_successful_refresh_display": null,
+      "frequency": "Monthly preliminary",
+      "unit": "Percent YoY",
+      "status": "Update not run",
+      "error_message": null,
+      "formula": null,
+      "release_note": "Nationwide total cash earnings, establishments with five or more employees. The updater reads the total-industry year-over-year figure from the latest official preliminary workbook."
     },
     "DGS2": {
       "display_name": "US 2-Year Treasury Yield",
