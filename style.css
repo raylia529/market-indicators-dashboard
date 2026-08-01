@@ -1780,6 +1780,21 @@ input,
   }
 }
 
+@media (max-width: 760px) and (orientation: portrait) {
+  .range-selector {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    width: 100%;
+  }
+
+  .range-button {
+    min-width: 0;
+    width: 100%;
+    padding: 8px 4px;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #000000;
