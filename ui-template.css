@@ -319,6 +319,126 @@ body {
   }
 }
 
+/* Keep the fixed chart selection readable on touch screens and independent of Plotly hover. */
+#indicator-chart,
+#fx-chart,
+.comparison-chart {
+  position: relative;
+}
+
+.chart-selection-popover {
+  position: absolute;
+  z-index: 12;
+  min-width: 104px;
+  max-width: 190px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 7px 9px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 7px 20px rgba(23, 35, 45, 0.16);
+  font-size: 0.74rem;
+  font-weight: 750;
+  line-height: 1.25;
+  pointer-events: auto;
+  user-select: none;
+}
+
+.chart-selection-popover[hidden],
+.chart-selection-guide[hidden] {
+  display: none !important;
+}
+
+.chart-selection-date {
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.chart-selection-value {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 18px;
+  white-space: nowrap;
+}
+
+.chart-selection-swatch {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.chart-selection-guide {
+  position: absolute;
+  z-index: 11;
+  width: 0;
+  border-left: 1px dashed var(--chart-guide);
+  pointer-events: none;
+  opacity: 0.78;
+}
+
+.chart-selection-active .hoverlayer .hovertext {
+  visibility: hidden;
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+  .chart-toolbar,
+  .fx-controls {
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: nowrap;
+  }
+
+  .chart-toolbar > .range-selector,
+  .fx-controls > .range-selector {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    width: auto !important;
+    margin: 0 !important;
+  }
+
+  .chart-toolbar > .range-selector .range-button,
+  .fx-controls > .range-selector .range-button {
+    width: auto;
+    min-width: 48px;
+    height: 32.5px !important;
+    border-bottom: 0;
+    padding: 0 8px;
+  }
+
+  :is(.dashboard-modebar, .chart-toolbar > .modebar, .fx-controls > .modebar) {
+    margin-left: auto !important;
+  }
+}
+
+@media (max-width: 760px) and (orientation: portrait) {
+  body.chart-landscape-required .mobile-pane.chart-pane.active {
+    display: flex;
+    min-height: 230px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+  }
+
+  body.chart-landscape-required .mobile-pane.chart-pane.active > * {
+    display: none !important;
+  }
+
+  body.chart-landscape-required .mobile-pane.chart-pane.active::after {
+    content: "Rotate your phone to view charts";
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-align: center;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #050607;
@@ -1245,4 +1365,23 @@ body {
     min-width: 98px;
     height: 30px !important;
   }
+}
+
+/* Final sizing pass: the chart controls must match the period selector box exactly. */
+.chart-toolbar > .range-selector,
+.fx-controls > .range-selector {
+  margin-top: 0 !important;
+}
+
+:is(.dashboard-modebar, .chart-toolbar > .modebar, .fx-controls > .modebar) {
+  height: 34.5px !important;
+}
+
+:is(.dashboard-modebar, .chart-toolbar > .modebar, .fx-controls > .modebar) .dashboard-modebar-group {
+  height: 34.5px !important;
+}
+
+:is(.dashboard-modebar, .chart-toolbar > .modebar, .fx-controls > .modebar) .dashboard-modebar-group .modebar-btn,
+:is(.dashboard-modebar, .chart-toolbar > .modebar, .fx-controls > .modebar) .dashboard-modebar-group .modebar-toggle-control {
+  height: 32.5px !important;
 }

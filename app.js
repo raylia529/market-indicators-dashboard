@@ -2739,6 +2739,10 @@ function clearPlotlyHover(chartNode) {
 
   if (chartNode) {
     delete chartNode.dataset.selectedDate;
+    chartNode.classList.remove("chart-selection-active");
+    chartNode.querySelectorAll(".chart-selection-popover, .chart-selection-guide").forEach((element) => {
+      element.hidden = true;
+    });
   }
 }
 
@@ -2805,35 +2809,134 @@ function getNearestPlotlyPointRefs(chartNode, dateText) {
   });
 }
 
-function showPlotlySelection(chartNode, dateText, eventPoints = []) {
-  if (!chartNode || !dateText || !window.Plotly?.Fx?.hover) {
+function getChartSelectionValue(trace, pointNumber) {
+  const customdata = trace?.customdata?.[pointNumber];
+  const formattedValue = Array.isArray(customdata) ? customdata[2] ?? customdata[0] : customdata;
+
+  if (formattedValue !== undefined && formattedValue !== null && formattedValue !== "") {
+    return String(formattedValue);
+  }
+
+  const value = Number(trace?.y?.[pointNumber]);
+  return Number.isFinite(value)
+    ? new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(value)
+    : "--";
+}
+
+function getChartSelectionColor(trace, pointNumber) {
+  const lineColor = trace?.line?.color;
+  const markerColor = Array.isArray(trace?.marker?.color)
+    ? trace.marker.color[pointNumber]
+    : trace?.marker?.color;
+
+  return lineColor || markerColor || getCssColor("--muted", "#64748b");
+}
+
+function renderChartSelectionOverlay(chartNode, dateText, pointRefs, anchor = null) {
+  let popover = chartNode.querySelector(":scope > .chart-selection-popover");
+  let guide = chartNode.querySelector(":scope > .chart-selection-guide");
+
+  if (!popover) {
+    popover = document.createElement("div");
+    popover.className = "chart-selection-popover";
+    popover.setAttribute("role", "status");
+    popover.setAttribute("aria-live", "polite");
+    chartNode.append(popover);
+  }
+
+  if (!guide) {
+    guide = document.createElement("div");
+    guide.className = "chart-selection-guide";
+    guide.setAttribute("aria-hidden", "true");
+    chartNode.append(guide);
+  }
+
+  popover.replaceChildren();
+  const dateElement = document.createElement("div");
+  dateElement.className = "chart-selection-date";
+  dateElement.textContent = formatFullDate(dateText);
+  popover.append(dateElement);
+
+  const uniqueRefs = [];
+  const seenCurves = new Set();
+  pointRefs.forEach(({ curveNumber, pointNumber }) => {
+    if (seenCurves.has(curveNumber) || !chartNode.data?.[curveNumber]) {
+      return;
+    }
+
+    seenCurves.add(curveNumber);
+    uniqueRefs.push({ curveNumber, pointNumber });
+  });
+
+  uniqueRefs.forEach(({ curveNumber, pointNumber }) => {
+    const trace = chartNode.data[curveNumber];
+    const row = document.createElement("div");
+    row.className = "chart-selection-value";
+
+    const swatch = document.createElement("span");
+    swatch.className = "chart-selection-swatch";
+    swatch.style.backgroundColor = getChartSelectionColor(trace, pointNumber);
+
+    const value = document.createElement("span");
+    value.textContent = getChartSelectionValue(trace, pointNumber);
+    row.append(swatch, value);
+    popover.append(row);
+  });
+
+  const rect = chartNode.getBoundingClientRect();
+  const plotSize = chartNode?._fullLayout?._size;
+  let localX = Number.isFinite(anchor?.clientX) ? anchor.clientX - rect.left : rect.width / 2;
+  let localY = Number.isFinite(anchor?.clientY) ? anchor.clientY - rect.top : rect.height / 2;
+  const plotLeft = plotSize?.l ?? 8;
+  const plotRight = plotLeft + (plotSize?.w ?? Math.max(rect.width - plotLeft - 8, 0));
+  const plotTop = plotSize?.t ?? 8;
+  const plotBottom = plotTop + (plotSize?.h ?? Math.max(rect.height - plotTop - 8, 0));
+
+  localX = Math.min(Math.max(localX, plotLeft), plotRight);
+  localY = Math.min(Math.max(localY, plotTop), plotBottom);
+  guide.style.left = `${localX}px`;
+  guide.style.top = `${plotTop}px`;
+  guide.style.height = `${Math.max(plotBottom - plotTop, 0)}px`;
+  guide.hidden = false;
+  popover.hidden = false;
+
+  const popoverWidth = popover.offsetWidth || 160;
+  const popoverHeight = popover.offsetHeight || 52;
+  const left = Math.min(Math.max(localX + 12, 8), Math.max(rect.width - popoverWidth - 8, 8));
+  const top = Math.min(Math.max(localY - popoverHeight - 12, 8), Math.max(rect.height - popoverHeight - 8, 8));
+  popover.style.left = `${left}px`;
+  popover.style.top = `${top}px`;
+}
+
+function showPlotlySelection(chartNode, dateText, eventPoints = [], anchor = null) {
+  if (!chartNode || !dateText) {
     return;
   }
 
   chartNode.dataset.selectedDate = dateText;
   chartNode.dataset.promptDate = dateText;
+  chartNode.classList.add("chart-selection-active");
 
-  const pointRefs = eventPoints.length
-    ? eventPoints
-        .filter(
-          (point) =>
-            Number.isFinite(point?.curveNumber) && Number.isFinite(point?.pointNumber),
-        )
-        .map(({ curveNumber, pointNumber }) => ({ curveNumber, pointNumber }))
-    : getNearestPlotlyPointRefs(chartNode, dateText);
+  const nearestRefs = getNearestPlotlyPointRefs(chartNode, dateText);
+  const pointRefs = [
+    ...nearestRefs,
+    ...eventPoints
+      .filter(
+        (point) =>
+          Number.isFinite(point?.curveNumber) && Number.isFinite(point?.pointNumber),
+      )
+      .map(({ curveNumber, pointNumber }) => ({ curveNumber, pointNumber })),
+  ];
 
   try {
-    if (pointRefs.length) {
-      window.Plotly.Fx.hover(chartNode, pointRefs);
-      return;
+    if (window.Plotly?.Fx?.unhover) {
+      window.Plotly.Fx.unhover(chartNode);
     }
-
-    window.Plotly.Fx.hover(chartNode, {
-      xval: new Date(`${dateText}T00:00:00Z`),
-    });
   } catch {
-    // A chart without a matching point should still be dismissible.
+    // The custom selection overlay remains usable if Plotly has no active hover layer.
   }
+
+  renderChartSelectionOverlay(chartNode, dateText, pointRefs, anchor);
 }
 
 function setupChartHoverDismiss(chartNode) {
@@ -2852,7 +2955,7 @@ function setupChartHoverDismiss(chartNode) {
   if (!chartHoverDismissDocumentReady) {
     chartHoverDismissDocumentReady = true;
     document.addEventListener("click", (event) => {
-      if (event.target.closest?.(".modebar, .hovertext")) {
+      if (event.target.closest?.(".modebar, .hovertext, .chart-selection-popover")) {
         return;
       }
 
@@ -2863,17 +2966,21 @@ function setupChartHoverDismiss(chartNode) {
 
   chartNode.on("plotly_click", (eventData) => {
     const dateText = normalizePlotlyDate(eventData?.points?.[0]?.x);
+    const pointerEvent = eventData?.event;
+    const anchor = Number.isFinite(pointerEvent?.clientX) && Number.isFinite(pointerEvent?.clientY)
+      ? { clientX: pointerEvent.clientX, clientY: pointerEvent.clientY }
+      : null;
 
     if (dateText) {
       clearRegisteredPlotlyHovers(chartNode);
-      showPlotlySelection(chartNode, dateText, eventData.points);
+      showPlotlySelection(chartNode, dateText, eventData.points, anchor);
     } else {
       clearPlotlyHover(chartNode);
     }
   });
 
   chartNode.addEventListener("click", (event) => {
-    if (event.target.closest?.(".modebar, .hovertext")) {
+    if (event.target.closest?.(".modebar, .hovertext, .chart-selection-popover")) {
       return;
     }
 
@@ -2882,7 +2989,7 @@ function setupChartHoverDismiss(chartNode) {
 
       if (dateText) {
         clearRegisteredPlotlyHovers(chartNode);
-        showPlotlySelection(chartNode, dateText);
+        showPlotlySelection(chartNode, dateText, [], event);
       }
       return;
     }
@@ -3816,7 +3923,10 @@ function renderChart() {
     return {
       x: rows.map((row) => row.date),
       y: rows.map((row) => row.value),
-      customdata: rawRows.map((row) => [formatDisplayNumber(row.value, indicator)]),
+      customdata: rawRows.map((row) => {
+        const formattedValue = formatDisplayNumber(row.value, indicator);
+        return [formattedValue, "", formattedValue];
+      }),
       type: indicator.chartType || "scatter",
       name: indicator.name,
       yaxis: axisById.get(id),
@@ -4154,6 +4264,11 @@ function renderFxChart() {
       x: seriesRows.map((row) => row.date),
       y: seriesRows.map((row) => getFxDisplayValue(row[series.field], series)),
       customdata: seriesRows.map((row) => [
+        new Intl.NumberFormat("en-US", {
+          minimumFractionDigits: getFxDisplayDecimals(series),
+          maximumFractionDigits: getFxDisplayDecimals(series),
+        }).format(getFxDisplayValue(row[series.field], series)),
+        "",
         new Intl.NumberFormat("en-US", {
           minimumFractionDigits: getFxDisplayDecimals(series),
           maximumFractionDigits: getFxDisplayDecimals(series),
@@ -4777,6 +4892,9 @@ function createComparisonSection(config) {
         customdata: rawRows.map((row) => [
           formatDisplayNumber(row.originalValue ?? row.value, indicator),
           row.baseDate ?? "",
+          state.normalized
+            ? formatDisplayNumber(row.value, { displayDecimals: 2 })
+            : formatDisplayNumber(row.originalValue ?? row.value, indicator),
         ]),
         type: indicator.chartType || "scatter",
         name: indicator.name,
@@ -5177,16 +5295,25 @@ function resizeVisibleCharts() {
     return;
   }
 
-  if (chartElement) {
+  const isDisplayed = (chart) => {
+    if (!chart) {
+      return false;
+    }
+
+    const rect = chart.getBoundingClientRect();
+    return getComputedStyle(chart).display !== "none" && rect.width > 0 && rect.height > 0;
+  };
+
+  if (isDisplayed(chartElement)) {
     Plotly.Plots.resize(chartElement);
   }
 
-  if (fxChartElement) {
+  if (isDisplayed(fxChartElement)) {
     Plotly.Plots.resize(fxChartElement);
   }
 
   comparisonSections.forEach((section) => {
-    if (section.loaded && section.chartElement) {
+    if (section.loaded && isDisplayed(section.chartElement)) {
       Plotly.Plots.resize(section.chartElement);
     }
   });
@@ -5213,6 +5340,36 @@ function centerMobileChartPane(track) {
   );
 
   window.scrollTo({ top: targetTop, behavior: "smooth" });
+}
+
+function syncChartLandscapeRequirement() {
+  const chartPaneActive = Boolean(document.querySelector('[data-mobile-pane="charts"].active'));
+  const requiresLandscape =
+    usesMobilePaneLayout() &&
+    chartPaneActive &&
+    window.matchMedia("(orientation: portrait)").matches;
+
+  document.body.classList.toggle("chart-landscape-required", requiresLandscape);
+}
+
+function requestChartLandscape() {
+  syncChartLandscapeRequirement();
+
+  const orientation = window.screen?.orientation;
+  if (orientation && typeof orientation.lock === "function") {
+    orientation.lock("landscape").catch(() => {
+      // iOS Safari may not expose orientation locking outside an installed app.
+    });
+  }
+}
+
+function releaseChartLandscape() {
+  document.body.classList.remove("chart-landscape-required");
+
+  const orientation = window.screen?.orientation;
+  if (orientation && typeof orientation.unlock === "function") {
+    orientation.unlock();
+  }
 }
 
 function centerActiveLandscapeChart() {
@@ -5245,6 +5402,12 @@ function setMobileView(group, view) {
     pane.classList.toggle("active", pane.dataset.mobilePane === view);
   });
 
+  if (view === "charts") {
+    requestChartLandscape();
+  } else {
+    releaseChartLandscape();
+  }
+
   mobileViewButtons
     .filter((button) => button.dataset.mobileViewButton === group)
     .forEach((button) => {
@@ -5261,6 +5424,8 @@ function setMobileView(group, view) {
       });
     });
   }
+
+  syncChartLandscapeRequirement();
 }
 
 function validateMacroScale() {
@@ -5865,6 +6030,8 @@ function activateTab(tab) {
     panel.classList.toggle("active", panel.dataset.tabPanel === tab);
   });
 
+  syncChartLandscapeRequirement();
+
   if (tab === "fx" && fxData.length === 0) {
     loadFxData().then(renderFx).catch((error) => setFxText("fx-updated", error.message));
   }
@@ -6107,10 +6274,14 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () 
 });
 
 window.matchMedia("(orientation: landscape)").addEventListener("change", (event) => {
+  syncChartLandscapeRequirement();
+
   if (event.matches) {
     window.setTimeout(centerActiveLandscapeChart, 180);
   }
 });
+
+syncChartLandscapeRequirement();
 
 loadIndicatorData()
   .then(() => {
