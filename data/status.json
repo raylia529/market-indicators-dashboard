@@ -3,7 +3,7 @@
   "last_dashboard_refresh_display": "2026-08-01 14:27 JST",
   "update_duration_seconds": 0,
   "dashboard_version": "1.0.0",
-  "last_git_commit": "345c97a",
+  "last_git_commit": "6919ac8",
   "python_version": "Python 3.13.3",
   "indicators": {
     "SP500": {
@@ -934,39 +934,35 @@
     "DEXJPUS": {
       "display_name": "USD/JPY Exchange Rate",
       "short_name": "USD/JPY",
-      "source_name": "Bank of Japan",
-      "source_url": "https://www.stat-search.boj.or.jp/index_en.html",
+      "source_name": "Google Finance",
+      "source_url": "https://www.google.com/finance/quote/USD-JPY",
       "source_urls": [
         {
-          "label": "Bank of Japan Time-Series Data Search",
-          "url": "https://www.stat-search.boj.or.jp/index_en.html"
-        },
-        {
-          "label": "BOJ FM08 API metadata",
-          "url": "https://www.stat-search.boj.or.jp/api/v1/getMetadata?format=json&lang=en&db=FM08"
+          "label": "Google Finance USD/JPY",
+          "url": "https://www.google.com/finance/quote/USD-JPY"
         }
       ],
       "latest_available_date": "2026-07-29",
       "dashboard_latest_date": "2026-07-29",
-      "source_available_date": "2026-07-29",
+      "source_available_date": null,
       "next_expected_update_date": "2026-07-30",
       "next_expected_observation_date": "2026-07-30",
-      "expected_source_update_at": "2026-07-31T01:00:00.000Z",
-      "expected_source_update_date": "2026-07-31",
-      "expected_source_update_display": "2026-07-31 10:00 JST",
-      "source_checked_at": "2026-08-01T08:16:28+09:00",
-      "source_checked_display": "2026-08-01 08:16 JST",
-      "source_check_status": "success",
-      "source_available_checked_at": "2026-08-01T08:16:28+09:00",
-      "source_available_checked_display": "2026-08-01 08:16 JST",
-      "last_successful_refresh": "2026-08-01T08:16:28+09:00",
-      "last_successful_refresh_display": "2026-08-01 08:16 JST",
-      "frequency": "Daily forex trading days",
+      "expected_source_update_at": "2026-07-29T23:15:00.000Z",
+      "expected_source_update_date": "2026-07-30",
+      "expected_source_update_display": "2026-07-30 08:15 JST",
+      "source_checked_at": null,
+      "source_checked_display": null,
+      "source_check_status": null,
+      "source_available_checked_at": null,
+      "source_available_checked_display": null,
+      "last_successful_refresh": null,
+      "last_successful_refresh_display": null,
+      "frequency": "Daily FX market quote",
       "unit": "JPY per USD",
-      "status": "Up to date",
+      "status": "Update not run",
       "error_message": null,
       "formula": null,
-      "release_note": "Official series FXERD04 is the USD/JPY spot rate at 17:00 JST in the Tokyo market. The pre-1998 archive is retained; BOJ observations take priority from 1998 onward."
+      "release_note": "The latest Google Finance USD/JPY quote is merged into the existing historical archive; no complete-history download is repeated."
     },
     "BOJ_POLICY_RATE": {
       "display_name": "Bank of Japan Policy Rate",
@@ -1288,6 +1284,43 @@
       "error_message": null,
       "formula": "US 2-Year Treasury Yield - Japan 2-Year JGB Yield",
       "release_note": null
+    },
+    "CFTC_JPY_SPECULATIVE_NET_POSITIONS": {
+      "display_name": "CFTC JPY Speculative Net Positions",
+      "short_name": "CFTC JPY Speculative Net Positions",
+      "source_name": "CFTC Legacy Futures Only",
+      "source_url": "https://publicreporting.cftc.gov/Commitments-of-Traders/Legacy-Futures-Only/6dca-aqww",
+      "source_urls": [
+        {
+          "label": "CFTC Legacy Futures Only",
+          "url": "https://publicreporting.cftc.gov/Commitments-of-Traders/Legacy-Futures-Only/6dca-aqww"
+        },
+        {
+          "label": "CFTC Public Reporting API",
+          "url": "https://publicreporting.cftc.gov/resource/6dca-aqww.json"
+        }
+      ],
+      "latest_available_date": "2026-07-28",
+      "dashboard_latest_date": "2026-07-28",
+      "source_available_date": null,
+      "next_expected_update_date": "2026-08-07",
+      "next_expected_observation_date": "2026-08-07",
+      "expected_source_update_at": null,
+      "expected_source_update_date": null,
+      "expected_source_update_display": null,
+      "source_checked_at": null,
+      "source_checked_display": null,
+      "source_check_status": null,
+      "source_available_checked_at": null,
+      "source_available_checked_display": null,
+      "last_successful_refresh": null,
+      "last_successful_refresh_display": null,
+      "frequency": "Weekly, Friday release",
+      "unit": "Contracts",
+      "status": "Up to date",
+      "error_message": null,
+      "formula": null,
+      "release_note": "CFTC Legacy Futures Only report for CME Japanese Yen futures (contract 097741). Net speculative positions are non-commercial long contracts minus non-commercial short contracts. The report date is Tuesday and the report is normally published Friday; no forward fill is used."
     },
     "JAPAN_10Y_JGB": {
       "display_name": "Japan 10-Year JGB Yield",

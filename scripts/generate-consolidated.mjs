@@ -53,6 +53,10 @@ const sources = [
   { file: "us-10y-term-premium.csv", columns: { value: "US_10Y_TERM_PREMIUM" } },
   { file: "us-initial-jobless-claims.csv", columns: { value: "US_INITIAL_JOBLESS_CLAIMS" } },
   { file: "broad-us-dollar-index.csv", columns: { value: "BROAD_US_DOLLAR_INDEX" } },
+  {
+    file: "cftc-jpy-speculative-net-positions.csv",
+    columns: { value: "CFTC_JPY_SPECULATIVE_NET_POSITIONS" },
+  },
   { file: "japan-cash-earnings-yoy.csv", columns: { value: "JAPAN_CASH_EARNINGS_YOY" } },
   { file: "boj-implied-rate.csv", columns: { value: "BOJ_IMPLIED_RATE_3M_TONA" } },
   { file: "japan-10-year-jgb-yield.csv", columns: { value: "JAPAN_10Y_YIELD" } },

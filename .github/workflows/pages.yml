@@ -230,6 +230,7 @@ jobs:
             run_update "CBOE SKEW Index" "node scripts/update-extra-indicators.mjs --only=skew" "SKEW" "daily" "us" "cboe"
             run_update "ISM Manufacturing PMI" "node scripts/update-extra-indicators.mjs --only=ism-pmi" "ISM_MANUFACTURING_PMI" "${slow_mode}" "us" "ism"
             run_update "FINRA Margin Debt YoY" "python scripts/update-finra-margin-debt-yoy.py" "FINRA_MARGIN_DEBT_YOY" "${slow_mode}" "us" "finra"
+            run_update "CFTC JPY speculative net positions" "node scripts/update-cftc-jpy-positions.mjs" "CFTC_JPY_SPECULATIVE_NET_POSITIONS" "${slow_mode}" "us" "cftc"
           }
 
           run_us_sources() {
@@ -246,7 +247,7 @@ jobs:
           }
 
           run_asia_daily() {
-            run_update "USD/JPY" "node scripts/update-fx.mjs --profile=asia --only=usdjpy" "DEXJPUS" "daily" "asia" "boj-fx"
+            run_update "USD/JPY" "node scripts/update-fx.mjs --profile=asia --only=usdjpy" "DEXJPUS" "daily" "asia" "google-finance"
             run_update "Japan overnight call rate" "node scripts/update-boj-overnight-rate.mjs" "BOJ_OVERNIGHT_CALL_RATE" "daily" "asia" "boj"
             run_update "BOJ implied rate (3M TONA)" "node scripts/update-tona-implied-rate.mjs" "BOJ_IMPLIED_RATE_3M_TONA" "daily" "asia" "jpx"
             run_update "Japan 2Y and spread" "node scripts/update-fx.mjs --profile=asia --only=japan2y" "JAPAN_2Y_JGB,US_JAPAN_2Y_SPREAD" "daily" "asia" "japan-mof"
@@ -271,6 +272,7 @@ jobs:
 
           if [ "${UPDATE_PROFILE}" = "us" ]; then
             run_us_sources slow-overdue
+            run_update "USD/JPY (US schedule)" "node scripts/update-fx.mjs --profile=us --only=usdjpy" "DEXJPUS" "daily" "us" "google-finance"
           elif [ "${UPDATE_PROFILE}" = "fred" ]; then
             run_fred_sources slow-overdue
           elif [ "${UPDATE_PROFILE}" = "asia" ]; then
@@ -306,6 +308,7 @@ jobs:
             run_update "Japan cash earnings" "python scripts/update-japan-cash-earnings.py" "JAPAN_CASH_EARNINGS_YOY" "force" "full"
             run_update "BOJ implied rate (3M TONA)" "node scripts/update-tona-implied-rate.mjs" "BOJ_IMPLIED_RATE_3M_TONA" "force" "full"
             run_update "FINRA Margin Debt YoY" "python scripts/update-finra-margin-debt-yoy.py" "FINRA_MARGIN_DEBT_YOY" "force" "full"
+            run_update "CFTC JPY speculative net positions" "node scripts/update-cftc-jpy-positions.mjs" "CFTC_JPY_SPECULATIVE_NET_POSITIONS" "force" "full"
           fi
 
           echo "DATA_UPDATE_FAILURES=${failures}" >> "${GITHUB_ENV}"
@@ -331,6 +334,7 @@ jobs:
           node --check scripts/update-fred-series.mjs
           node --check scripts/update-cme-fedwatch.mjs
           node --check scripts/update-extra-indicators.mjs
+          node --check scripts/update-cftc-jpy-positions.mjs
           node --check scripts/update-alpaca-indicators.mjs
           node --check scripts/update-fx.mjs
           node --check scripts/update-us-rates.mjs

@@ -771,6 +771,26 @@
         "en": "The BOJ Implied Rate is the market-implied policy interest rate derived from interest rate futures or Overnight Index Swap (OIS) pricing. Unlike the current policy rate set by the Bank of Japan (BOJ), it reflects investors' expectations for the future path of monetary policy.\n\nWhen markets expect the BOJ to continue raising interest rates, the implied rate typically trades above the current policy rate. Conversely, if investors anticipate future rate cuts or a more accommodative policy stance, the implied rate may fall below the current policy rate. Because financial markets price in future expectations, the BOJ Implied Rate often moves before any official policy decision.\n\nInvestors commonly compare the BOJ Implied Rate with the current BOJ policy rate, the Japan 2-Year Government Bond Yield, Core CPI, Cash Earnings YoY, and USD/JPY. A rising implied rate generally indicates increasing expectations for future rate hikes, while a declining implied rate suggests expectations of slower economic growth, easing inflation, or a more dovish policy outlook. This dashboard calculates the series as 100 minus the nearest 3-Month TONA futures settlement price, so it is a market proxy for future short-term yen rates rather than an official forecast or a probability-weighted next-meeting decision.",
         "ja": "BOJインプライド政策金利は、金利先物やオーバーナイト・インデックス・スワップ（OIS）などの市場価格から算出される、市場が織り込む将来の政策金利です。現在の日本銀行（BOJ）の政策金利とは異なり、市場参加者が予想する今後の金融政策の方向性を反映しています。\n\n市場が追加利上げを予想している場合、インプライド政策金利は現在の政策金利を上回ることが多く、反対に利下げや金融緩和への転換を予想している場合は、現在の政策金利を下回ることがあります。金融市場は将来の見通しを先取りして価格に反映するため、BOJインプライド政策金利は実際の政策変更よりも早く変化することが一般的です。\n\nBOJインプライド政策金利は、日本銀行の政策金利、日本国債2年利回り、コアCPI、現金給与総額前年比（Cash Earnings YoY）、USD/JPYと併せて確認することで、金融政策に対する市場の期待や金利見通しをより正確に把握できます。上昇は追加利上げ期待の高まりを、低下は景気やインフレの鈍化、あるいは金融緩和期待を示唆することが一般的です。このDashboardでは期近の3か月TONA先物の清算値を100から引いて算出しており、公式予測や次回会合の確率加重予測ではなく、将来の円短期金利に対する市場代理指標です。"
       }
+    },
+    {
+      "id": "CFTC_JPY_SPECULATIVE_NET_POSITIONS",
+      "short_name": "CFTC JPY Speculative Net Positions",
+      "full_name": "CFTC JPY Speculative Net Positions (Futures Only)",
+      "aliases": [
+        "CFTC JPY Speculative Net Positions",
+        "JPY Speculative Net Positions",
+        "CFTC COT JPY"
+      ],
+      "headings": {
+        "zh": "CFTC 日圓投機淨部位",
+        "en": "CFTC JPY Speculative Net Positions",
+        "ja": "CFTC円投機筋ネットポジション"
+      },
+      "descriptions": {
+        "zh": "CFTC 日圓投機淨部位（CFTC JPY Speculative Net Positions）是根據美國商品期貨交易委員會（CFTC）每週公布的 Commitments of Traders（COT）報告，統計非商業交易者（Non-commercial Traders）持有的日圓期貨淨部位。這些交易者主要包括避險基金、CTA（商品交易顧問）及其他大型投機機構，因此常被視為市場投機資金的代表。\n\n該指標以日圓期貨多單減去空單計算。數值為正代表市場整體偏多日圓，數值為負則代表市場整體偏空日圓。由於它反映的是市場部位而非價格本身，因此通常用來衡量市場情緒與部位擁擠程度，而不是直接預測短期漲跌。\n\nCOT 報告固定於每週五公布，但資料反映的是前一個星期二收盤時的持倉，因此具有約三個交易日的時間落差。雖然不適合用於日內交易，但對於判斷中期市場部位是否過度集中具有重要參考價值。當日圓淨空單累積至歷史極端水準時，代表市場普遍預期日圓走弱，一旦日本央行政策、官方干預或市場風險偏好發生變化，便可能引發大量空單回補，造成日圓快速升值；反之，當淨多單過度集中時，也可能增加日圓回落的風險。",
+        "en": "CFTC JPY Speculative Net Positions measures the net long or short positions in Japanese yen futures held by non-commercial (speculative) traders, based on the U.S. Commodity Futures Trading Commission (CFTC) Commitments of Traders (COT) report. These traders primarily include hedge funds, commodity trading advisors (CTAs), and other large institutional speculators.\n\nThe indicator is calculated as long contracts minus short contracts. A positive value indicates that speculative traders are net long the Japanese yen, while a negative value indicates that they are net short. Since the report reflects positioning rather than price, it is widely used as a sentiment indicator rather than a direct market timing tool.\n\nThe COT report is published weekly every Friday but reflects positions held as of the previous Tuesday, meaning the data is reported with a several day lag. Although it is less useful for intraday trading, it provides valuable insight into positioning extremes over medium term horizons. Exceptionally large net short JPY positions may signal crowded bearish sentiment toward the yen, increasing the risk of a short squeeze if market expectations change. Likewise, extremely large net long positions may indicate that bullish sentiment has become overly crowded.",
+        "ja": "CFTC円投機筋ネットポジションは、米国商品先物取引委員会（CFTC）が毎週公表するCommitments of Traders（COT）レポートに基づき、非商業部門（投機筋）が保有する日本円先物のネットポジションを示す指標です。対象となるのは主にヘッジファンド、CTA（商品投資顧問）、その他の大口投機筋であり、企業の為替ヘッジなどを目的とする商業部門は含まれません。\n\nネットポジションは買い建玉から売り建玉を差し引いて算出されます。プラスであれば円の買い越し、マイナスであれば円の売り越しを意味します。この指標は価格そのものではなく、市場参加者のポジション状況を示すため、市場センチメントを把握する指標として広く利用されています。\n\nCOTレポートは毎週金曜日に公表されますが、実際のデータは前週火曜日時点のポジションを反映しているため、数日のタイムラグがあります。そのため短期売買のタイミング判断には適しませんが、中期的なポジションの偏りを確認する上では非常に有効です。円のネットショートが過去と比較して極端な水準まで拡大している場合、市場が円安方向へ大きく傾いていることを示し、予想外の政策変更や市場環境の変化によってショートカバーが発生しやすくなる可能性があります。"
+      }
     }
   ]
 }

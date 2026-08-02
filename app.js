@@ -77,12 +77,15 @@ const indicators = [
     id: "fed-balance-sheet",
     name: "Fed Balance Sheet",
     file: "data/fed-balance-sheet.csv",
-    unitLabel: "Millions of U.S. Dollars",
+    unitLabel: "USD bn",
     valueSuffix: "",
     category: "balance-sheet",
     color: "#64748b",
     decimals: 0,
     cadence: "weekly",
+    displayDivisor: 1000,
+    displayDecimals: 1,
+    displaySuffix: "bn",
   },
   {
     id: "nfci",
@@ -463,12 +466,14 @@ const japanIndicators = [
     id: "japan-foreign-investor-net-buying",
     name: "Foreign Investors Net Buying of Japanese Equities",
     file: "data/japan-foreign-investor-net-buying.csv",
-    unitLabel: "JPY Billions",
+    unitLabel: "JPY bn",
     valueSuffix: "",
     category: "flow",
     color: "#10b981",
     decimals: 1,
     cadence: "weekly",
+    displayDecimals: 1,
+    displaySuffix: "bn",
   },
   {
     id: "japan-tab-usdjpy",
@@ -518,11 +523,14 @@ const taiwanIndicators = [
     id: "taiwan-foreign-investor-net-buying",
     name: "Foreign Investors Net Buying of Taiwan Equities",
     file: "data/taiwan-foreign-investor-net-buying.csv",
-    unitLabel: "TWD Millions",
+    unitLabel: "TWD bn",
     valueSuffix: "",
     category: "flow",
     color: "#10b981",
     decimals: 0,
+    displayDivisor: 1000,
+    displayDecimals: 1,
+    displaySuffix: "bn",
   },
   {
     id: "usdtwd",
@@ -606,6 +614,7 @@ const defaultIndicatorColors = {
   BROAD_US_DOLLAR_INDEX: "#6a61b7",
   USDJPY: "#dc944b",
   US_Japan_2Y_Spread: "#4f78c9",
+  CFTC_JPY_SPECULATIVE_NET_POSITIONS: "#65b779",
   topix: "#46b9c9",
   "nikkei-225": "#945bb0",
   "tsmc-revenue-yoy": "#2a9d8f",
@@ -684,6 +693,22 @@ const fxSeriesDefinitions = [
     category: "price",
     changeIndicatorId: "broad-us-dollar-index",
     decimals: 2,
+    suffix: "",
+  },
+  {
+    id: "CFTC_JPY_SPECULATIVE_NET_POSITIONS",
+    name: "CFTC JPY Speculative Net Positions",
+    unitLabel: "k",
+    field: "CFTC_JPY_SPECULATIVE_NET_POSITIONS",
+    valueElementId: "fx-cftc-jpy-value",
+    changeElementId: "fx-cftc-jpy-change",
+    category: "flow",
+    cadence: "weekly",
+    changeIndicatorId: "cftc-jpy-speculative-net-positions",
+    decimals: 1,
+    displayDivisor: 1000,
+    displayDecimals: 1,
+    displaySuffix: "k",
     suffix: "",
   },
 ];
@@ -772,6 +797,7 @@ const indicatorGlossaryIds = {
   "taiwan-foreign-investor-net-buying": "TAIWAN_FOREIGN_NET_BUYING",
   usdtwd: "USDTWD",
   "broad-us-dollar-index": "DTWEXBGS",
+  "cftc-jpy-speculative-net-positions": "CFTC_JPY_SPECULATIVE_NET_POSITIONS",
   "taiwan-margin-financing-balance-yoy": "TAIWAN_MARGIN_FINANCING_BALANCE_YOY",
   "taiwan-electronics-exports-yoy": "TAIWAN_ELECTRONICS_EXPORTS_YOY",
 };
@@ -855,6 +881,10 @@ const glossaryDashboardTargets = {
   DEXJPUS: { tab: "fx", selector: '[data-fx-card="USDJPY"]' },
   DTWEXBGS: { tab: "fx", selector: '[data-fx-card="BROAD_US_DOLLAR_INDEX"]' },
   US_JAPAN_2Y_SPREAD: { tab: "fx", selector: '[data-fx-card="US_Japan_2Y_Spread"]' },
+  CFTC_JPY_SPECULATIVE_NET_POSITIONS: {
+    tab: "fx",
+    selector: '[data-fx-card="CFTC_JPY_SPECULATIVE_NET_POSITIONS"]',
+  },
   TAIEX: { tab: "taiwan", selector: '[data-taiwan-indicator="taiex"]' },
   TAIWAN_FOREIGN_NET_BUYING: {
     tab: "taiwan",
@@ -1562,13 +1592,80 @@ function toIsoDate(date) {
   return `${year}-${month}-${day}`;
 }
 
+function getDisplayDivisor(indicator) {
+  return Number.isFinite(indicator?.displayDivisor) && indicator.displayDivisor !== 0
+    ? indicator.displayDivisor
+    : 1;
+}
+
+function getDisplayDecimals(indicator) {
+  return indicator?.displayDecimals ?? indicator?.decimals ?? 0;
+}
+
+function getDisplaySuffix(indicator) {
+  return indicator?.displaySuffix ?? indicator?.valueSuffix ?? "";
+}
+
+function getDisplayValue(value, indicator) {
+  return Number(value) / getDisplayDivisor(indicator);
+}
+
+function getUnitDisplayRows(rows, indicator) {
+  return rows.map((row) => ({
+    ...row,
+    value: getDisplayValue(row.value, indicator),
+  }));
+}
+
+function getDisplayIndicator(indicator) {
+  if (!indicator?.displayDivisor && !indicator?.displayDecimals && !indicator?.displaySuffix) {
+    return indicator;
+  }
+
+  const axisBounds = indicator.axisBounds
+    ? Object.fromEntries(
+        Object.entries(indicator.axisBounds).map(([key, value]) => [
+          key,
+          Number.isFinite(value) ? getDisplayValue(value, indicator) : value,
+        ]),
+      )
+    : indicator.axisBounds;
+
+  return {
+    ...indicator,
+    axisBounds,
+    decimals: getDisplayDecimals(indicator),
+    valueSuffix: getDisplaySuffix(indicator),
+  };
+}
+
 function formatValue(value, indicator) {
   const formatted = new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: indicator.decimals,
-    maximumFractionDigits: indicator.decimals,
-  }).format(value);
+    minimumFractionDigits: getDisplayDecimals(indicator),
+    maximumFractionDigits: getDisplayDecimals(indicator),
+  }).format(getDisplayValue(value, indicator));
 
-  return `${formatted}${indicator.valueSuffix}`;
+  return `${formatted}${getDisplaySuffix(indicator)}`;
+}
+
+function formatDisplayNumber(value, indicator) {
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: getDisplayDecimals(indicator),
+    maximumFractionDigits: getDisplayDecimals(indicator),
+  }).format(getDisplayValue(value, indicator));
+}
+
+function getDisplayHoverUnit(indicator) {
+  return indicator?.displayDivisor ? getDisplaySuffix(indicator) : indicator?.unitLabel || "";
+}
+
+function getDisplayHoverMarkup(indicator) {
+  const unit = getDisplayHoverUnit(indicator);
+  if (!unit) {
+    return "";
+  }
+
+  return indicator?.displayDivisor ? unit : ` ${unit}`;
 }
 
 function getIndicatorChangeFormat(indicator) {
@@ -1646,7 +1743,7 @@ function getIndicatorChange(latest, previous, indicator) {
 
   return {
     direction,
-    text: `${arrow} ${formatSignedChange(rawChange, indicator.decimals, "")}`,
+    text: `${arrow} ${formatSignedChange(rawChange, indicator.decimals, getDisplaySuffix(indicator))}`,
   };
 }
 
@@ -1672,7 +1769,9 @@ function findPreviousDistinctObservation(rows) {
 }
 
 function renderIndicatorChange(rows, indicator) {
-  const latest = rows.at(-1);
+  const displayRows = getUnitDisplayRows(rows, indicator);
+  const displayIndicator = getDisplayIndicator(indicator);
+  const latest = displayRows.at(-1);
 
   if (!latest) {
     return "";
@@ -1704,11 +1803,11 @@ function renderIndicatorChange(rows, indicator) {
       change: getIndicatorChange(
         latest,
         policyMeeting
-          ? findPolicyRateBeforePreviousMeeting(rows)
+          ? findPolicyRateBeforePreviousMeeting(displayRows)
           : distinctValue
-          ? findPreviousDistinctObservation(rows)
-          : findPreviousActualObservation(rows, observationsBack, indicator),
-        indicator,
+          ? findPreviousDistinctObservation(displayRows)
+          : findPreviousActualObservation(displayRows, observationsBack, displayIndicator),
+        displayIndicator,
       ),
     }))
     .filter((item) => item.change);
@@ -1966,7 +2065,7 @@ function percentile(values, p) {
   return sorted[lower] + (sorted[upper] - sorted[lower]) * (index - lower);
 }
 
-function getAutoRange(rows, scale, axisBounds = null) {
+function getAutoRange(rows, scale, axisBounds = null, includeZero = false) {
   const values = rows.map((row) => row.value).filter((value) => Number.isFinite(value));
   const visibleValues = scale === "log" ? values.filter((value) => value > 0) : values;
 
@@ -1976,6 +2075,11 @@ function getAutoRange(rows, scale, axisBounds = null) {
 
   let min = Math.min(...visibleValues);
   let max = Math.max(...visibleValues);
+
+  if (includeZero && scale === "linear") {
+    min = Math.min(min, 0);
+    max = Math.max(max, 0);
+  }
 
   if (min === max) {
     const padding = Math.abs(min || 1) * 0.1;
@@ -2428,11 +2532,14 @@ function buildFxPrompt(dateText) {
       id: series.id,
       name: series.name,
       unit: series.unit,
-      rows: fxData,
+      rows: fxData.map((row) => ({
+        ...row,
+        [series.field]: getFxDisplayValue(row[series.field], series),
+      })),
       dateText,
       valueField: series.field,
-      decimals: series.decimals,
-      suffix: series.suffix,
+      decimals: getFxDisplayDecimals(series),
+      suffix: getFxDisplaySuffix(series),
     }),
   );
 
@@ -3371,7 +3478,7 @@ function getAxisGroupColor(ids, theme) {
 
 function getYAxisLayout(side, indicator, rows, theme = getChartTheme(), axisColor = theme.ink) {
   const scale = macroScale === "log" && canUseLog(rows) ? "log" : "linear";
-  const range = getAutoRange(rows, scale, indicator.axisBounds);
+  const range = getAutoRange(rows, scale, indicator.axisBounds, indicator.chartType === "bar");
   const axis = {
     gridcolor: side === "left" ? theme.grid : "rgba(0,0,0,0)",
     zeroline: true,
@@ -3525,25 +3632,33 @@ function renderChart() {
   ]);
   const traces = selected.map((id) => {
     const indicator = getIndicator(id);
-    const rows = getFilteredRows(id);
+    const rawRows = getFilteredRows(id);
+    const rows = getUnitDisplayRows(rawRows, indicator);
+    const hoverUnit = getDisplayHoverMarkup(indicator);
+    const hoverTemplate = `<b>${indicator.name}</b><br>%{customdata[0]}${hoverUnit}<extra></extra>`;
 
     return {
       x: rows.map((row) => row.date),
       y: rows.map((row) => row.value),
-      type: "scatter",
-      mode: rows.length === 1 ? "lines+markers" : "lines",
+      customdata: rawRows.map((row) => [formatDisplayNumber(row.value, indicator)]),
+      type: indicator.chartType || "scatter",
       name: indicator.name,
       yaxis: axisById.get(id),
-      line: {
-        color: getChartSeriesColor(indicator.id),
-        width: 1.5,
-        dash: "solid",
-        shape: indicator.lineShape || "linear",
-      },
-      ...(rows.length === 1
-        ? { marker: { size: 8, color: getChartSeriesColor(indicator.id) } }
-        : {}),
-      hovertemplate: `<b>${indicator.name}</b><br>%{y:.${indicator.decimals}f} ${indicator.unitLabel}<extra></extra>`,
+      ...(indicator.chartType === "bar"
+        ? { marker: { color: getChartSeriesColor(indicator.id), opacity: 0.82 } }
+        : {
+            mode: rows.length === 1 ? "lines+markers" : "lines",
+            line: {
+              color: getChartSeriesColor(indicator.id),
+              width: 1.5,
+              dash: "solid",
+              shape: indicator.lineShape || "linear",
+            },
+            ...(rows.length === 1
+              ? { marker: { size: 8, color: getChartSeriesColor(indicator.id) } }
+              : {}),
+          }),
+      hovertemplate: hoverTemplate,
     };
   });
 
@@ -3551,10 +3666,11 @@ function renderChart() {
   chartTitle.textContent = title || "Select indicators";
 
   const xBounds = getMacroXBounds();
-  const leftRows = combineRows(leftIds, getFilteredRows);
-  const rightRows = combineRows(rightIds, getFilteredRows);
-  const leftIndicator = leftIds[0] ? { ...getIndicator(leftIds[0]) } : null;
-  const rightIndicator = rightIds[0] ? { ...getIndicator(rightIds[0]) } : null;
+  const getDisplayChartRows = (id) => getUnitDisplayRows(getFilteredRows(id), getIndicator(id));
+  const leftRows = combineRows(leftIds, getDisplayChartRows);
+  const rightRows = combineRows(rightIds, getDisplayChartRows);
+  const leftIndicator = leftIds[0] ? getDisplayIndicator(getIndicator(leftIds[0])) : null;
+  const rightIndicator = rightIds[0] ? getDisplayIndicator(getIndicator(rightIds[0])) : null;
   if (rightIndicator && rightIds.length > 1) {
     delete rightIndicator.axisBounds;
   }
@@ -3714,6 +3830,33 @@ function setFxHtml(id, html) {
   }
 }
 
+function getFxDisplayValue(value, series) {
+  if (value === null || value === undefined || value === "") {
+    return Number.NaN;
+  }
+
+  const divisor = Number.isFinite(series.displayDivisor) && series.displayDivisor !== 0 ? series.displayDivisor : 1;
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue / divisor : Number.NaN;
+}
+
+function getFxDisplayDecimals(series) {
+  return series.displayDecimals ?? series.decimals;
+}
+
+function getFxDisplaySuffix(series) {
+  return series.displaySuffix ?? series.suffix;
+}
+
+function formatFxCardValue(value, series) {
+  const formatted = new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: getFxDisplayDecimals(series),
+    maximumFractionDigits: getFxDisplayDecimals(series),
+  }).format(getFxDisplayValue(value, series));
+
+  return `${formatted}${getFxDisplaySuffix(series)}`;
+}
+
 function renderFxCards() {
   const latestAny = fxData.at(-1);
 
@@ -3725,15 +3868,13 @@ function renderFxCards() {
 
     setFxText(
       series.valueElementId,
-      latest ? `${latest[series.field].toFixed(series.decimals)}${series.suffix}` : "--",
+      latest ? formatFxCardValue(latest[series.field], series) : "--",
     );
     setFxHtml(
       series.changeElementId,
       renderIndicatorChange(rows, {
+        ...series,
         id: series.changeIndicatorId,
-        category: series.category,
-        cadence: series.cadence,
-        decimals: series.decimals,
       }),
     );
   });
@@ -3779,7 +3920,7 @@ function renderFxCards() {
   });
 }
 
-function fxAxisRange(values) {
+function fxAxisRange(values, includeZero = false) {
   const finiteValues = values.filter((value) => Number.isFinite(value));
 
   if (finiteValues.length === 0) {
@@ -3789,14 +3930,19 @@ function fxAxisRange(values) {
   let min = Math.min(...finiteValues);
   let max = Math.max(...finiteValues);
 
+  if (includeZero) {
+    min = Math.min(min, 0);
+    max = Math.max(max, 0);
+  }
+
   if (min === max) {
-    const padding = Math.abs(min || 1) * 0.08;
+    const padding = Math.abs(min || 1) * 0.12;
     min -= padding;
     max += padding;
   } else {
-    const padding = (max - min) * 0.08;
-    min -= padding;
-    max += padding;
+    const padding = max - min;
+    min -= padding * 0.08;
+    max += padding * 0.16;
   }
 
   return [min, max];
@@ -3824,30 +3970,42 @@ function renderFxChart() {
 
     return {
       x: seriesRows.map((row) => row.date),
-      y: seriesRows.map((row) => row[series.field]),
-      type: "scatter",
-      mode: seriesRows.length === 1 ? "lines+markers" : "lines",
+      y: seriesRows.map((row) => getFxDisplayValue(row[series.field], series)),
+      customdata: seriesRows.map((row) => [
+        new Intl.NumberFormat("en-US", {
+          minimumFractionDigits: getFxDisplayDecimals(series),
+          maximumFractionDigits: getFxDisplayDecimals(series),
+        }).format(getFxDisplayValue(row[series.field], series)),
+      ]),
+      type: series.chartType || "scatter",
+      ...(series.chartType === "bar"
+        ? { marker: { color: series.color, opacity: 0.82 } }
+        : {
+            mode: seriesRows.length === 1 ? "lines+markers" : "lines",
+            line: { color: series.color, width: 1.5 },
+          }),
       name: series.name,
       yaxis: axisById.get(series.id),
-      line: { color: series.color, width: 1.5 },
-      ...(seriesRows.length === 1 ? { marker: { size: 8, color: series.color } } : {}),
-      hovertemplate: `<b>${series.name}</b><br>%{y:.${series.decimals}f}${series.suffix}<extra></extra>`,
+      ...(series.chartType !== "bar" && seriesRows.length === 1
+        ? { marker: { size: 8, color: series.color } }
+        : {}),
+      hovertemplate: `<b>${series.name}</b><br>%{customdata[0]}${getFxDisplaySuffix(series)}<extra></extra>`,
     };
   });
 
   const leftValues = leftIds.flatMap((id) => {
     const series = getFxDefinition(id);
-    return rows.map((row) => row[series.field]);
+    return rows.map((row) => getFxDisplayValue(row[series.field], series));
   });
   const rightValues = rightIds.flatMap((id) => {
     const series = getFxDefinition(id);
-    return rows.map((row) => row[series.field]);
+    return rows.map((row) => getFxDisplayValue(row[series.field], series));
   });
   const xBounds = getFxXBounds();
   const theme = getChartTheme();
   const yaxis = leftIds.length
     ? {
-        range: fxAxisRange(leftValues),
+        range: fxAxisRange(leftValues, leftIds.some((id) => getFxDefinition(id).chartType === "bar")),
         tickfont: {
           color: getAxisGroupColor(leftIds, theme),
           size: usesTouchChartMode() ? 10 : 11,
@@ -3861,7 +4019,7 @@ function renderFxChart() {
       };
   const yaxis2 = rightIds.length
     ? {
-        range: fxAxisRange(rightValues),
+        range: fxAxisRange(rightValues, rightIds.some((id) => getFxDefinition(id).chartType === "bar")),
         tickfont: {
           color: getAxisGroupColor(rightIds, theme),
           size: usesTouchChartMode() ? 10 : 11,
@@ -4277,7 +4435,7 @@ function createComparisonSection(config) {
     axisColor = theme.ink,
   ) {
     const scale = state.scale === "log" && canUseLocalLog(rows) ? "log" : "linear";
-    const range = getAutoRange(rows, scale, indicator.axisBounds);
+    const range = getAutoRange(rows, scale, indicator.axisBounds, indicator.chartType === "bar");
     const axis = {
       gridcolor: side === "left" ? theme.grid : "rgba(0,0,0,0)",
       zeroline: true,
@@ -4418,28 +4576,37 @@ function createComparisonSection(config) {
     ]);
     const traces = selected.map((id) => {
       const indicator = getLocalIndicator(id);
-      const rows = getChartRows(id);
+      const rawRows = getChartRows(id);
+      const rows = state.normalized ? rawRows : getUnitDisplayRows(rawRows, indicator);
+      const hoverUnit = getDisplayHoverMarkup(indicator);
       const normalizedHover = state.normalized
-        ? `<b>${indicator.name}</b><br>Change from base: %{y:.2f}%<br>Original: %{customdata[0]:.${indicator.decimals}f} ${indicator.unitLabel}<br>Base date: %{customdata[1]}<extra></extra>`
-        : `<b>${indicator.name}</b><br>%{y:.${indicator.decimals}f} ${indicator.unitLabel}<extra></extra>`;
+        ? `<b>${indicator.name}</b><br>Change from base: %{y:.2f}%<br>Original: %{customdata[0]}${hoverUnit}<br>Base date: %{customdata[1]}<extra></extra>`
+        : `<b>${indicator.name}</b><br>%{customdata[0]}${hoverUnit}<extra></extra>`;
 
       return {
         x: rows.map((row) => row.date),
         y: rows.map((row) => row.value),
-        customdata: rows.map((row) => [row.originalValue ?? row.value, row.baseDate ?? ""]),
-        type: "scatter",
-        mode: rows.length === 1 ? "lines+markers" : "lines",
+        customdata: rawRows.map((row) => [
+          formatDisplayNumber(row.originalValue ?? row.value, indicator),
+          row.baseDate ?? "",
+        ]),
+        type: indicator.chartType || "scatter",
         name: indicator.name,
         yaxis: axisById.get(id),
-        line: {
-          color: getChartSeriesColor(indicator.id),
-          width: 1.5,
-          dash: "solid",
-          shape: indicator.lineShape || "linear",
-        },
-        ...(rows.length === 1
-          ? { marker: { size: 8, color: getChartSeriesColor(indicator.id) } }
-          : {}),
+        ...(indicator.chartType === "bar"
+          ? { marker: { color: getChartSeriesColor(indicator.id), opacity: 0.82 } }
+          : {
+              mode: rows.length === 1 ? "lines+markers" : "lines",
+              line: {
+                color: getChartSeriesColor(indicator.id),
+                width: 1.5,
+                dash: "solid",
+                shape: indicator.lineShape || "linear",
+              },
+              ...(rows.length === 1
+                ? { marker: { size: 8, color: getChartSeriesColor(indicator.id) } }
+                : {}),
+            }),
         hovertemplate: normalizedHover,
       };
     });
@@ -4452,8 +4619,12 @@ function createComparisonSection(config) {
     const includesTrendAnchor = Boolean(
       xBounds && requestedBounds && xBounds.start < requestedBounds.start,
     );
-    const leftRows = combineRows(leftIds, getChartRows);
-    const rightRows = combineRows(rightIds, getChartRows);
+    const getDisplayChartRows = (id) => {
+      const rows = getChartRows(id);
+      return state.normalized ? rows : getUnitDisplayRows(rows, getLocalIndicator(id));
+    };
+    const leftRows = combineRows(leftIds, getDisplayChartRows);
+    const rightRows = combineRows(rightIds, getDisplayChartRows);
     const normalizedIndicator = {
       id: "normalized-change",
       name: "Change from base",
@@ -4463,9 +4634,9 @@ function createComparisonSection(config) {
     const leftIndicator = state.normalized
       ? normalizedIndicator
       : leftIds[0]
-        ? { ...getLocalIndicator(leftIds[0]) }
+        ? getDisplayIndicator(getLocalIndicator(leftIds[0]))
         : null;
-    const rightIndicator = rightIds[0] ? { ...getLocalIndicator(rightIds[0]) } : null;
+    const rightIndicator = rightIds[0] ? getDisplayIndicator(getLocalIndicator(rightIds[0])) : null;
     if (rightIndicator && rightIds.length > 1) {
       delete rightIndicator.axisBounds;
     }
@@ -4938,15 +5109,22 @@ async function loadFedWatchExpectation() {
 }
 
 async function loadFxData() {
-  const [fxText, broadDollarText] = await Promise.all([
+  const [fxText, broadDollarText, cftcJpyText] = await Promise.all([
     fetchLocalText("data/fx.csv"),
     fetchLocalText("data/broad-us-dollar-index.csv"),
+    fetchLocalText("data/cftc-jpy-speculative-net-positions.csv"),
   ]);
   const rowsByDate = new Map(parseFxCsv(fxText).map((row) => [row.date, { ...row }]));
 
   parseCsv(broadDollarText).forEach((row) => {
     const target = rowsByDate.get(row.date) || { date: row.date };
     target.BROAD_US_DOLLAR_INDEX = row.value;
+    rowsByDate.set(row.date, target);
+  });
+
+  parseCsv(cftcJpyText).forEach((row) => {
+    const target = rowsByDate.get(row.date) || { date: row.date };
+    target.CFTC_JPY_SPECULATIVE_NET_POSITIONS = row.value;
     rowsByDate.set(row.date, target);
   });
 

@@ -7,8 +7,7 @@ const downloadTimeoutMs = 20_000;
 const defaultRetryBackoffMs = [];
 
 const sources = {
-  usdJpyBojBase:
-    "https://www.stat-search.boj.or.jp/api/v1/getDataCode?format=json&lang=en&db=FM08&code=FXERD04",
+  usdJpyGoogleFinance: "https://www.google.com/finance/quote/USD-JPY?hl=en",
   japan2yHistorical:
     "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/historical/jgbcme_all.csv",
   japan2yCurrent:
@@ -119,50 +118,47 @@ async function downloadWithRetry(
   throw lastError;
 }
 
-function parseBojUsdJpy(text) {
-  const payload = JSON.parse(text);
-  const result = payload?.RESULTSET?.find((series) => series.SERIES_CODE === "FXERD04");
-  const dates = result?.VALUES?.SURVEY_DATES;
-  const values = result?.VALUES?.VALUES;
+function parseGoogleFinanceUsdJpy(text) {
+  const priceMatch =
+    text.match(/\bdata-last-price="([^"]+)"/) ||
+    text.match(/jsname="Pdsbrc"[^>]*>[\s\S]*?<span[^>]*>\s*([\d,]+(?:\.\d+)?)\s*<\/span>/);
+  const timestampMatch = text.match(/\bdata-last-normal-market-timestamp="(\d+)"/);
+  const dateTextMatch = text.match(
+    />([A-Z][a-z]{2}\s+\d{1,2},\s+\d{1,2}:\d{2}:\d{2}\s*(?:AM|PM)\s+UTC)<\/div>/,
+  );
+  const value = Number((priceMatch?.[1] || "").replaceAll(",", ""));
+  const timestamp = Number(timestampMatch?.[1]);
+  const hasUsdJpyQuote = /USD\s*[/\-]\s*JPY|USDJPY|United States Dollar\s*[/\-]\s*Japanese Yen/i.test(
+    text,
+  );
 
-  if (
-    payload?.STATUS !== 200 ||
-    !Array.isArray(dates) ||
-    !Array.isArray(values) ||
-    dates.length !== values.length
-  ) {
-    throw new Error("Unexpected Bank of Japan FXERD04 response.");
+  if (!hasUsdJpyQuote || !isValidUsdJpyValue(value)) {
+    throw new Error("Unexpected Google Finance USD/JPY response.");
   }
 
-  return dates
-    .map((rawDate, index) => {
-      const compactDate = String(rawDate);
-      return {
-        date:
-          compactDate.length === 8
-            ? `${compactDate.slice(0, 4)}-${compactDate.slice(4, 6)}-${compactDate.slice(6, 8)}`
-            : "",
-        value: values[index] === null ? null : Number(values[index]),
-      };
-    })
-    .filter((row) => /^\d{4}-\d{2}-\d{2}$/.test(row.date) && isValidUsdJpyValue(row.value))
-    .sort((a, b) => a.date.localeCompare(b.date));
-}
-
-function bojUsdJpyUrl(existingRows) {
-  const now = new Date();
-  const endDate = `${now.getUTCFullYear()}${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
-  if (existingRows.length === 0) {
-    return `${sources.usdJpyBojBase}&startDate=199801&endDate=${endDate}`;
+  let date = "";
+  if (Number.isFinite(timestamp)) {
+    date = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "UTC",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date(timestamp * 1000));
+  } else if (dateTextMatch) {
+    const normalizedDateText = dateTextMatch[1].replace(/\u202f/g, " ");
+    const parsedDate = new Date(
+      `${normalizedDateText} ${new Date().getUTCFullYear()}`,
+    );
+    if (!Number.isNaN(parsedDate.getTime())) {
+      date = parsedDate.toISOString().slice(0, 10);
+    }
   }
 
-  const latestDate = new Date(`${existingRows.at(-1).date}T00:00:00Z`);
-  latestDate.setUTCMonth(latestDate.getUTCMonth() - 2);
-  const startDate = `${latestDate.getUTCFullYear()}${String(latestDate.getUTCMonth() + 1).padStart(
-    2,
-    "0",
-  )}`;
-  return `${sources.usdJpyBojBase}&startDate=${startDate}&endDate=${endDate}`;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw new Error("Google Finance returned an invalid USD/JPY market date.");
+  }
+
+  return [{ date, value }];
 }
 
 function splitCsvLine(line) {
@@ -434,7 +430,7 @@ async function main() {
       : existingRows
           .filter((row) => Number.isFinite(row.Japan_2Y_Yield))
           .map((row) => ({ date: row.date, value: row.Japan_2Y_Yield }));
-  let bojUsdJpyRows = [];
+  let googleUsdJpyRows = [];
   let us2yRows = [];
   let japan2yRows = [];
   const warnings = [];
@@ -445,12 +441,15 @@ async function main() {
 
   if (requestedSources.has("usdjpy")) {
     try {
-      bojUsdJpyRows = parseBojUsdJpy(
-        await downloadWithRetry(bojUsdJpyUrl(canonicalUsdJpy)),
+      googleUsdJpyRows = parseGoogleFinanceUsdJpy(
+        await downloadWithRetry(sources.usdJpyGoogleFinance, {
+          Accept: "text/html",
+          "Accept-Language": "en-US,en;q=0.9",
+        }),
       );
       usdJpySourceSucceeded = true;
     } catch (error) {
-      warnings.push(`WARNING: Bank of Japan USDJPY download/parse failed. ${error.message}`);
+      warnings.push(`WARNING: Google Finance USDJPY download/parse failed. ${error.message}`);
     }
 
   }
@@ -486,9 +485,9 @@ async function main() {
     console.warn(warning);
   }
 
-  // Preserve the pre-BOJ archive. Official BOJ observations take priority on
-  // overlapping dates and future runs request only a recent overlap window.
-  const combinedUsdJpy = mergeSeries([...existingUsdJpy, ...bojUsdJpyRows]);
+  // Preserve the existing historical archive. Google Finance quotes take
+  // priority on overlapping dates and each run requests only one latest quote.
+  const combinedUsdJpy = mergeSeries([...existingUsdJpy, ...googleUsdJpyRows]);
   const combinedUs2y = mergeSeries([...existingUs2y, ...us2yRows]);
   const combinedJapan2y = mergeSeries([...existingJapan2y, ...japan2yRows]);
   if (us2ySourceSucceeded) {
@@ -532,8 +531,8 @@ async function main() {
   console.log(`Earliest date: ${finalRows[0].date}`);
   console.log(`Latest date: ${finalRows.at(-1).date}`);
   console.log(`Valid USDJPY observations: ${validation.validUsdJpyRows.length}`);
-  console.log(`Bank of Japan USDJPY observations downloaded: ${bojUsdJpyRows.length}`);
-  console.log("USDJPY merge priority: existing archive < official BOJ FXERD04 observations");
+  console.log(`Google Finance USDJPY observations downloaded: ${googleUsdJpyRows.length}`);
+  console.log("USDJPY merge priority: existing archive < Google Finance latest quote");
   console.log(`Valid spread observations: ${validation.validSpreadRows.length}`);
   console.log(`Duplicate dates: ${validation.duplicateDates}`);
   console.log(`Latest USDJPY: ${latestUsdJpy.date} ${latestUsdJpy.USDJPY.toFixed(4)}`);

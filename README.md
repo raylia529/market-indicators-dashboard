@@ -43,7 +43,7 @@ The repository includes `.github/workflows/pages.yml`, which:
 
 GitHub Actions cron expressions use UTC. The comments and times above are the intended fixed Japan Standard Time schedule. Every scheduled run evaluates freshness indicator by indicator before downloading anything. Exchange holidays can keep a daily series pending until a later check, while already complete indicators are skipped. Downloaders make no delayed retries; each configured primary or fallback endpoint is requested at most once per scheduled check. Existing committed data is retained if a source remains unavailable.
 
-Network updates are incremental. Each updater reads the complete local CSV first, requests only a recent overlap window or latest observation, and merges newer observations by date. FRED, Alpaca, Google Finance, FinMind, TWSE, MOPS, JPX, Bank of Japan, and Japan MOF updates therefore do not bootstrap full history again when a valid local archive exists. MOVE preserves its historical archive and uses one Google Finance quote page to merge the displayed recent daily observations, which can repair a short gap without another request. Alpaca ETF ratios request a 14-calendar-day overlap. Weekly Breadth requests about 430 calendar days so genuine 200-day averages and 252-trading-day highs/lows can be calculated without storing or publishing the underlying constituent histories. Full-file downloads remain unavoidable for source endpoints that expose only one complete artifact: FINRA margin statistics, the New York Fed ACM workbook, Cboe SKEW history, Taiwan central-bank daily exchange rates, Taiwan MOF exports, and SEC Company Facts. Freshness gates prevent those files from being requested again after the indicator is current.
+Network updates are incremental. Each updater reads the complete local CSV first, requests only a recent overlap window or latest observation, and merges newer observations by date. FRED, Alpaca, Google Finance, FinMind, TWSE, MOPS, JPX, Bank of Japan, and Japan MOF updates therefore do not bootstrap full history again when a valid local archive exists. MOVE and USD/JPY preserve their historical archives and use one Google Finance quote page to merge the latest displayed quote. Alpaca ETF ratios request a 14-calendar-day overlap. Weekly Breadth requests about 430 calendar days so genuine 200-day averages and 252-trading-day highs/lows can be calculated without storing or publishing the underlying constituent histories. Full-file downloads remain unavoidable for source endpoints that expose only one complete artifact: FINRA margin statistics, the New York Fed ACM workbook, Cboe SKEW history, Taiwan central-bank daily exchange rates, Taiwan MOF exports, and SEC Company Facts. Freshness gates prevent those files from being requested again after the indicator is current.
 
 In GitHub, set `Settings -> Pages -> Build and deployment -> Source` to `GitHub Actions`.
 
@@ -141,8 +141,9 @@ Glossary language can be shared in the URL with `?lang=us` for English,
 | New High / New Low (Proxy) | `data/new-high-low-breadth.csv` | Calculated from current S&P 500 constituents using Alpaca IEX daily bars | 2021-07-27 | Daily/US trading days |
 | % Above 200DMA (Proxy) | `data/sp500-above-200dma.csv` | Calculated from current S&P 500 constituents using Alpaca IEX daily bars | 2021-05-12 | Daily/US trading days |
 | TSMC Revenue YoY | `data/tsmc-revenue-yoy.csv` | MOPSOV monthly operating revenue for TSMC `2330` | 2013-01-31 | Monthly |
-| USD/JPY | `data/usd-jpy.csv` and `data/fx.csv` | Bank of Japan `FM08/FXERD04` from 1998; earlier archive retained | 1971-01-04 | Daily/Tokyo business days |
+| USD/JPY | `data/usd-jpy.csv` and `data/fx.csv` | Google Finance `USD-JPY`; existing historical archive retained | 1971-01-04 | Daily/latest FX quote |
 | US-JP 2Y Spread | `data/fx.csv` | FRED `DGS2` minus Japan MOF 2Y JGB yield | 1976-06-01 | Daily/business daily with forward-filled published yield observations |
+| CFTC JPY Speculative Net Positions | `data/cftc-jpy-speculative-net-positions.csv` | CFTC Legacy Futures Only API, CME Japanese Yen futures contract `097741`; non-commercial long contracts minus non-commercial short contracts | 1986-01-15 | Weekly, Tuesday position date and normally Friday release |
 | BOJ Policy Rate | `data/boj-policy-rate.csv` | BIS Central Bank Policy Rates `D.JP`, reported with the Bank of Japan | 1946-01-01 | Daily observations, weekly BIS release |
 | Japan Overnight Call Rate | `data/japan-overnight-call-rate.csv` | Bank of Japan Time-Series Data Search `FM01'STRDCLUCON` | 1998-01-05 | Daily/Japan business days |
 | Japan Core CPI YoY | `data/japan-core-cpi-yoy.csv` | Statistics Bureau of Japan / e-Stat, all items less fresh food | 1971-01-31 | Monthly |
@@ -164,10 +165,10 @@ This is a personal dashboard built from publicly accessible sources. The reposit
 
 - Official or public-agency sources used here include FRED, FINRA, Japan Ministry of Finance, JPX, TWSE/MOPS, and Taiwan Ministry of Finance.
 - This product uses the FRED® API but is not endorsed or certified by the Federal Reserve Bank of St. Louis.
-- Free market-data endpoints used here include Alpaca Market Data API's Paper IEX feed, Google Finance for MOVE's latest observation, Nikkei Indexes, Japan Exchange Group, the Bank of Japan, the Central Bank of the Republic of China (Taiwan), the Taiwan Stock Exchange, and Cboe public CSV downloads where available.
+- Free market-data endpoints used here include Alpaca Market Data API's Paper IEX feed, Google Finance for MOVE and USD/JPY latest quotes, Nikkei Indexes, Japan Exchange Group, the Bank of Japan, the Central Bank of the Republic of China (Taiwan), the Taiwan Stock Exchange, and Cboe public CSV downloads where available.
 - HYG/IEF retains the existing pre-Alpaca archive and uses Alpaca split-adjusted HYG and IEF closes for new observations because FRED does not provide matching ETF price series. RSP/SPY, SPY/TLT, XLY/XLP, IWM/SPY, and SMH/SPY use the same Alpaca feed. All ratios use matching published dates only, with no forward fill or estimates.
 - SMH/SPY is defined as the split-adjusted SMH close divided by the split-adjusted SPY close on matching trading dates. Its initial 2016–2026 archive is built from Nasdaq historical closes; scheduled observations are merged incrementally from Alpaca using the same 14-calendar-day overlap as the other Flows ratios.
-- Alpaca replaces other providers only where the dashboard needs the exact same U.S.-listed stock or ETF close. It does not replace macroeconomic series, FX, or exact index definitions with ETF proxies. S&P 500, VIX, HY OAS, Treasury yields, and other macro series therefore retain their canonical sources. Nikkei 225, TOPIX, and TAIEX use their official index publishers; MOVE preserves its existing history and appends only Google Finance's latest observation. USD/JPY and USD/TWD use their respective central-bank sources.
+- Alpaca replaces other providers only where the dashboard needs the exact same U.S.-listed stock or ETF close. It does not replace macroeconomic series, FX, or exact index definitions with ETF proxies. S&P 500, VIX, HY OAS, Treasury yields, and other macro series therefore retain their canonical sources. Nikkei 225, TOPIX, and TAIEX use their official index publishers; MOVE and USD/JPY preserve their existing histories and append only Google Finance's latest quote. USD/TWD continues to use the Taiwan central-bank source.
 - ISM Manufacturing PMI is parsed from the revised rolling 12-month table in ISM's official monthly press release distributed by PR Newswire. FRED removed ISM series from its services in 2016, so this repository does not label a proxy or an unverified third-party reconstruction as official history. The committed series begins in July 2025 and grows by monthly merge. ISM content and PMI trademarks remain subject to ISM's terms; review those terms before redistribution or commercial use.
 - Some sources may still be subject to provider terms, third-party data rights, rate limits, or redistribution restrictions. This is especially relevant for Alpaca/IEX market data, ICE-linked HY OAS and MOVE data, Google Finance data, ISM PMI content, Cboe data, New York Fed term premium data, and BIS statistics. BIS policy-rate data should retain BIS and Bank of Japan attribution.
 - For personal, low-traffic use, the current setup is intended to be practical and transparent. Before commercial use, broad redistribution, or presenting this as a data service, review the relevant provider terms and replace any source whose terms are not suitable.
@@ -224,6 +225,7 @@ node scripts/update-fx.mjs
 node scripts/update-us-rates.mjs
 node scripts/update-japan-rates.mjs
 node scripts/update-japan-cpi.mjs
+node scripts/update-cftc-jpy-positions.mjs
 node scripts/update-regional-markets.mjs
 python3 -m pip install -r requirements.txt
 python3 scripts/update-regional-official.py
@@ -293,7 +295,7 @@ The Fed Funds Rate card uses the official target-rate series rather than the eff
 
 ### FX
 
-- USD/JPY source: official Bank of Japan Time-Series Data Search API database `FM08`, series `FXERD04` (`US.Dollar/Yen Spot Rate at 17:00 in JST, Tokyo Market`). `data/usd-jpy.csv` retains the pre-1998 archive and gives official BOJ observations priority from 1998 onward. After the one-time official-history migration, updates request only the latest overlapping calendar months.
+- USD/JPY source: Google Finance quote page `USD-JPY`. `data/usd-jpy.csv` retains the existing historical archive and each scheduled update requests one latest quote, then merges it by observation date. The existing archive is never replaced by a short quote response.
 - US 2-Year Treasury source: FRED `DGS2`
 - Japan 2-Year JGB source: Japan Ministry of Finance JGB interest rate CSV files:
   - Historical: `https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/historical/jgbcme_all.csv`
