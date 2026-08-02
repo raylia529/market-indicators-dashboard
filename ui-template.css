@@ -1132,3 +1132,117 @@ body {
     color: var(--muted) !important;
   }
 }
+
+/* Keep chart controls in the same toolbar as the period selector. */
+:is(.dashboard-modebar, .chart-toolbar > .modebar, .fx-controls > .modebar) {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+  left: auto !important;
+  display: flex !important;
+  flex: 0 0 auto;
+  align-items: center;
+  margin: 0 0 0 auto !important;
+  transform: none !important;
+  background: transparent !important;
+}
+
+:is(.dashboard-modebar, .chart-toolbar > .modebar, .fx-controls > .modebar) .dashboard-modebar-group {
+  display: inline-flex !important;
+  float: none !important;
+  align-items: stretch;
+  gap: 0 !important;
+  padding: 0 !important;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface) !important;
+  overflow: hidden;
+}
+
+:is(.dashboard-modebar, .chart-toolbar > .modebar, .fx-controls > .modebar) .dashboard-modebar-group .modebar-btn,
+:is(.dashboard-modebar, .chart-toolbar > .modebar, .fx-controls > .modebar) .dashboard-modebar-group .modebar-toggle-control {
+  display: inline-flex !important;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  width: 112px !important;
+  min-width: 112px;
+  height: 32px !important;
+  margin: 0;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  padding: 0 10px !important;
+  background: var(--surface) !important;
+  color: var(--muted) !important;
+  box-shadow: none;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+:is(.dashboard-modebar, .chart-toolbar > .modebar, .fx-controls > .modebar) .dashboard-modebar-group > :last-child {
+  border-right: 0;
+}
+
+:is(.dashboard-modebar, .chart-toolbar > .modebar, .fx-controls > .modebar) .dashboard-modebar-group .modebar-button-label {
+  display: block;
+  color: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+:is(.dashboard-modebar, .chart-toolbar > .modebar, .fx-controls > .modebar) .dashboard-modebar-group .modebar-toggle-control input,
+:is(.dashboard-modebar, .chart-toolbar > .modebar, .fx-controls > .modebar) .dashboard-modebar-group .modebar-btn svg {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+:is(.dashboard-modebar, .chart-toolbar > .modebar, .fx-controls > .modebar) .dashboard-modebar-group .modebar-btn:hover,
+:is(.dashboard-modebar, .chart-toolbar > .modebar, .fx-controls > .modebar) .dashboard-modebar-group .modebar-toggle-control:hover {
+  background: var(--surface-soft) !important;
+  color: var(--blue-strong) !important;
+}
+
+:is(.dashboard-modebar, .chart-toolbar > .modebar, .fx-controls > .modebar) .dashboard-modebar-group .modebar-toggle-control:has(input:checked) {
+  background: var(--blue-soft) !important;
+  color: var(--blue-strong) !important;
+}
+
+@media (max-width: 760px) {
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
+  .chart-toolbar,
+  .fx-controls {
+    flex-wrap: wrap;
+  }
+
+  .chart-toolbar > .range-selector,
+  .fx-controls > .range-selector {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  :is(.dashboard-modebar, .chart-toolbar > .modebar, .fx-controls > .modebar) {
+    margin-left: auto !important;
+  }
+
+  :is(.dashboard-modebar, .chart-toolbar > .modebar, .fx-controls > .modebar) .dashboard-modebar-group .modebar-btn,
+  :is(.dashboard-modebar, .chart-toolbar > .modebar, .fx-controls > .modebar) .dashboard-modebar-group .modebar-toggle-control {
+    width: 98px !important;
+    min-width: 98px;
+    height: 30px !important;
+  }
+}

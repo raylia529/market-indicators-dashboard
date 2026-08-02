@@ -1300,7 +1300,10 @@ function setupChartModebar(chartNode, logScaleInput = null, normalizedInput = nu
     return;
   }
 
-  const modebar = chartNode.querySelector(".modebar");
+  const chartPane = chartNode.closest(".chart-pane");
+  const modebar =
+    chartNode.querySelector(".modebar") ||
+    chartPane?.querySelector(".dashboard-modebar, .chart-toolbar > .modebar, .fx-controls > .modebar");
   if (!modebar) {
     return;
   }
@@ -1347,6 +1350,17 @@ function setupChartModebar(chartNode, logScaleInput = null, normalizedInput = nu
   }
 
   modebar.replaceChildren(modebarGroup);
+  modebar.classList.add("dashboard-modebar");
+
+  const toolbar = chartPane?.querySelector(".chart-toolbar, .fx-controls");
+  if (toolbar) {
+    toolbar.append(modebar);
+
+    const chartActions = toolbar.querySelector(".chart-actions");
+    if (chartActions && !chartActions.querySelector(".toggle-pill")) {
+      chartActions.hidden = true;
+    }
+  }
 }
 
 function getCssColor(name, fallback) {
@@ -2722,6 +2736,10 @@ function clearPlotlyHover(chartNode) {
   if (chartNode && window.Plotly?.Fx?.unhover) {
     window.Plotly.Fx.unhover(chartNode);
   }
+
+  if (chartNode) {
+    delete chartNode.dataset.selectedDate;
+  }
 }
 
 function clearRegisteredPlotlyHovers(exceptChart = null) {
@@ -2730,6 +2748,92 @@ function clearRegisteredPlotlyHovers(exceptChart = null) {
       clearPlotlyHover(chartNode);
     }
   });
+}
+
+function isInsideChartPlotArea(chartNode, event) {
+  const rect = chartNode?.getBoundingClientRect?.();
+  const plotSize = chartNode?._fullLayout?._size;
+
+  if (!rect || !plotSize) {
+    return false;
+  }
+
+  const left = rect.left + plotSize.l;
+  const right = left + plotSize.w;
+  const top = rect.top + plotSize.t;
+  const bottom = top + plotSize.h;
+
+  return (
+    event.clientX >= left &&
+    event.clientX <= right &&
+    event.clientY >= top &&
+    event.clientY <= bottom
+  );
+}
+
+function getNearestPlotlyPointRefs(chartNode, dateText) {
+  const targetTime = Date.parse(`${dateText}T00:00:00Z`);
+
+  if (!Number.isFinite(targetTime) || !Array.isArray(chartNode?.data)) {
+    return [];
+  }
+
+  return chartNode.data.flatMap((trace, curveNumber) => {
+    if (!Array.isArray(trace?.x) || trace.x.length === 0) {
+      return [];
+    }
+
+    let nearestPointNumber = -1;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+
+    trace.x.forEach((value, pointNumber) => {
+      const time = Date.parse(value);
+
+      if (!Number.isFinite(time)) {
+        return;
+      }
+
+      const distance = Math.abs(time - targetTime);
+
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestPointNumber = pointNumber;
+      }
+    });
+
+    return nearestPointNumber >= 0 ? [{ curveNumber, pointNumber: nearestPointNumber }] : [];
+  });
+}
+
+function showPlotlySelection(chartNode, dateText, eventPoints = []) {
+  if (!chartNode || !dateText || !window.Plotly?.Fx?.hover) {
+    return;
+  }
+
+  chartNode.dataset.selectedDate = dateText;
+  chartNode.dataset.promptDate = dateText;
+
+  const pointRefs = eventPoints.length
+    ? eventPoints
+        .filter(
+          (point) =>
+            Number.isFinite(point?.curveNumber) && Number.isFinite(point?.pointNumber),
+        )
+        .map(({ curveNumber, pointNumber }) => ({ curveNumber, pointNumber }))
+    : getNearestPlotlyPointRefs(chartNode, dateText);
+
+  try {
+    if (pointRefs.length) {
+      window.Plotly.Fx.hover(chartNode, pointRefs);
+      return;
+    }
+
+    window.Plotly.Fx.hover(chartNode, {
+      xval: new Date(`${dateText}T00:00:00Z`),
+    });
+  } catch {
+    // A chart without a matching point should still be dismissible.
+  }
 }
 
 function setupChartHoverDismiss(chartNode) {
@@ -2758,7 +2862,12 @@ function setupChartHoverDismiss(chartNode) {
   }
 
   chartNode.on("plotly_click", (eventData) => {
-    if (!eventData?.points?.length) {
+    const dateText = normalizePlotlyDate(eventData?.points?.[0]?.x);
+
+    if (dateText) {
+      clearRegisteredPlotlyHovers(chartNode);
+      showPlotlySelection(chartNode, dateText, eventData.points);
+    } else {
       clearPlotlyHover(chartNode);
     }
   });
@@ -2768,9 +2877,17 @@ function setupChartHoverDismiss(chartNode) {
       return;
     }
 
-    if (event.target.closest?.(".nsewdrag, .draglayer")) {
-      window.requestAnimationFrame(() => clearPlotlyHover(chartNode));
+    if (isInsideChartPlotArea(chartNode, event)) {
+      const dateText = getDateFromChartPointer(chartNode, event);
+
+      if (dateText) {
+        clearRegisteredPlotlyHovers(chartNode);
+        showPlotlySelection(chartNode, dateText);
+      }
+      return;
     }
+
+    clearPlotlyHover(chartNode);
   });
 }
 
@@ -5087,11 +5204,15 @@ function centerMobileChartPane(track) {
     return;
   }
 
-  (chart || chartPane).scrollIntoView({
-    behavior: "smooth",
-    block: "center",
-    inline: "nearest",
-  });
+  const target = chart || chartPane;
+  const rect = target.getBoundingClientRect();
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+  const targetTop = Math.max(
+    0,
+    window.scrollY + rect.top - Math.max((viewportHeight - rect.height) / 2, 0),
+  );
+
+  window.scrollTo({ top: targetTop, behavior: "smooth" });
 }
 
 function centerActiveLandscapeChart() {
