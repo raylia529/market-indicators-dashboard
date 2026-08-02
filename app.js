@@ -2715,6 +2715,65 @@ function setupPromptCopy(chartNode, buildPrompt) {
   });
 }
 
+const chartHoverDismissRegistry = new Set();
+let chartHoverDismissDocumentReady = false;
+
+function clearPlotlyHover(chartNode) {
+  if (chartNode && window.Plotly?.Fx?.unhover) {
+    window.Plotly.Fx.unhover(chartNode);
+  }
+}
+
+function clearRegisteredPlotlyHovers(exceptChart = null) {
+  chartHoverDismissRegistry.forEach((chartNode) => {
+    if (chartNode !== exceptChart) {
+      clearPlotlyHover(chartNode);
+    }
+  });
+}
+
+function setupChartHoverDismiss(chartNode) {
+  if (
+    !chartNode ||
+    typeof chartNode.addEventListener !== "function" ||
+    typeof chartNode.on !== "function" ||
+    chartNode.dataset.hoverDismissReady === "true"
+  ) {
+    return;
+  }
+
+  chartNode.dataset.hoverDismissReady = "true";
+  chartHoverDismissRegistry.add(chartNode);
+
+  if (!chartHoverDismissDocumentReady) {
+    chartHoverDismissDocumentReady = true;
+    document.addEventListener("click", (event) => {
+      if (event.target.closest?.(".modebar, .hovertext")) {
+        return;
+      }
+
+      const clickedChart = event.target.closest?.(".js-plotly-plot");
+      clearRegisteredPlotlyHovers(clickedChart);
+    });
+  }
+
+  chartNode.on("plotly_click", (eventData) => {
+    if (!eventData?.points?.length) {
+      clearPlotlyHover(chartNode);
+    }
+  });
+
+  chartNode.addEventListener("click", (event) => {
+    if (event.target.closest?.(".modebar, .hovertext")) {
+      return;
+    }
+
+    if (event.target.closest?.(".nsewdrag, .draglayer")) {
+      window.requestAnimationFrame(() => clearPlotlyHover(chartNode));
+    }
+  });
+}
+
 function setupBoundedXAxis(chartNode, getBounds) {
   if (!chartNode || typeof chartNode.on !== "function" || chartNode.dataset.xBoundsGuard === "true") {
     return;
@@ -3635,7 +3694,7 @@ function renderChart() {
     const rawRows = getFilteredRows(id);
     const rows = getUnitDisplayRows(rawRows, indicator);
     const hoverUnit = getDisplayHoverMarkup(indicator);
-    const hoverTemplate = `<b>${indicator.name}</b><br>%{customdata[0]}${hoverUnit}<extra></extra>`;
+    const hoverTemplate = `%{customdata[0]}${hoverUnit}<extra></extra>`;
 
     return {
       x: rows.map((row) => row.date),
@@ -3704,6 +3763,11 @@ function renderChart() {
       showgrid: false,
       tickformat: getDateTickFormat(activeRange),
       hoverformat: "%Y/%-m/%-d",
+      showspikes: true,
+      spikemode: "across",
+      spikethickness: 1,
+      spikedash: "dot",
+      spikecolor: theme.guide,
       tickfont: { color: theme.muted, weight: 700 },
     },
     hoverlabel: {
@@ -3757,6 +3821,7 @@ function renderChart() {
       setupMobileYAxisGestures(chartElement);
       setupMobileXAxisGestures(chartElement);
       setupPromptCopy(chartElement, buildMacroPrompt);
+      setupChartHoverDismiss(chartElement);
     });
   }
 }
@@ -3989,7 +4054,7 @@ function renderFxChart() {
       ...(series.chartType !== "bar" && seriesRows.length === 1
         ? { marker: { size: 8, color: series.color } }
         : {}),
-      hovertemplate: `<b>${series.name}</b><br>%{customdata[0]}${getFxDisplaySuffix(series)}<extra></extra>`,
+      hovertemplate: `%{customdata[0]}${getFxDisplaySuffix(series)}<extra></extra>`,
     };
   });
 
@@ -4069,6 +4134,11 @@ function renderFxChart() {
         showgrid: false,
         tickformat: getDateTickFormat(activeFxRange),
         hoverformat: "%Y/%-m/%-d",
+        showspikes: true,
+        spikemode: "across",
+        spikethickness: 1,
+        spikedash: "dot",
+        spikecolor: theme.guide,
         tickfont: { color: theme.muted, weight: 700 },
       },
       yaxis,
@@ -4094,6 +4164,7 @@ function renderFxChart() {
     setupMobileYAxisGestures(fxChartElement);
     setupMobileXAxisGestures(fxChartElement);
     setupPromptCopy(fxChartElement, buildFxPrompt);
+    setupChartHoverDismiss(fxChartElement);
   });
 }
 
@@ -4580,8 +4651,8 @@ function createComparisonSection(config) {
       const rows = state.normalized ? rawRows : getUnitDisplayRows(rawRows, indicator);
       const hoverUnit = getDisplayHoverMarkup(indicator);
       const normalizedHover = state.normalized
-        ? `<b>${indicator.name}</b><br>Change from base: %{y:.2f}%<br>Original: %{customdata[0]}${hoverUnit}<br>Base date: %{customdata[1]}<extra></extra>`
-        : `<b>${indicator.name}</b><br>%{customdata[0]}${hoverUnit}<extra></extra>`;
+        ? `%{y:.2f}%<extra></extra>`
+        : `%{customdata[0]}${hoverUnit}<extra></extra>`;
 
       return {
         x: rows.map((row) => row.date),
@@ -4687,6 +4758,11 @@ function createComparisonSection(config) {
         showgrid: false,
         tickformat: getDateTickFormat(state.activeRange),
         hoverformat: "%Y/%-m/%-d",
+        showspikes: true,
+        spikemode: "across",
+        spikethickness: 1,
+        spikedash: "dot",
+        spikecolor: theme.guide,
         tickfont: { color: theme.muted, weight: 700 },
       },
       hoverlabel: {
@@ -4771,6 +4847,7 @@ function createComparisonSection(config) {
         setupMobileYAxisGestures(elements.chart);
         setupMobileXAxisGestures(elements.chart);
         setupPromptCopy(elements.chart, (dateText) => buildComparisonPrompt(config.label, state, config.indicators, dateText));
+        setupChartHoverDismiss(elements.chart);
       });
     }
   }

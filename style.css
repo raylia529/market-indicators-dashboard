@@ -1682,9 +1682,8 @@ input,
 
   .mobile-view-switch {
     display: grid;
-    position: sticky;
-    top: calc(8px + env(safe-area-inset-top));
-    z-index: 12;
+    position: static;
+    z-index: auto;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px;
     margin: 8px 0 12px;
