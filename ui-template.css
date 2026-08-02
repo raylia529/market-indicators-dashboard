@@ -1,0 +1,977 @@
+/* Standalone UI concept: presentation-only overrides for comparison. */
+:root {
+  --bg: #eef2f4;
+  --surface: #ffffff;
+  --surface-soft: #f7f9fa;
+  --surface-raised: #ffffff;
+  --ink: #17232d;
+  --text: #17232d;
+  --inverse-ink: #ffffff;
+  --muted: #6b7a86;
+  --line: #dce4e9;
+  --green: #18856b;
+  --red: #c95a58;
+  --blue: #0b7285;
+  --blue-strong: #075b6b;
+  --blue-soft: #e7f4f5;
+  --teal: #18856b;
+  --gold: #a86b19;
+  --danger-soft: #fff0ef;
+  --success-soft: #eaf7f1;
+  --warning-soft: #fff7e6;
+  --neutral-soft: #eef2f4;
+  --chart-grid: #e3e9ec;
+  --chart-guide: #8b9aa4;
+  --chart-zero: #cbd5da;
+  --modebar-bg: rgba(255, 255, 255, 0.96);
+  --modebar-icon: #7a8a94;
+  --modebar-icon-active: #17232d;
+  --shadow: 0 8px 24px rgba(23, 35, 45, 0.07);
+}
+
+body {
+  background: var(--bg);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.dashboard-shell {
+  width: min(1180px, calc(100% - 40px));
+  padding: 24px 0 40px;
+}
+
+.tab-bar {
+  gap: 3px;
+  margin-bottom: 22px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow: 0 3px 12px rgba(23, 35, 45, 0.05);
+  overflow-x: auto;
+}
+
+.tab-button {
+  border: 0;
+  border-radius: 7px;
+  padding: 9px 13px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.tab-button:hover,
+.tab-button:focus-visible {
+  background: var(--surface-soft);
+  color: var(--blue-strong);
+  outline: 2px solid rgba(11, 114, 133, 0.16);
+  outline-offset: 1px;
+}
+
+.tab-button.active {
+  border: 0;
+  background: var(--ink);
+  color: var(--inverse-ink);
+  box-shadow: 0 3px 8px rgba(23, 35, 45, 0.16);
+}
+
+.dashboard-section {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.metric-grid {
+  gap: 12px;
+  margin: 16px 0 20px;
+}
+
+.metric-card {
+  min-height: 104px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 13px 46px 12px 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.metric-card:hover,
+.metric-card:focus-visible,
+.fx-card:hover,
+.fx-card:focus-visible {
+  border-color: rgba(11, 114, 133, 0.5);
+  box-shadow: 0 10px 26px rgba(23, 35, 45, 0.11);
+  transform: translateY(-1px);
+}
+
+.indicator-card.active,
+.fx-card.active {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  box-shadow: inset 0 0 0 1px rgba(11, 114, 133, 0.28), var(--shadow);
+}
+
+.indicator-label,
+.fx-card > .indicator-label,
+.indicator-label-detail {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 850;
+  letter-spacing: 0.02em;
+}
+
+.metric-card strong {
+  margin: 7px 0 3px;
+  color: var(--ink);
+  font-size: clamp(1.16rem, 1.8vw, 1.48rem);
+  letter-spacing: -0.01em;
+}
+
+.indicator-date,
+.fx-card > small {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.indicator-change {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.current-color {
+  width: 22px;
+  height: 22px;
+  border: 3px solid var(--surface);
+  box-shadow: 0 0 0 1px rgba(23, 35, 45, 0.18), 0 3px 8px rgba(23, 35, 45, 0.12);
+}
+
+.color-control {
+  right: 12px;
+  bottom: 12px;
+}
+
+.range-selector {
+  gap: 5px;
+  margin: 16px 0 0;
+}
+
+.range-button,
+.toggle-pill,
+.secondary-button {
+  border-radius: 7px;
+  padding: 7px 11px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.79rem;
+  font-weight: 800;
+}
+
+.range-button:hover,
+.range-button.active,
+.secondary-button:hover:not(:disabled),
+.secondary-button:focus-visible {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  color: var(--blue-strong);
+}
+
+.toggle-pill {
+  gap: 6px;
+}
+
+.chart-toolbar {
+  gap: 10px;
+  margin: 13px 0 6px;
+}
+
+#indicator-chart,
+#fx-chart,
+.comparison-chart {
+  height: 430px;
+  margin-top: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.js-plotly-plot .plotly .modebar-btn {
+  border-color: var(--line);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.9) !important;
+}
+
+.data-status-table-wrap {
+  margin-top: 24px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+
+.data-status-table th {
+  background: var(--surface-soft);
+  color: var(--muted);
+}
+
+.data-status-table td {
+  padding: 13px 14px;
+}
+
+.data-status-table tr[data-status-row]:hover,
+.glossary-table tr[data-glossary-row]:hover {
+  background: #f8fbfc;
+}
+
+.data-status-badge {
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+}
+
+.glossary-title-row {
+  gap: 10px;
+}
+
+.glossary-language-controls {
+  gap: 3px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 3px;
+  background: var(--surface);
+}
+
+.glossary-language-button {
+  border-radius: 5px;
+  padding: 6px 9px;
+  font-size: 0.74rem;
+}
+
+.glossary-language-button.active {
+  background: var(--ink);
+  color: var(--inverse-ink);
+}
+
+.glossary-header-tools {
+  margin-left: auto;
+}
+
+.glossary-search-input {
+  width: min(240px, 100%);
+  border-radius: 7px;
+  padding: 8px 11px;
+  background: var(--surface);
+  font-size: 0.8rem;
+}
+
+.terms-note {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 760px) {
+  .dashboard-shell {
+    width: min(100% - 24px, 620px);
+    padding-top: 14px;
+  }
+
+  .tab-bar {
+    margin-bottom: 16px;
+    border-radius: 8px;
+  }
+
+  .tab-button {
+    padding: 8px 11px;
+    font-size: 0.76rem;
+  }
+
+  .metric-grid {
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .metric-card {
+    min-height: 96px;
+    border-radius: 8px;
+  }
+
+  .glossary-header-tools {
+    margin-left: 0;
+  }
+
+  .glossary-search-input {
+    width: 100%;
+  }
+
+  #indicator-chart,
+  #fx-chart,
+  .comparison-chart {
+    height: 380px;
+    border-radius: 8px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #050607;
+    --surface: #0d1012;
+    --surface-soft: #13181b;
+    --surface-raised: #161c20;
+    --ink: #edf2f4;
+    --text: #edf2f4;
+    --inverse-ink: #081014;
+    --muted: #9eacb4;
+    --line: #28343a;
+    --blue: #6dd3df;
+    --blue-strong: #8ce3ec;
+    --blue-soft: #102c31;
+    --shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+  }
+
+  .tab-bar {
+    background: rgba(13, 16, 18, 0.88);
+  }
+
+  .tab-button.active,
+  .glossary-language-button.active {
+    background: var(--blue);
+    color: var(--inverse-ink);
+  }
+
+  .data-status-table tr[data-status-row]:hover,
+  .glossary-table tr[data-glossary-row]:hover {
+    background: #11191c;
+  }
+}
+
+/* Concept refinement: align navigation, controls, and swatches with the lighter range-selector language. */
+.tab-bar {
+  background: var(--surface-soft);
+  box-shadow: none;
+}
+
+.tab-button {
+  border: 1px solid transparent;
+  background: transparent;
+}
+
+.tab-button.active {
+  border-color: rgba(11, 114, 133, 0.34);
+  background: var(--blue-soft);
+  color: var(--blue-strong);
+  box-shadow: none;
+}
+
+.tab-button:hover,
+.tab-button:focus-visible {
+  border-color: rgba(11, 114, 133, 0.2);
+  background: var(--surface);
+}
+
+.js-plotly-plot .plotly .modebar {
+  top: 16px;
+}
+
+.current-color,
+.color-swatch {
+  border: 0;
+  box-shadow: none;
+}
+
+.current-color:hover,
+.current-color:focus-visible {
+  box-shadow: none;
+  transform: scale(1.08);
+}
+
+.current-color:focus-visible,
+.color-swatch:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.color-swatch:hover {
+  box-shadow: none;
+  transform: scale(1.1);
+}
+
+.color-swatch.active {
+  box-shadow: 0 0 0 2px var(--blue);
+}
+
+/* Give the plot itself more top breathing room, instead of only moving its controls. */
+#indicator-chart,
+#fx-chart,
+.comparison-chart {
+  height: 480px;
+}
+
+.js-plotly-plot .plotly .modebar {
+  top: 24px !important;
+}
+
+@media (max-width: 760px) {
+  #indicator-chart,
+  #fx-chart,
+  .comparison-chart {
+    height: 430px;
+  }
+}
+
+/* Concept refinement: clearer blue selection and tighter card baseline. */
+:root {
+  --blue: #2563eb;
+  --blue-strong: #1d4ed8;
+  --blue-soft: #eff6ff;
+}
+
+.metric-card:hover,
+.metric-card:focus-visible,
+.fx-card:hover,
+.fx-card:focus-visible {
+  border-color: rgba(37, 99, 235, 0.5);
+}
+
+.indicator-card.active,
+.fx-card.active {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  box-shadow:
+    inset 0 0 0 1px rgba(37, 99, 235, 0.28),
+    var(--shadow);
+}
+
+.indicator-label,
+.fx-card > .indicator-label,
+.indicator-label-detail {
+  color: var(--blue-strong);
+}
+
+.indicator-change {
+  transform: translateY(4px);
+}
+
+.tab-button.active {
+  border-color: rgba(37, 99, 235, 0.34);
+}
+
+.tab-button:hover,
+.tab-button:focus-visible {
+  border-color: rgba(37, 99, 235, 0.2);
+}
+
+@media (max-width: 760px) {
+  .indicator-change {
+    transform: translateY(3px);
+  }
+}
+
+/* Concept refinement: Yahoo-like change colors. */
+.indicator-change .change-period.up {
+  color: #008a6a;
+}
+
+.indicator-change .change-period.down {
+  color: #e21b3c;
+}
+
+.indicator-change .change-period.flat {
+  color: #64748b;
+}
+
+/* Concept refinement: selected cards and periods use fill, not an outline. */
+.indicator-card.active,
+.fx-card.active {
+  border-color: transparent;
+  box-shadow: var(--shadow);
+}
+
+.range-button.active {
+  border-color: transparent;
+  background: var(--blue-soft);
+  color: var(--blue-strong);
+  box-shadow: none;
+}
+
+/* Concept refinement: Yahoo-style segmented controls and persistent card frames. */
+.tab-bar {
+  gap: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: none;
+  overflow-x: auto;
+}
+
+.tab-button {
+  flex: 0 0 auto;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  padding: 10px 14px;
+  background: var(--surface);
+  color: var(--muted);
+}
+
+.tab-button:last-child {
+  border-right: 0;
+}
+
+.tab-button.active {
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: var(--blue-soft);
+  color: var(--blue-strong);
+  box-shadow: none;
+}
+
+.metric-card,
+.indicator-card.active,
+.fx-card.active {
+  border-color: var(--line) !important;
+}
+
+.indicator-card.active,
+.fx-card.active {
+  background: var(--blue-soft);
+  box-shadow: var(--shadow);
+}
+
+.range-selector {
+  display: inline-flex;
+  flex: 0 1 auto;
+  flex-wrap: nowrap;
+  gap: 0;
+  width: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.range-button {
+  min-width: 54px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  padding: 9px 13px;
+  background: var(--surface);
+}
+
+.range-button:last-child {
+  border-right: 0;
+}
+
+.range-button:hover,
+.range-button.active {
+  border-color: var(--line);
+  background: var(--blue-soft);
+  color: var(--blue-strong);
+}
+
+@media (max-width: 760px) {
+  .tab-button {
+    padding: 9px 11px;
+  }
+
+  .range-selector {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .range-button {
+    width: 100%;
+    min-width: 0;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 8px 4px;
+  }
+
+  .range-button:nth-child(4n) {
+    border-right: 0;
+  }
+
+  .range-button:nth-last-child(-n + 4) {
+    border-bottom: 0;
+  }
+}
+
+/* Concept refinement: one segmented-control language across tabs, chart actions, and glossary. */
+.tab-button:hover,
+.tab-button:focus-visible {
+  border-color: var(--line);
+  background: var(--surface-soft);
+  outline: none;
+  box-shadow: none;
+}
+
+.tab-button.active:hover,
+.tab-button.active:focus-visible {
+  background: var(--blue-soft);
+  color: var(--blue-strong);
+}
+
+.js-plotly-plot .plotly .modebar-btn,
+.js-plotly-plot .plotly .modebar-button-label,
+.js-plotly-plot .plotly .modebar-toggle-control {
+  font-size: 0.79rem;
+  font-weight: 800;
+}
+
+.js-plotly-plot .plotly .modebar-button-label {
+  line-height: 1;
+}
+
+.glossary-language-controls {
+  display: inline-flex;
+  gap: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.glossary-language-button {
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  padding: 9px 13px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.79rem;
+  font-weight: 800;
+}
+
+.glossary-language-button:last-child {
+  border-right: 0;
+}
+
+.glossary-language-button:hover,
+.glossary-language-button:focus-visible {
+  background: var(--surface-soft);
+  color: var(--blue-strong);
+  outline: none;
+}
+
+.glossary-language-button.active {
+  background: var(--blue-soft);
+  color: var(--blue-strong);
+}
+
+/* Concept refinement: equal-width, centered segmented controls. */
+.tab-button {
+  flex: 1 1 0;
+  min-width: 92px;
+  text-align: center;
+}
+
+.glossary-language-button {
+  width: 84px;
+  min-width: 84px;
+  text-align: center;
+}
+
+.js-plotly-plot .plotly .dashboard-modebar-group {
+  display: inline-flex !important;
+  align-items: stretch;
+  gap: 0 !important;
+  padding: 0 !important;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.js-plotly-plot .plotly .dashboard-modebar-group .modebar-btn,
+.js-plotly-plot .plotly .dashboard-modebar-group .modebar-toggle-control {
+  width: 112px !important;
+  min-width: 112px;
+  height: 36px !important;
+  margin: 0;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  padding: 0 10px !important;
+  background: var(--surface) !important;
+  color: var(--muted) !important;
+  font-size: 0.74rem;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+  box-shadow: none;
+}
+
+.js-plotly-plot .plotly .dashboard-modebar-group > :last-child {
+  border-right: 0;
+}
+
+.js-plotly-plot .plotly .dashboard-modebar-group .modebar-button-label {
+  color: inherit;
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.js-plotly-plot .plotly .dashboard-modebar-group .modebar-btn:hover,
+.js-plotly-plot .plotly .dashboard-modebar-group .modebar-toggle-control:hover {
+  background: var(--surface-soft) !important;
+  color: var(--blue-strong) !important;
+}
+
+.js-plotly-plot .plotly .dashboard-modebar-group .modebar-toggle-control:has(input:checked) {
+  border-right-color: var(--line);
+  background: var(--blue-soft) !important;
+  color: var(--blue-strong) !important;
+}
+
+@media (max-width: 760px) {
+  .tab-button {
+    flex: 0 0 92px;
+    min-width: 92px;
+  }
+
+  .glossary-language-button {
+    width: 78px;
+    min-width: 78px;
+  }
+
+  .js-plotly-plot .plotly .dashboard-modebar-group .modebar-btn,
+  .js-plotly-plot .plotly .dashboard-modebar-group .modebar-toggle-control {
+    width: 98px !important;
+    min-width: 98px;
+  }
+}
+
+/* Concept refinement: make compact controls match the period-row height. */
+.glossary-language-button {
+  height: 32px;
+  padding: 6px 12px;
+  line-height: 1.1;
+}
+
+.js-plotly-plot .plotly .dashboard-modebar-group .modebar-btn,
+.js-plotly-plot .plotly .dashboard-modebar-group .modebar-toggle-control {
+  height: 32px !important;
+  padding: 0 10px !important;
+  font-size: 0.72rem;
+}
+
+.js-plotly-plot .plotly .dashboard-modebar-group .modebar-button-label {
+  font-size: 0.72rem;
+}
+
+@media (max-width: 760px) {
+  .glossary-language-button {
+    height: 30px;
+    padding: 5px 10px;
+  }
+
+  .js-plotly-plot .plotly .dashboard-modebar-group .modebar-btn,
+  .js-plotly-plot .plotly .dashboard-modebar-group .modebar-toggle-control {
+    height: 30px !important;
+  }
+}
+
+/* Concept refinement: Yahoo-like semantic colors and a near-white light canvas. */
+:root {
+  --blue: #1f66d1;
+  --blue-strong: #1f66d1;
+  --blue-soft: #eaf3ff;
+  --green: #008a70;
+  --red: #e4002b;
+}
+
+.indicator-change .change-period.up {
+  color: #008a70;
+}
+
+.indicator-change .change-period.down {
+  color: #e4002b;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #fbfcfd;
+    --surface: #ffffff;
+    --surface-soft: #f6f8fb;
+    --surface-raised: #ffffff;
+    --line: #dfe4ea;
+    --chart-grid: #e6ebf0;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --surface: #0b0b0c;
+    --surface-soft: #111113;
+    --surface-raised: #161618;
+    --blue: #60a5fa;
+    --blue-strong: #93c5fd;
+    --blue-soft: #172554;
+    --green: #34d399;
+    --red: #fb7185;
+  }
+}
+
+/* Concept refinement: center disclosure triangles by shape, not text baseline. */
+.status-card-head,
+.glossary-card-head {
+  align-items: center;
+}
+
+.glossary-expand-button {
+  position: relative;
+  padding: 0;
+  font-size: 0;
+  line-height: 0;
+  transform-origin: center;
+}
+
+.glossary-expand-button::before {
+  content: "";
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid currentColor;
+}
+
+/* Concept refinement: clean disclosure controls and period-style language segments. */
+.glossary-expand-button,
+.glossary-expand-button:hover,
+.glossary-expand-button:focus-visible,
+.status-row-expanded .glossary-expand-button,
+.glossary-row-expanded .glossary-expand-button {
+  width: 30px;
+  height: 30px;
+  border: 0 !important;
+  border-color: transparent !important;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none !important;
+  outline: none !important;
+  color: var(--muted);
+}
+
+.glossary-expand-button:hover,
+.glossary-expand-button:focus-visible {
+  background: var(--surface-soft);
+  color: var(--blue);
+}
+
+.status-row-expanded .glossary-expand-button,
+.glossary-row-expanded .glossary-expand-button {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.glossary-language-controls {
+  display: inline-flex !important;
+  flex-wrap: nowrap !important;
+  gap: 0 !important;
+  margin-bottom: 0 !important;
+  padding: 0 !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 8px !important;
+  background: var(--surface) !important;
+  box-shadow: none !important;
+  overflow: hidden;
+}
+
+.glossary-language-button,
+.glossary-language-button:hover,
+.glossary-language-button:focus-visible,
+.glossary-language-button.active {
+  flex: 1 1 0;
+  width: 84px;
+  min-width: 84px;
+  height: 32px;
+  margin: 0;
+  border: 0 !important;
+  border-right: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+  padding: 0 10px;
+  background: var(--surface);
+  color: var(--muted);
+  box-shadow: none !important;
+  outline: none !important;
+  text-align: center;
+  line-height: 1;
+}
+
+.glossary-language-button:last-child {
+  border-right: 0 !important;
+}
+
+.glossary-language-button:hover,
+.glossary-language-button:focus-visible {
+  background: var(--surface-soft);
+  color: var(--blue);
+}
+
+.glossary-language-button.active {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+@media (max-width: 760px) {
+  .glossary-language-button,
+  .glossary-language-button:hover,
+  .glossary-language-button:focus-visible,
+  .glossary-language-button.active {
+    width: 78px;
+    min-width: 78px;
+    height: 30px;
+  }
+}
+
+/* Restore the circular disclosure control; expanded state keeps a neutral edge. */
+.glossary-expand-button,
+.glossary-expand-button:hover,
+.glossary-expand-button:focus-visible,
+.status-row-expanded .glossary-expand-button,
+.glossary-row-expanded .glossary-expand-button {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line) !important;
+  border-color: var(--line) !important;
+  border-radius: 999px;
+  padding: 0;
+  background: var(--surface);
+  box-shadow: none !important;
+  outline: none !important;
+  font-size: 0.9rem;
+  line-height: normal;
+}
+
+.glossary-expand-button::before {
+  display: none;
+  content: none;
+}
+
+.glossary-expand-button:hover,
+.glossary-expand-button:focus-visible {
+  background: var(--surface-soft);
+  color: var(--blue);
+}
+
+.status-row-expanded .glossary-expand-button,
+.glossary-row-expanded .glossary-expand-button {
+  border-color: var(--line) !important;
+  background: var(--blue-soft);
+  color: var(--blue);
+}

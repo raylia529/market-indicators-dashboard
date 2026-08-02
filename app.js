@@ -1203,7 +1203,7 @@ const indicatorThresholdZones = {
     { from: 50, tone: "unfavorable" },
   ],
 };
-const glossaryLinkAliasMaxLength = 24;
+const glossaryLinkAliasMaxLength = 72;
 
 const statusClassNames = {
   "Up to date": "up-to-date",
@@ -3358,7 +3358,7 @@ function getAxisGroupAnnotations(ids, side, getDefinition, theme) {
 function getHorizontalAxisMargins(hasRightAxis, hasLeftAxis = true) {
   const sideMargin = usesTouchChartMode() ? 100 : 110;
   return {
-    t: 24,
+    t: 72,
     r: hasRightAxis ? sideMargin : 22,
     b: 92,
     l: hasLeftAxis ? sideMargin : 22,
@@ -5196,6 +5196,7 @@ function getGlossaryLinkAliases(currentEntryId) {
 
     [
       entry.short_name,
+      entry.full_name,
       ...(entry.aliases || []),
       ...Object.values(entry.headings || {}),
     ].forEach((alias) => {
