@@ -687,6 +687,13 @@ body {
   visibility: hidden;
 }
 
+/* Keep the selected-date marker single: Plotly's hover spikeline otherwise
+   remains underneath the dashboard's compact detail guide. */
+.chart-selection-active .hoverlayer .spikeline {
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
 /* Concept refinement: one segmented-control language across tabs, chart actions, and glossary. */
 .tab-button:hover,
 .tab-button:focus-visible {
@@ -903,6 +910,11 @@ body {
     --blue-soft: #172554;
     --green: #34d399;
     --red: #fb7185;
+    --chart-guide: #ffffff;
+  }
+
+  .chart-selection-guide {
+    opacity: 0.78;
   }
 }
 
