@@ -1385,3 +1385,47 @@ body {
 :is(.dashboard-modebar, .chart-toolbar > .modebar, .fx-controls > .modebar) .dashboard-modebar-group .modebar-toggle-control {
   height: 32.5px !important;
 }
+
+/* Regression guards: keep desktop tabs centered and mobile periods evenly sized. */
+@media (min-width: 761px) {
+  .tab-bar {
+    display: grid;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .tab-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    height: 35px;
+    padding: 0 4px;
+    line-height: 1.1;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 760px) and (orientation: portrait) {
+  .chart-toolbar > .range-selector,
+  .fx-controls > .range-selector {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: 100% !important;
+  }
+
+  .chart-toolbar > .range-selector .range-button,
+  .fx-controls > .range-selector .range-button {
+    box-sizing: border-box;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 32.5px !important;
+    margin: 0;
+    padding: 0 4px;
+  }
+}

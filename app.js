@@ -2470,6 +2470,7 @@ function getDateFromChartPointer(chartNode, event) {
   const xaxis = fullLayout?.xaxis;
   const plotSize = fullLayout?._size;
   const rect = chartNode.getBoundingClientRect();
+  const dragRect = chartNode.querySelector(".nsewdrag")?.getBoundingClientRect();
 
   if (xaxis?.p2d && plotSize) {
     const xPixel = Math.min(Math.max(event.clientX - rect.left - plotSize.l, 0), plotSize.w);
@@ -2485,8 +2486,8 @@ function getDateFromChartPointer(chartNode, event) {
   const end = chartNode.dataset.promptEnd;
 
   if (start && end) {
-    const left = plotSize ? rect.left + plotSize.l : rect.left;
-    const width = plotSize?.w || rect.width;
+    const left = dragRect?.left ?? (plotSize ? rect.left + plotSize.l : rect.left);
+    const width = dragRect?.width || plotSize?.w || rect.width;
     const ratio = Math.min(Math.max((event.clientX - left) / width, 0), 1);
     const startTime = Date.parse(`${start}T00:00:00`);
     const endTime = Date.parse(`${end}T00:00:00`);
@@ -2730,6 +2731,7 @@ function setupPromptCopy(chartNode, buildPrompt) {
 }
 
 const chartHoverDismissRegistry = new Set();
+const chartSelectionTraces = new WeakMap();
 let chartHoverDismissDocumentReady = false;
 
 function clearPlotlyHover(chartNode) {
@@ -2757,6 +2759,16 @@ function clearRegisteredPlotlyHovers(exceptChart = null) {
 function isInsideChartPlotArea(chartNode, event) {
   const rect = chartNode?.getBoundingClientRect?.();
   const plotSize = chartNode?._fullLayout?._size;
+  const dragRect = chartNode?.querySelector?.(".nsewdrag")?.getBoundingClientRect?.();
+
+  if (dragRect) {
+    return (
+      event.clientX >= dragRect.left &&
+      event.clientX <= dragRect.right &&
+      event.clientY >= dragRect.top &&
+      event.clientY <= dragRect.bottom
+    );
+  }
 
   if (!rect || !plotSize) {
     return false;
@@ -2777,12 +2789,13 @@ function isInsideChartPlotArea(chartNode, event) {
 
 function getNearestPlotlyPointRefs(chartNode, dateText) {
   const targetTime = Date.parse(`${dateText}T00:00:00Z`);
+  const traces = chartSelectionTraces.get(chartNode) || chartNode?.data;
 
-  if (!Number.isFinite(targetTime) || !Array.isArray(chartNode?.data)) {
+  if (!Number.isFinite(targetTime) || !Array.isArray(traces)) {
     return [];
   }
 
-  return chartNode.data.flatMap((trace, curveNumber) => {
+  return traces.flatMap((trace, curveNumber) => {
     if (!Array.isArray(trace?.x) || trace.x.length === 0) {
       return [];
     }
@@ -2833,6 +2846,7 @@ function getChartSelectionColor(trace, pointNumber) {
 }
 
 function renderChartSelectionOverlay(chartNode, dateText, pointRefs, anchor = null) {
+  const traces = chartSelectionTraces.get(chartNode) || chartNode.data || [];
   let popover = chartNode.querySelector(":scope > .chart-selection-popover");
   let guide = chartNode.querySelector(":scope > .chart-selection-guide");
 
@@ -2860,7 +2874,7 @@ function renderChartSelectionOverlay(chartNode, dateText, pointRefs, anchor = nu
   const uniqueRefs = [];
   const seenCurves = new Set();
   pointRefs.forEach(({ curveNumber, pointNumber }) => {
-    if (seenCurves.has(curveNumber) || !chartNode.data?.[curveNumber]) {
+    if (seenCurves.has(curveNumber) || !traces[curveNumber]) {
       return;
     }
 
@@ -2869,7 +2883,7 @@ function renderChartSelectionOverlay(chartNode, dateText, pointRefs, anchor = nu
   });
 
   uniqueRefs.forEach(({ curveNumber, pointNumber }) => {
-    const trace = chartNode.data[curveNumber];
+    const trace = traces[curveNumber];
     const row = document.createElement("div");
     row.className = "chart-selection-value";
 
@@ -2885,12 +2899,17 @@ function renderChartSelectionOverlay(chartNode, dateText, pointRefs, anchor = nu
 
   const rect = chartNode.getBoundingClientRect();
   const plotSize = chartNode?._fullLayout?._size;
+  const dragRect = chartNode.querySelector(".nsewdrag")?.getBoundingClientRect();
   let localX = Number.isFinite(anchor?.clientX) ? anchor.clientX - rect.left : rect.width / 2;
   let localY = Number.isFinite(anchor?.clientY) ? anchor.clientY - rect.top : rect.height / 2;
-  const plotLeft = plotSize?.l ?? 8;
-  const plotRight = plotLeft + (plotSize?.w ?? Math.max(rect.width - plotLeft - 8, 0));
-  const plotTop = plotSize?.t ?? 8;
-  const plotBottom = plotTop + (plotSize?.h ?? Math.max(rect.height - plotTop - 8, 0));
+  const plotLeft = dragRect ? dragRect.left - rect.left : plotSize?.l ?? 8;
+  const plotRight = dragRect
+    ? dragRect.right - rect.left
+    : plotLeft + (plotSize?.w ?? Math.max(rect.width - plotLeft - 8, 0));
+  const plotTop = dragRect ? dragRect.top - rect.top : plotSize?.t ?? 8;
+  const plotBottom = dragRect
+    ? dragRect.bottom - rect.top
+    : plotTop + (plotSize?.h ?? Math.max(rect.height - plotTop - 8, 0));
 
   localX = Math.min(Math.max(localX, plotLeft), plotRight);
   localY = Math.min(Math.max(localY, plotTop), plotBottom);
@@ -4175,6 +4194,7 @@ function renderChart() {
   layout.shapes = getThresholdZoneShapes(selected, layout, axisById);
 
   if (chartElement && window.Plotly) {
+    chartSelectionTraces.set(chartElement, traces);
     Plotly.react(chartElement, traces, layout, getPlotlyConfig()).then(() => {
       setupChartModebar(
         chartElement,
@@ -4483,6 +4503,7 @@ function renderFxChart() {
     ...getAxisGroupAnnotations(rightIds, "right", getFxDefinition, theme),
   ];
 
+  chartSelectionTraces.set(fxChartElement, traces);
   Plotly.react(
     fxChartElement,
     traces,
@@ -5209,6 +5230,7 @@ function createComparisonSection(config) {
     ];
 
     if (elements.chart && window.Plotly) {
+      chartSelectionTraces.set(elements.chart, traces);
       Plotly.react(elements.chart, traces, layout, getPlotlyConfig()).then(() => {
         setupChartModebar(
           elements.chart,
