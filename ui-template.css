@@ -21,6 +21,7 @@
   --warning-soft: #fff7e6;
   --neutral-soft: #eef2f4;
   --chart-grid: #e3e9ec;
+  --chart-policy-grid: #b4bec4;
   --chart-guide: #8b9aa4;
   --chart-zero: #cbd5da;
   --modebar-bg: rgba(255, 255, 255, 0.96);
@@ -910,6 +911,9 @@ body {
     --blue-soft: #172554;
     --green: #34d399;
     --red: #fb7185;
+    --chart-grid: rgba(148, 163, 184, 0.16);
+    --chart-policy-grid: rgba(148, 163, 184, 0.24);
+    --chart-zero: rgba(148, 163, 184, 0.28);
     --chart-guide: #ffffff;
   }
 

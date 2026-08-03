@@ -1966,6 +1966,7 @@ function getChartTheme() {
     muted: getCssColor("--muted", "#64748b"),
     line: getCssColor("--line", "#e5e7eb"),
     grid: getCssColor("--chart-grid", "#e5e7eb"),
+    policyGrid: getCssColor("--chart-policy-grid", getCssColor("--chart-grid", "#e5e7eb")),
     guide: getCssColor("--chart-guide", "#94a3b8"),
     zero: getCssColor("--chart-zero", "#d1d5db"),
     surface: getCssColor("--surface", "#ffffff"),
@@ -4323,7 +4324,7 @@ function renderChart() {
       bordercolor: theme.line,
       font: { color: theme.ink },
     },
-    hovermode: "x unified",
+    hovermode: false,
     dragmode: getChartDragMode(),
   };
 
@@ -4693,7 +4694,7 @@ function renderFxChart() {
         bordercolor: theme.line,
         font: { color: theme.ink },
       },
-      hovermode: "x unified",
+      hovermode: false,
       dragmode: getChartDragMode(),
     },
     getPlotlyConfig(),
@@ -5313,7 +5314,7 @@ function createComparisonSection(config) {
         bordercolor: theme.line,
         font: { color: theme.ink },
       },
-      hovermode: "x unified",
+      hovermode: false,
       dragmode: usesTouchChartMode()
         ? false
         : selected.includes("cme-expected-policy-rate") ||
@@ -5335,7 +5336,7 @@ function createComparisonSection(config) {
         leftIds.some((id) => quarterPointRateIds.has(id))
       ) {
         layout.yaxis.griddash = "dot";
-        layout.yaxis.gridcolor = theme.guide;
+        layout.yaxis.gridcolor = theme.policyGrid;
         if (layout.yaxis.type === "linear") {
           layout.yaxis.tick0 = 0;
           layout.yaxis.dtick = 0.25;
@@ -5357,7 +5358,7 @@ function createComparisonSection(config) {
         rightIds.some((id) => quarterPointRateIds.has(id))
       ) {
         layout.yaxis2.griddash = "dot";
-        layout.yaxis2.gridcolor = theme.guide;
+        layout.yaxis2.gridcolor = theme.policyGrid;
         layout.yaxis2.showgrid = true;
         if (layout.yaxis2.type === "linear") {
           layout.yaxis2.tick0 = 0;
