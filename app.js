@@ -2952,6 +2952,150 @@ function setupChartHoverDismiss(chartNode) {
   chartNode.dataset.hoverDismissReady = "true";
   chartHoverDismissRegistry.add(chartNode);
 
+  // Plotly can consume a short touch as the start of a pan gesture, so keep
+  // a small native tap fallback for mobile chart selection.
+  let touchTap = null;
+  const tapMoveTolerance = 14;
+  const tapDurationMs = 450;
+
+  function beginTouchTap(clientX, clientY) {
+    if (!isInsideChartPlotArea(chartNode, { clientX, clientY })) {
+      touchTap = null;
+      return;
+    }
+
+    touchTap = {
+      clientX,
+      clientY,
+      startedAt: Date.now(),
+      moved: false,
+    };
+  }
+
+  function updateTouchTap(clientX, clientY) {
+    if (!touchTap) {
+      return;
+    }
+
+    touchTap.moved =
+      touchTap.moved ||
+      Math.hypot(clientX - touchTap.clientX, clientY - touchTap.clientY) > tapMoveTolerance;
+  }
+
+  function finishTouchTap(clientX, clientY) {
+    const tap = touchTap;
+    touchTap = null;
+
+    if (
+      !tap ||
+      tap.moved ||
+      Date.now() - tap.startedAt > tapDurationMs ||
+      !isInsideChartPlotArea(chartNode, { clientX, clientY })
+    ) {
+      return;
+    }
+
+    const dateText = getDateFromChartPointer(chartNode, { clientX, clientY });
+
+    if (dateText) {
+      clearRegisteredPlotlyHovers(chartNode);
+      showPlotlySelection(chartNode, dateText, [], { clientX, clientY });
+    }
+  }
+
+  chartNode.addEventListener(
+    "pointerdown",
+    (event) => {
+      if (event.pointerType === "mouse") {
+        return;
+      }
+
+      beginTouchTap(event.clientX, event.clientY);
+    },
+    { capture: true },
+  );
+
+  chartNode.addEventListener(
+    "pointermove",
+    (event) => {
+      if (event.pointerType !== "mouse") {
+        updateTouchTap(event.clientX, event.clientY);
+      }
+    },
+    { capture: true },
+  );
+
+  chartNode.addEventListener(
+    "pointerup",
+    (event) => {
+      if (event.pointerType !== "mouse") {
+        finishTouchTap(event.clientX, event.clientY);
+      }
+    },
+    { capture: true },
+  );
+
+  chartNode.addEventListener(
+    "pointercancel",
+    (event) => {
+      if (event.pointerType !== "mouse") {
+        touchTap = null;
+      }
+    },
+    { capture: true },
+  );
+
+  chartNode.addEventListener(
+    "touchstart",
+    (event) => {
+      if (event.touches.length === 1) {
+        const touch = event.touches[0];
+
+        if (!touchTap) {
+          beginTouchTap(touch.clientX, touch.clientY);
+        }
+      } else {
+        touchTap = null;
+      }
+    },
+    { capture: true, passive: true },
+  );
+
+  chartNode.addEventListener(
+    "touchmove",
+    (event) => {
+      if (event.touches.length === 1) {
+        const touch = event.touches[0];
+        updateTouchTap(touch.clientX, touch.clientY);
+      } else {
+        touchTap = null;
+      }
+    },
+    { capture: true, passive: true },
+  );
+
+  chartNode.addEventListener(
+    "touchend",
+    (event) => {
+      const touch = event.changedTouches[0];
+
+      if (touch) {
+        finishTouchTap(touch.clientX, touch.clientY);
+      } else {
+        touchTap = null;
+      }
+    },
+    { capture: true, passive: true },
+  );
+
+  chartNode.addEventListener(
+    "touchcancel",
+    () => {
+      touchTap = null;
+    },
+    { capture: true, passive: true },
+  );
+
   if (!chartHoverDismissDocumentReady) {
     chartHoverDismissDocumentReady = true;
     document.addEventListener("click", (event) => {
