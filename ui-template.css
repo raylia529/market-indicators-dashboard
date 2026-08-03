@@ -1519,3 +1519,23 @@ body {
     border-bottom: 0;
   }
 }
+
+/* The final Glossary tab does not need the centering tail that follows the
+   other mobile tabs; removing it avoids a large blank block on the right. */
+@media (max-width: 900px) {
+  body[data-active-tab="glossary"] .tab-bar {
+    padding-right: 0;
+  }
+}
+
+/* Give the labels that need a second word a little more room on desktop. */
+@media (min-width: 901px) {
+  .tab-button {
+    padding-inline: 10px;
+  }
+
+  .tab-button[data-tab="breadth"],
+  .tab-button[data-tab="data-status"] {
+    flex-grow: 1.1;
+  }
+}

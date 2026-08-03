@@ -961,6 +961,7 @@ const rangeButtons = Array.from(document.querySelectorAll("[data-range]:not([dat
 const tabButtons = Array.from(document.querySelectorAll("[data-tab]"));
 const tabBar = document.querySelector(".tab-bar");
 const tabPanels = Array.from(document.querySelectorAll("[data-tab-panel]"));
+document.body.dataset.activeTab = tabPanels.find((panel) => panel.classList.contains("active"))?.dataset.tabPanel || "macro";
 const mobileViewButtons = Array.from(document.querySelectorAll("[data-mobile-view-button]"));
 const fxChartElement = document.getElementById("fx-chart");
 const fxRangeButtons = Array.from(document.querySelectorAll("[data-fx-range]"));
@@ -1339,6 +1340,39 @@ function isInsideChartPlotArea(chartNode, event) {
   );
 }
 
+function isChartDetailExcludedTarget(target) {
+  return Boolean(target?.closest?.(".modebar, .hovertext, .legend, .axis, .colorbar, .chart-selection-popover"));
+}
+
+function getChartAtPoint(clientX, clientY) {
+  let matchedChart = null;
+
+  chartDetailRegistry.forEach((chartNode) => {
+    if (matchedChart || !isInsideChartPlotArea(chartNode, { clientX, clientY })) {
+      return;
+    }
+
+    matchedChart = chartNode;
+  });
+
+  return matchedChart;
+}
+
+function showChartDetailAtPoint(chartNode, clientX, clientY) {
+  if (!chartNode || !isInsideChartPlotArea(chartNode, { clientX, clientY })) {
+    return false;
+  }
+
+  const dateText = getDateFromChartPointer(chartNode, { clientX, clientY });
+  if (!dateText) {
+    return false;
+  }
+
+  clearOtherChartDetails(chartNode);
+  showChartDetail(chartNode, dateText, [], { clientX, clientY });
+  return true;
+}
+
 function getNearestChartPointRefs(chartNode, dateText) {
   const targetTime = Date.parse(`${dateText}T00:00:00Z`);
   const traces = chartDetailTraces.get(chartNode) || chartNode?.data;
@@ -1515,6 +1549,106 @@ function setupChartDetailInteraction(chartNode) {
     };
     document.addEventListener("pointerdown", clearOutside, { capture: true });
     document.addEventListener("click", clearOutside, { capture: true });
+
+    // Some mobile browsers do not deliver a Plotly click from the blank upper
+    // canvas. Resolve the chart from screen coordinates as a document-level
+    // fallback, while keeping axis/legend controls out of the detail action.
+    const openFromDocumentClick = (event) => {
+      if (isChartDetailExcludedTarget(event.target)) {
+        return;
+      }
+
+      const chartNode = event.target.closest?.(".js-plotly-plot") || getChartAtPoint(event.clientX, event.clientY);
+      showChartDetailAtPoint(chartNode, event.clientX, event.clientY);
+    };
+    document.addEventListener("click", openFromDocumentClick, { capture: true });
+
+    let documentTouchTap = null;
+    const beginDocumentTouchTap = (clientX, clientY, target = null) => {
+      if (isChartDetailExcludedTarget(target)) {
+        documentTouchTap = null;
+        return;
+      }
+
+      const chartNode = getChartAtPoint(clientX, clientY);
+      if (!chartNode) {
+        documentTouchTap = null;
+        return;
+      }
+
+      documentTouchTap = {
+        chartNode,
+        clientX,
+        clientY,
+        startedAt: Date.now(),
+        moved: false,
+      };
+    };
+    const updateDocumentTouchTap = (clientX, clientY) => {
+      if (!documentTouchTap) {
+        return;
+      }
+
+      documentTouchTap.moved =
+        documentTouchTap.moved ||
+        Math.hypot(clientX - documentTouchTap.clientX, clientY - documentTouchTap.clientY) > 14;
+    };
+    const finishDocumentTouchTap = (clientX, clientY) => {
+      const tap = documentTouchTap;
+      documentTouchTap = null;
+
+      if (!tap || tap.moved || Date.now() - tap.startedAt > 450) {
+        return;
+      }
+
+      showChartDetailAtPoint(tap.chartNode, clientX, clientY);
+    };
+
+    document.addEventListener("pointerdown", (event) => {
+      if (event.pointerType !== "mouse") {
+        beginDocumentTouchTap(event.clientX, event.clientY, event.target);
+      }
+    }, { capture: true });
+    document.addEventListener("pointermove", (event) => {
+      if (event.pointerType !== "mouse") {
+        updateDocumentTouchTap(event.clientX, event.clientY);
+      }
+    }, { capture: true });
+    document.addEventListener("pointerup", (event) => {
+      if (event.pointerType !== "mouse") {
+        finishDocumentTouchTap(event.clientX, event.clientY);
+      }
+    }, { capture: true });
+    document.addEventListener("pointercancel", () => {
+      documentTouchTap = null;
+    }, { capture: true });
+    document.addEventListener("touchstart", (event) => {
+      if (event.touches.length === 1) {
+        const touch = event.touches[0];
+        beginDocumentTouchTap(touch.clientX, touch.clientY, event.target);
+      } else {
+        documentTouchTap = null;
+      }
+    }, { capture: true, passive: true });
+    document.addEventListener("touchmove", (event) => {
+      if (event.touches.length === 1) {
+        const touch = event.touches[0];
+        updateDocumentTouchTap(touch.clientX, touch.clientY);
+      } else {
+        documentTouchTap = null;
+      }
+    }, { capture: true, passive: true });
+    document.addEventListener("touchend", (event) => {
+      const touch = event.changedTouches[0];
+      if (touch) {
+        finishDocumentTouchTap(touch.clientX, touch.clientY);
+      } else {
+        documentTouchTap = null;
+      }
+    }, { capture: true, passive: true });
+    document.addEventListener("touchcancel", () => {
+      documentTouchTap = null;
+    }, { capture: true, passive: true });
   }
 
   // Plotly does not consistently emit a click event for a short touch on every
@@ -1654,7 +1788,7 @@ function setupChartDetailInteraction(chartNode) {
   );
 
   chartNode.addEventListener("click", (event) => {
-    if (event.target.closest?.(".modebar, .hovertext, .legend, .axis, .colorbar, .chart-selection-popover")) {
+    if (isChartDetailExcludedTarget(event.target)) {
       return;
     }
 
@@ -1663,11 +1797,7 @@ function setupChartDetailInteraction(chartNode) {
       return;
     }
 
-    const dateText = getDateFromChartPointer(chartNode, event);
-    if (dateText) {
-      clearOtherChartDetails(chartNode);
-      showChartDetail(chartNode, dateText, [], event);
-    }
+    showChartDetailAtPoint(chartNode, event.clientX, event.clientY);
   }, { capture: true });
 
   if (typeof chartNode.on === "function") {
@@ -6170,6 +6300,8 @@ function setDashboardRange(range) {
 }
 
 function activateTab(tab) {
+  document.body.dataset.activeTab = tab;
+
   tabButtons.forEach((item) => {
     const active = item.dataset.tab === tab;
     item.classList.toggle("active", active);
