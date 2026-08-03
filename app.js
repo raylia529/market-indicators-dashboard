@@ -729,6 +729,10 @@ function getAxisGroups(ids, getDefinition) {
     return { leftIds: [otherIds[0]], rightIds: [otherIds[1]] };
   }
 
+  if (percentageIds.length >= 2) {
+    return { leftIds: percentageIds, rightIds: otherIds };
+  }
+
   return { leftIds: otherIds, rightIds: percentageIds };
 }
 
@@ -740,7 +744,7 @@ function canShareComparisonAxes(ids, getDefinition) {
 }
 
 function comparisonLimitMessage() {
-  return "Percentage series share the right axis. Compare them with one non-percentage series, or compare two non-percentage series.";
+  return "Percentage series share the left axis. Compare them with one non-percentage series, or compare two non-percentage series.";
 }
 
 function combineRows(ids, getRows) {
@@ -5638,15 +5642,29 @@ function renderActiveChartForResponsiveLayout() {
   comparisonSections.find((section) => section.key === activeTab)?.renderChart();
 }
 
-function centerMobileChartPane(track) {
+function centerMobileChartPane(track, { align = "center" } = {}) {
   if (!track || !isMobileLandscape()) {
     return;
   }
 
   const chartPane = track.querySelector('[data-mobile-pane="charts"]');
   const chart = chartPane?.querySelector("#indicator-chart, #fx-chart, .comparison-chart");
+  const toolbar = chartPane?.querySelector(".chart-toolbar, .fx-controls");
 
   if (!chartPane) {
+    return;
+  }
+
+  if (align === "toolbar" && toolbar) {
+    const scrollingElement = document.scrollingElement || document.documentElement;
+    const toolbarRect = toolbar.getBoundingClientRect();
+    const maxScroll = Math.max(scrollingElement.scrollHeight - window.innerHeight, 0);
+    const targetScroll = Math.min(
+      Math.max(window.scrollY + toolbarRect.top - 8, 0),
+      maxScroll,
+    );
+
+    window.scrollTo({ top: targetScroll, behavior: "auto" });
     return;
   }
 
@@ -5697,7 +5715,7 @@ function resetMobilePortraitPosition() {
   window.setTimeout(reset, 300);
 }
 
-function centerActiveLandscapeChart() {
+function centerActiveLandscapeChart({ align = "center" } = {}) {
   if (!usesMobilePaneLayout() || !window.matchMedia("(orientation: landscape)").matches) {
     return;
   }
@@ -5712,7 +5730,7 @@ function centerActiveLandscapeChart() {
 
   requestAnimationFrame(() => {
     resizeVisibleCharts();
-    requestAnimationFrame(() => centerMobileChartPane(track));
+    requestAnimationFrame(() => centerMobileChartPane(track, { align }));
   });
 }
 
@@ -5745,7 +5763,7 @@ function setMobileView(group, view, { center = true } = {}) {
   }
 }
 
-function syncMobileViewsForOrientation({ center = true, force = false } = {}) {
+function syncMobileViewsForOrientation({ center = true, force = false, align = "center" } = {}) {
   const mobileLayout = usesMobilePaneLayout();
   const nextView = isMobileLandscape() ? "charts" : "cards";
   const layoutKey = mobileLayout ? nextView : "desktop";
@@ -5764,7 +5782,7 @@ function syncMobileViewsForOrientation({ center = true, force = false } = {}) {
   });
 
   if (nextView === "charts" && center) {
-    centerActiveLandscapeChart();
+    centerActiveLandscapeChart({ align });
   }
 }
 
@@ -6386,7 +6404,7 @@ function activateTab(tab) {
     resizeVisibleCharts();
     centerActiveMobileTab();
     syncMobileViewsForOrientation({ center: false, force: true });
-    centerActiveLandscapeChart();
+    centerActiveLandscapeChart({ align: "toolbar" });
   });
 }
 
@@ -6630,11 +6648,11 @@ function handleResponsiveLayoutChange() {
 
   responsiveLayoutKey = nextKey;
   window.setTimeout(() => {
-    syncMobileViewsForOrientation({ center: true, force: true });
+    syncMobileViewsForOrientation({ center: true, force: true, align: "toolbar" });
     renderActiveChartForResponsiveLayout();
     requestAnimationFrame(() => {
       resizeVisibleCharts();
-      requestAnimationFrame(() => centerActiveLandscapeChart());
+      requestAnimationFrame(() => centerActiveLandscapeChart({ align: "toolbar" }));
     });
 
     // Safari can finish the orientation reflow after the first resize frame.
@@ -6642,7 +6660,7 @@ function handleResponsiveLayoutChange() {
     window.setTimeout(() => {
       renderActiveChartForResponsiveLayout();
       resizeVisibleCharts();
-      centerActiveLandscapeChart();
+      centerActiveLandscapeChart({ align: "toolbar" });
     }, 360);
 
     if (usesMobilePaneLayout() && !isMobileLandscape()) {
@@ -6662,7 +6680,7 @@ syncMobileViewsForOrientation({ center: false, force: true });
 loadIndicatorData()
   .then(() => {
     renderAll();
-    syncMobileViewsForOrientation({ center: true, force: true });
+    syncMobileViewsForOrientation({ center: true, force: true, align: "toolbar" });
   })
   .catch((error) => {
     indicatorGrid.innerHTML = `<p class="error-message">${error.message}</p>`;

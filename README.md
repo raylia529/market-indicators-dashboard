@@ -63,7 +63,7 @@ FRED-powered indicators require the repository Actions secret `FRED_API_KEY`. Sc
 - Mobile card-to-chart swipe layout for portrait and landscape phone screens.
 - Indicator cards loaded from local CSV files.
 - Click cards to show or hide series.
-- Percentage series share the right Y-axis and can be compared together with one non-percentage series on the left. Two non-percentage series retain the existing independent left/right-axis comparison.
+- Two or more percentage series share the left Y-axis and can be compared together with non-percentage series on the right. A single percentage series keeps the existing left/right-axis comparison behavior. Two non-percentage series retain the existing independent left/right-axis comparison.
 - FX comparison supports USD/JPY and the US-Japan 2Y yield spread.
 - Interactive Plotly charts with zoom, pan, hover tooltips, and range controls.
 - Range controls:
