@@ -2962,7 +2962,6 @@ function setupChartHoverDismiss(chartNode) {
   if (
     !chartNode ||
     typeof chartNode.addEventListener !== "function" ||
-    typeof chartNode.on !== "function" ||
     chartNode.dataset.hoverDismissReady === "true"
   ) {
     return;
@@ -3064,59 +3063,94 @@ function setupChartHoverDismiss(chartNode) {
     { capture: true },
   );
 
-  chartNode.addEventListener(
-    "touchstart",
-    (event) => {
-      if (event.touches.length === 1) {
-        const touch = event.touches[0];
-
-        if (!touchTap) {
-          beginTouchTap(touch.clientX, touch.clientY);
-        }
-      } else {
-        touchTap = null;
-      }
-    },
-    { capture: true, passive: true },
-  );
-
-  chartNode.addEventListener(
-    "touchmove",
-    (event) => {
-      if (event.touches.length === 1) {
-        const touch = event.touches[0];
-        updateTouchTap(touch.clientX, touch.clientY);
-      } else {
-        touchTap = null;
-      }
-    },
-    { capture: true, passive: true },
-  );
-
-  chartNode.addEventListener(
-    "touchend",
-    (event) => {
-      const touch = event.changedTouches[0];
-
-      if (touch) {
-        finishTouchTap(touch.clientX, touch.clientY);
-      } else {
-        touchTap = null;
-      }
-    },
-    { capture: true, passive: true },
-  );
-
-  chartNode.addEventListener(
-    "touchcancel",
-    () => {
-      touchTap = null;
-    },
-    { capture: true, passive: true },
-  );
-
   if (!chartHoverDismissDocumentReady) {
     chartHoverDismissDocumentReady = true;
+    const documentTouchTaps = new Map();
+
+    function findChartAtPoint(clientX, clientY) {
+      return [...chartHoverDismissRegistry].find((chart) =>
+        isInsideChartPlotArea(chart, { clientX, clientY }),
+      );
+    }
+
+    document.addEventListener(
+      "touchstart",
+      (event) => {
+        if (event.touches.length !== 1) {
+          documentTouchTaps.clear();
+          return;
+        }
+
+        const touch = event.touches[0];
+        const chart = findChartAtPoint(touch.clientX, touch.clientY);
+
+        if (chart) {
+          documentTouchTaps.set(chart, {
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+            startedAt: Date.now(),
+            moved: false,
+          });
+        }
+      },
+      { capture: true, passive: true },
+    );
+
+    document.addEventListener(
+      "touchmove",
+      (event) => {
+        if (event.touches.length !== 1) {
+          documentTouchTaps.clear();
+          return;
+        }
+
+        const touch = event.touches[0];
+        documentTouchTaps.forEach((tap) => {
+          tap.moved =
+            tap.moved ||
+            Math.hypot(touch.clientX - tap.clientX, touch.clientY - tap.clientY) > tapMoveTolerance;
+        });
+      },
+      { capture: true, passive: true },
+    );
+
+    document.addEventListener(
+      "touchend",
+      (event) => {
+        const touch = event.changedTouches[0];
+
+        if (!touch) {
+          documentTouchTaps.clear();
+          return;
+        }
+
+        documentTouchTaps.forEach((tap, chart) => {
+          documentTouchTaps.delete(chart);
+
+          if (
+            tap.moved ||
+            Date.now() - tap.startedAt > tapDurationMs ||
+            !isInsideChartPlotArea(chart, { clientX: touch.clientX, clientY: touch.clientY })
+          ) {
+            return;
+          }
+
+          const dateText = getDateFromChartPointer(chart, touch);
+
+          if (dateText) {
+            clearRegisteredPlotlyHovers(chart);
+            showPlotlySelection(chart, dateText, [], touch);
+          }
+        });
+      },
+      { capture: true, passive: true },
+    );
+
+    document.addEventListener("touchcancel", () => documentTouchTaps.clear(), {
+      capture: true,
+      passive: true,
+    });
+
     document.addEventListener("click", (event) => {
       if (event.target.closest?.(".modebar, .hovertext, .chart-selection-popover")) {
         return;
@@ -3127,20 +3161,22 @@ function setupChartHoverDismiss(chartNode) {
     });
   }
 
-  chartNode.on("plotly_click", (eventData) => {
-    const dateText = normalizePlotlyDate(eventData?.points?.[0]?.x);
-    const pointerEvent = eventData?.event;
-    const anchor = Number.isFinite(pointerEvent?.clientX) && Number.isFinite(pointerEvent?.clientY)
-      ? { clientX: pointerEvent.clientX, clientY: pointerEvent.clientY }
-      : null;
+  if (typeof chartNode.on === "function") {
+    chartNode.on("plotly_click", (eventData) => {
+      const dateText = normalizePlotlyDate(eventData?.points?.[0]?.x);
+      const pointerEvent = eventData?.event;
+      const anchor = Number.isFinite(pointerEvent?.clientX) && Number.isFinite(pointerEvent?.clientY)
+        ? { clientX: pointerEvent.clientX, clientY: pointerEvent.clientY }
+        : null;
 
-    if (dateText) {
-      clearRegisteredPlotlyHovers(chartNode);
-      showPlotlySelection(chartNode, dateText, eventData.points, anchor);
-    } else {
-      clearPlotlyHover(chartNode);
-    }
-  });
+      if (dateText) {
+        clearRegisteredPlotlyHovers(chartNode);
+        showPlotlySelection(chartNode, dateText, eventData.points, anchor);
+      } else {
+        clearPlotlyHover(chartNode);
+      }
+    });
+  }
 
   chartNode.addEventListener("click", (event) => {
     if (event.target.closest?.(".modebar, .hovertext, .chart-selection-popover")) {

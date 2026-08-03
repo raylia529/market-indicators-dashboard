@@ -439,6 +439,35 @@ body {
   }
 }
 
+/* Keep every period segment fixed; the final item must never absorb free space. */
+.chart-toolbar > .range-selector .range-button,
+.fx-controls > .range-selector .range-button {
+  flex: 0 0 54px !important;
+  width: 54px !important;
+  min-width: 54px !important;
+  max-width: 54px !important;
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+  .chart-toolbar > .range-selector .range-button,
+  .fx-controls > .range-selector .range-button {
+    flex: 0 0 48px !important;
+    width: 48px !important;
+    min-width: 48px !important;
+    max-width: 48px !important;
+  }
+}
+
+@media (max-width: 760px) and (orientation: portrait) {
+  .chart-toolbar > .range-selector .range-button,
+  .fx-controls > .range-selector .range-button {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #050607;
