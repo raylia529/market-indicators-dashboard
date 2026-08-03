@@ -687,9 +687,9 @@ body {
   visibility: hidden;
 }
 
-/* Keep the selected-date marker single: Plotly's hover spikeline otherwise
-   remains underneath the dashboard's compact detail guide. */
-.chart-selection-active .hoverlayer .spikeline {
+/* Keep the selected-date marker single: Plotly's hover layer can leave a
+   second guide or marker underneath the dashboard's compact detail guide. */
+.chart-selection-active .hoverlayer > * {
   visibility: hidden !important;
   opacity: 0 !important;
 }
