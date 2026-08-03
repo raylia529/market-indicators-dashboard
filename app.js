@@ -1321,30 +1321,22 @@ function clearOtherChartDetails(activeChart) {
 }
 
 function isInsideChartPlotArea(chartNode, event) {
-  const dragRect = chartNode?.querySelector?.(".nsewdrag")?.getBoundingClientRect?.();
-
-  if (dragRect) {
-    return (
-      event.clientX >= dragRect.left &&
-      event.clientX <= dragRect.right &&
-      event.clientY >= dragRect.top &&
-      event.clientY <= dragRect.bottom
-    );
-  }
-
   const rect = chartNode?.getBoundingClientRect?.();
-  const plotSize = chartNode?._fullLayout?._size;
-
-  if (!rect || !plotSize) {
+  if (!rect || rect.width <= 0 || rect.height <= 0) {
     return false;
   }
 
-  const left = rect.left + plotSize.l;
-  const right = left + plotSize.w;
-  const top = rect.top + plotSize.t;
-  const bottom = top + plotSize.h;
+  // The chart's visual canvas includes useful blank space above the plot. Use
+  // the whole canvas for date selection so a tap does not have to land near
+  // the x-axis labels or the data line itself.
+  const inset = 4;
 
-  return event.clientX >= left && event.clientX <= right && event.clientY >= top && event.clientY <= bottom;
+  return (
+    event.clientX >= rect.left + inset &&
+    event.clientX <= rect.right - inset &&
+    event.clientY >= rect.top + inset &&
+    event.clientY <= rect.bottom - inset
+  );
 }
 
 function getNearestChartPointRefs(chartNode, dateText) {
@@ -1532,7 +1524,12 @@ function setupChartDetailInteraction(chartNode) {
   const tapMoveTolerance = 14;
   const tapDurationMs = 450;
 
-  function beginTouchTap(clientX, clientY) {
+  function beginTouchTap(clientX, clientY, target = null) {
+    if (target?.closest?.(".modebar, .hovertext, .legend, .axis, .colorbar, .chart-selection-popover")) {
+      touchTap = null;
+      return;
+    }
+
     if (!isInsideChartPlotArea(chartNode, { clientX, clientY })) {
       touchTap = null;
       return;
@@ -1580,7 +1577,7 @@ function setupChartDetailInteraction(chartNode) {
     "pointerdown",
     (event) => {
       if (event.pointerType !== "mouse") {
-        beginTouchTap(event.clientX, event.clientY);
+        beginTouchTap(event.clientX, event.clientY, event.target);
       }
     },
     { capture: true },
@@ -1617,7 +1614,7 @@ function setupChartDetailInteraction(chartNode) {
     (event) => {
       if (event.touches.length === 1 && !touchTap) {
         const touch = event.touches[0];
-        beginTouchTap(touch.clientX, touch.clientY);
+        beginTouchTap(touch.clientX, touch.clientY, event.target);
       } else if (event.touches.length !== 1) {
         touchTap = null;
       }
@@ -1657,7 +1654,7 @@ function setupChartDetailInteraction(chartNode) {
   );
 
   chartNode.addEventListener("click", (event) => {
-    if (event.target.closest?.(".modebar, .hovertext, .chart-selection-popover")) {
+    if (event.target.closest?.(".modebar, .hovertext, .legend, .axis, .colorbar, .chart-selection-popover")) {
       return;
     }
 
@@ -5503,7 +5500,8 @@ function resetMobilePortraitPosition() {
     reset();
     requestAnimationFrame(reset);
   });
-  window.setTimeout(reset, 90);
+  window.setTimeout(reset, 120);
+  window.setTimeout(reset, 300);
 }
 
 function centerActiveLandscapeChart() {

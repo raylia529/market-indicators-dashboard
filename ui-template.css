@@ -1054,7 +1054,7 @@ body {
 @media (max-width: 760px) {
   .dashboard-shell {
     width: min(calc(100% - 20px), 620px);
-    padding: 10px 0 calc(24px + env(safe-area-inset-bottom));
+    padding: calc(10px + env(safe-area-inset-top)) 0 calc(24px + env(safe-area-inset-bottom));
   }
 
   .tab-bar {
@@ -1236,7 +1236,7 @@ body {
   .dashboard-shell {
     width: 100%;
     max-width: none;
-    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    padding: calc(8px + env(safe-area-inset-top)) 10px calc(8px + env(safe-area-inset-bottom));
   }
 
   .dashboard-section {
@@ -1266,6 +1266,43 @@ body {
     height: calc(100dvh - 60px);
     min-height: 240px;
     margin-top: 0;
+  }
+}
+
+/* Keep glossary cards inside the phone viewport, including expanded text. */
+@media (max-width: 900px) {
+  .glossary-section,
+  .glossary-section .panel-header,
+  .glossary-section .glossary-title-row,
+  .glossary-section .glossary-header-tools,
+  .glossary-section .data-status-table-wrap,
+  .glossary-section .glossary-table,
+  .glossary-section .glossary-table tbody,
+  .glossary-section .glossary-table tr,
+  .glossary-section .glossary-table td,
+  .glossary-section .glossary-description {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .glossary-section {
+    overflow-x: hidden;
+  }
+
+  .glossary-section .data-status-table-wrap {
+    overflow-x: hidden;
+  }
+
+  .glossary-section .glossary-table tr {
+    overflow: hidden;
+  }
+
+  .glossary-section .glossary-table td,
+  .glossary-section .glossary-description,
+  .glossary-section .glossary-description * {
+    overflow-wrap: anywhere;
   }
 }
 
