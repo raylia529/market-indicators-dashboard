@@ -192,7 +192,6 @@ body {
 #indicator-chart,
 #fx-chart,
 .comparison-chart {
-  position: relative;
   height: 430px;
   margin-top: 10px;
   border: 1px solid var(--line);
@@ -200,64 +199,6 @@ body {
   background: var(--surface);
   box-shadow: var(--shadow);
   overflow: hidden;
-}
-
-.chart-selection-popover {
-  position: absolute;
-  z-index: 12;
-  min-width: 104px;
-  max-width: min(190px, calc(100% - 16px));
-  padding: 7px 9px;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  background: var(--surface);
-  box-shadow: 0 6px 16px rgba(23, 35, 45, 0.16);
-  color: var(--ink);
-  font-size: 0.72rem;
-  font-weight: 750;
-  line-height: 1.25;
-  pointer-events: none;
-  user-select: none;
-  white-space: nowrap;
-}
-
-.chart-selection-popover[hidden],
-.chart-selection-guide[hidden] {
-  display: none !important;
-}
-
-.chart-selection-date {
-  margin-bottom: 4px;
-  color: var(--muted);
-  font-size: 0.68rem;
-  font-weight: 800;
-}
-
-.chart-selection-value {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 16px;
-}
-
-.chart-selection-swatch {
-  flex: 0 0 auto;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.chart-selection-guide {
-  position: absolute;
-  z-index: 11;
-  width: 0;
-  border-left: 1px dashed var(--chart-guide);
-  opacity: 0.58;
-  pointer-events: none;
-}
-
-.chart-selection-active .hoverlayer .hovertext {
-  visibility: hidden;
 }
 
 .js-plotly-plot .plotly .modebar-btn {
