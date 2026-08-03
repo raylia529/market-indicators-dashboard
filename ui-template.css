@@ -1427,9 +1427,11 @@ body {
   .tab-bar {
     display: flex;
     align-items: stretch;
-    gap: 3px;
+    gap: 0;
     overflow-x: auto;
     overflow-y: hidden;
+    padding-right: 50%;
+    scroll-padding-inline: 0;
   }
 
   .tab-button {

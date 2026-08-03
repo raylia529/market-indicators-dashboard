@@ -959,6 +959,7 @@ const selectionNoticeClose = document.getElementById("selection-notice-close");
 const macroLogScaleInput = document.getElementById("macro-log-scale");
 const rangeButtons = Array.from(document.querySelectorAll("[data-range]:not([data-comparison-range])"));
 const tabButtons = Array.from(document.querySelectorAll("[data-tab]"));
+const tabBar = document.querySelector(".tab-bar");
 const tabPanels = Array.from(document.querySelectorAll("[data-tab-panel]"));
 const mobileViewButtons = Array.from(document.querySelectorAll("[data-mobile-view-button]"));
 const fxChartElement = document.getElementById("fx-chart");
@@ -1523,6 +1524,137 @@ function setupChartDetailInteraction(chartNode) {
     document.addEventListener("pointerdown", clearOutside, { capture: true });
     document.addEventListener("click", clearOutside, { capture: true });
   }
+
+  // Plotly does not consistently emit a click event for a short touch on every
+  // mobile browser. Keep the chart tap separate from axis pan/zoom gestures so
+  // a stationary tap still opens the compact detail overlay.
+  let touchTap = null;
+  const tapMoveTolerance = 14;
+  const tapDurationMs = 450;
+
+  function beginTouchTap(clientX, clientY) {
+    if (!isInsideChartPlotArea(chartNode, { clientX, clientY })) {
+      touchTap = null;
+      return;
+    }
+
+    touchTap = {
+      clientX,
+      clientY,
+      startedAt: Date.now(),
+      moved: false,
+    };
+  }
+
+  function updateTouchTap(clientX, clientY) {
+    if (!touchTap) {
+      return;
+    }
+
+    touchTap.moved =
+      touchTap.moved ||
+      Math.hypot(clientX - touchTap.clientX, clientY - touchTap.clientY) > tapMoveTolerance;
+  }
+
+  function finishTouchTap(clientX, clientY) {
+    const tap = touchTap;
+    touchTap = null;
+
+    if (
+      !tap ||
+      tap.moved ||
+      Date.now() - tap.startedAt > tapDurationMs ||
+      !isInsideChartPlotArea(chartNode, { clientX, clientY })
+    ) {
+      return;
+    }
+
+    const dateText = getDateFromChartPointer(chartNode, { clientX, clientY });
+    if (dateText) {
+      clearOtherChartDetails(chartNode);
+      showChartDetail(chartNode, dateText, [], { clientX, clientY });
+    }
+  }
+
+  chartNode.addEventListener(
+    "pointerdown",
+    (event) => {
+      if (event.pointerType !== "mouse") {
+        beginTouchTap(event.clientX, event.clientY);
+      }
+    },
+    { capture: true },
+  );
+  chartNode.addEventListener(
+    "pointermove",
+    (event) => {
+      if (event.pointerType !== "mouse") {
+        updateTouchTap(event.clientX, event.clientY);
+      }
+    },
+    { capture: true },
+  );
+  chartNode.addEventListener(
+    "pointerup",
+    (event) => {
+      if (event.pointerType !== "mouse") {
+        finishTouchTap(event.clientX, event.clientY);
+      }
+    },
+    { capture: true },
+  );
+  chartNode.addEventListener(
+    "pointercancel",
+    (event) => {
+      if (event.pointerType !== "mouse") {
+        touchTap = null;
+      }
+    },
+    { capture: true },
+  );
+  chartNode.addEventListener(
+    "touchstart",
+    (event) => {
+      if (event.touches.length === 1 && !touchTap) {
+        const touch = event.touches[0];
+        beginTouchTap(touch.clientX, touch.clientY);
+      } else if (event.touches.length !== 1) {
+        touchTap = null;
+      }
+    },
+    { capture: true, passive: true },
+  );
+  chartNode.addEventListener(
+    "touchmove",
+    (event) => {
+      if (event.touches.length === 1) {
+        const touch = event.touches[0];
+        updateTouchTap(touch.clientX, touch.clientY);
+      } else {
+        touchTap = null;
+      }
+    },
+    { capture: true, passive: true },
+  );
+  chartNode.addEventListener(
+    "touchend",
+    (event) => {
+      const touch = event.changedTouches[0];
+      if (touch) {
+        finishTouchTap(touch.clientX, touch.clientY);
+      } else {
+        touchTap = null;
+      }
+    },
+    { capture: true, passive: true },
+  );
+  chartNode.addEventListener(
+    "touchcancel",
+    () => {
+      touchTap = null;
+    },
+    { capture: true, passive: true },
+  );
 
   chartNode.addEventListener("click", (event) => {
     if (event.target.closest?.(".modebar, .hovertext, .chart-selection-popover")) {
@@ -5335,6 +5467,45 @@ function centerMobileChartPane(track) {
   });
 }
 
+function centerActiveMobileTab() {
+  if (!tabBar || !usesMobilePaneLayout()) {
+    return;
+  }
+
+  const activeTab = tabBar.querySelector(".tab-button.active");
+  if (!activeTab) {
+    return;
+  }
+
+  const navRect = tabBar.getBoundingClientRect();
+  const activeRect = activeTab.getBoundingClientRect();
+  const maxScroll = Math.max(tabBar.scrollWidth - tabBar.clientWidth, 0);
+  const desiredLeft = navRect.left + (navRect.width - activeRect.width) / 2;
+  const targetScroll = tabBar.scrollLeft + activeRect.left - desiredLeft;
+  tabBar.scrollLeft = Math.min(Math.max(targetScroll, 0), maxScroll);
+}
+
+function resetMobilePortraitPosition() {
+  if (!usesMobilePaneLayout() || isMobileLandscape()) {
+    return;
+  }
+
+  const reset = () => {
+    const scrollingElement = document.scrollingElement || document.documentElement;
+    scrollingElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    window.scrollTo(0, 0);
+    centerActiveMobileTab();
+  };
+
+  reset();
+  requestAnimationFrame(() => {
+    reset();
+    requestAnimationFrame(reset);
+  });
+  window.setTimeout(reset, 90);
+}
+
 function centerActiveLandscapeChart() {
   if (!usesMobilePaneLayout() || !window.matchMedia("(orientation: landscape)").matches) {
     return;
@@ -6020,6 +6191,7 @@ function activateTab(tab) {
 
   requestAnimationFrame(() => {
     resizeVisibleCharts();
+    centerActiveMobileTab();
     syncMobileViewsForOrientation({ center: false, force: true });
     centerActiveLandscapeChart();
   });
@@ -6254,11 +6426,28 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () 
   comparisonSections.filter((section) => section.loaded).forEach((section) => section.renderChart());
 });
 
-window.matchMedia("(orientation: landscape)").addEventListener("change", () => {
+const landscapeMediaQuery = window.matchMedia("(orientation: landscape)");
+let responsiveLayoutKey = `${usesMobilePaneLayout()}-${isMobileLandscape()}`;
+
+function handleResponsiveLayoutChange() {
+  const nextKey = `${usesMobilePaneLayout()}-${isMobileLandscape()}`;
+  if (nextKey === responsiveLayoutKey) {
+    return;
+  }
+
+  responsiveLayoutKey = nextKey;
   window.setTimeout(() => {
     syncMobileViewsForOrientation({ center: true, force: true });
+    if (usesMobilePaneLayout() && !isMobileLandscape()) {
+      resetMobilePortraitPosition();
+    } else {
+      centerActiveMobileTab();
+    }
   }, 120);
-});
+}
+
+landscapeMediaQuery.addEventListener("change", handleResponsiveLayoutChange);
+window.addEventListener("resize", handleResponsiveLayoutChange);
 
 syncMobileViewsForOrientation({ center: false, force: true });
 
