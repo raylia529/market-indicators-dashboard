@@ -1259,7 +1259,7 @@ function isMobileLandscape() {
 }
 
 function getChartDragMode() {
-  return usesTouchChartMode() ? "pan" : "zoom";
+  return usesTouchChartMode() ? false : "zoom";
 }
 
 function getPlotlyConfig() {
@@ -1340,6 +1340,27 @@ function isInsideChartPlotArea(chartNode, event) {
   );
 }
 
+function isChartAxisPoint(chartNode, clientX, clientY) {
+  const plotSize = chartNode?._fullLayout?._size;
+  const rect = chartNode?.getBoundingClientRect?.();
+  if (!plotSize || !rect) {
+    return false;
+  }
+
+  const localX = clientX - rect.left;
+  const localY = clientY - rect.top;
+  const axisPadding = 18;
+  const onLeftAxis = localX <= plotSize.l + axisPadding;
+  const onRightAxis = localX >= plotSize.l + plotSize.w - axisPadding;
+  const onXAxis =
+    localX >= plotSize.l &&
+    localX <= plotSize.l + plotSize.w &&
+    localY >= plotSize.t + plotSize.h - 24 &&
+    localY <= plotSize.t + plotSize.h + 38;
+
+  return onLeftAxis || onRightAxis || onXAxis;
+}
+
 function isChartDetailExcludedTarget(target) {
   return Boolean(target?.closest?.(".modebar, .hovertext, .legend, .axis, .colorbar, .chart-selection-popover"));
 }
@@ -1359,7 +1380,11 @@ function getChartAtPoint(clientX, clientY) {
 }
 
 function showChartDetailAtPoint(chartNode, clientX, clientY) {
-  if (!chartNode || !isInsideChartPlotArea(chartNode, { clientX, clientY })) {
+  if (
+    !chartNode ||
+    isChartAxisPoint(chartNode, clientX, clientY) ||
+    !isInsideChartPlotArea(chartNode, { clientX, clientY })
+  ) {
     return false;
   }
 
@@ -1571,17 +1596,19 @@ function setupChartDetailInteraction(chartNode) {
       }
 
       const chartNode = getChartAtPoint(clientX, clientY);
-      if (!chartNode) {
+      if (!chartNode || isChartAxisPoint(chartNode, clientX, clientY)) {
         documentTouchTap = null;
         return;
       }
 
+      const detailOpened = showChartDetailAtPoint(chartNode, clientX, clientY);
       documentTouchTap = {
         chartNode,
         clientX,
         clientY,
         startedAt: Date.now(),
         moved: false,
+        detailOpened,
       };
     };
     const updateDocumentTouchTap = (clientX, clientY) => {
@@ -1592,6 +1619,11 @@ function setupChartDetailInteraction(chartNode) {
       documentTouchTap.moved =
         documentTouchTap.moved ||
         Math.hypot(clientX - documentTouchTap.clientX, clientY - documentTouchTap.clientY) > 14;
+
+      if (documentTouchTap.moved && documentTouchTap.detailOpened) {
+        clearChartDetail(documentTouchTap.chartNode);
+        documentTouchTap.detailOpened = false;
+      }
     };
     const finishDocumentTouchTap = (clientX, clientY) => {
       const tap = documentTouchTap;
@@ -1601,7 +1633,9 @@ function setupChartDetailInteraction(chartNode) {
         return;
       }
 
-      showChartDetailAtPoint(tap.chartNode, clientX, clientY);
+      if (!tap.detailOpened) {
+        showChartDetailAtPoint(tap.chartNode, clientX, clientY);
+      }
     };
 
     document.addEventListener("pointerdown", (event) => {
@@ -1664,7 +1698,10 @@ function setupChartDetailInteraction(chartNode) {
       return;
     }
 
-    if (!isInsideChartPlotArea(chartNode, { clientX, clientY })) {
+    if (
+      isChartAxisPoint(chartNode, clientX, clientY) ||
+      !isInsideChartPlotArea(chartNode, { clientX, clientY })
+    ) {
       touchTap = null;
       return;
     }
@@ -5270,10 +5307,11 @@ function createComparisonSection(config) {
         font: { color: theme.ink },
       },
       hovermode: "x unified",
-      dragmode:
-        selected.includes("cme-expected-policy-rate") ||
-        (config.key === "jp-rates" &&
-          selected.some((id) => ["boj-policy-rate", "boj-implied-rate"].includes(id)))
+      dragmode: usesTouchChartMode()
+        ? false
+        : selected.includes("cme-expected-policy-rate") ||
+            (config.key === "jp-rates" &&
+              selected.some((id) => ["boj-policy-rate", "boj-implied-rate"].includes(id)))
           ? "pan"
           : getChartDragMode(),
     };

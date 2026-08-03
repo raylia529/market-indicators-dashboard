@@ -1467,7 +1467,7 @@ body {
     gap: 0;
     overflow-x: auto;
     overflow-y: hidden;
-    padding-right: 50%;
+    padding-right: 0;
     scroll-padding-inline: 0;
   }
 
@@ -1520,14 +1520,6 @@ body {
   }
 }
 
-/* The final Glossary tab does not need the centering tail that follows the
-   other mobile tabs; removing it avoids a large blank block on the right. */
-@media (max-width: 900px) {
-  body[data-active-tab="glossary"] .tab-bar {
-    padding-right: 0;
-  }
-}
-
 /* Give the labels that need a second word a little more room on desktop. */
 @media (min-width: 901px) {
   .tab-button {
@@ -1537,5 +1529,15 @@ body {
   .tab-button[data-tab="breadth"],
   .tab-button[data-tab="data-status"] {
     flex-grow: 1.1;
+  }
+}
+
+/* The plot itself has no pan/zoom gesture on touch devices. The custom axis
+   handlers still own movement and zooming on the x/y axes. */
+@media (max-width: 900px) {
+  #indicator-chart,
+  #fx-chart,
+  .comparison-chart {
+    touch-action: none;
   }
 }
