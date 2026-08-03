@@ -464,6 +464,13 @@ body {
   color: var(--blue-strong);
 }
 
+[data-flows-indicator="xly-xlp"] .indicator-label-detail,
+[data-flows-indicator="smh-spy"] .indicator-label-detail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .indicator-change {
   transform: translateY(4px);
 }
@@ -1539,5 +1546,11 @@ body {
   #fx-chart,
   .comparison-chart {
     touch-action: none;
+  }
+
+  /* Touch charts use the compact tap detail instead of Plotly's larger
+     hover labels, which can reappear after an axis gesture. */
+  .js-plotly-plot .hoverlayer > * {
+    visibility: hidden !important;
   }
 }

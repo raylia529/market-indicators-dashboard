@@ -223,7 +223,7 @@ const flowsIndicators = [
   {
     id: "smh-spy",
     name: "SMH/SPY",
-    descriptor: "Semiconductor Leadership",
+    descriptor: "Semi Leadership",
     file: "data/smh-spy.csv",
     unitLabel: "Ratio",
     valueSuffix: "",
@@ -3441,6 +3441,7 @@ function setupMobileYAxisGestures(chartNode) {
       return false;
     }
 
+    clearChartDetail(chartNode);
     const distance =
       touches.length === 2 ? Math.max(Math.abs(touches[0].clientY - touches[1].clientY), 24) : null;
     const gestureMode = touches.length === 2 ? "zoom" : getYAxisGestureMode(axisName, center);
@@ -3547,6 +3548,7 @@ function setupMobileYAxisGestures(chartNode) {
       const axisName = getMobileYAxisAtPoint(chartNode, event.clientX);
 
       if (axisName) {
+        clearChartDetail(chartNode);
         chartNode.dataset.mobileYAxisActive = axisName;
         event.stopImmediatePropagation();
       }
@@ -3702,6 +3704,7 @@ function setupMobileXAxisGestures(chartNode) {
       if (!usesTouchChartMode() || event.touches.length < 1 || event.touches.length > 2) return;
       const touches = Array.from(event.touches);
       if (!touches.every(isXAxisTarget)) return;
+      clearChartDetail(chartNode);
       const centerX = touches.reduce((total, touch) => total + touch.clientX, 0) / touches.length;
       const range = rangeToMillis(chartNode._fullLayout?.xaxis?.range);
       if (!range) return;
@@ -5613,6 +5616,28 @@ function resizeVisibleCharts() {
   });
 }
 
+function renderActiveChartForResponsiveLayout() {
+  if (!isMobileLandscape()) {
+    return;
+  }
+
+  const activeTab = document.querySelector(".tab-panel.active")?.dataset.tabPanel;
+
+  if (activeTab === "macro") {
+    renderChart();
+    return;
+  }
+
+  if (activeTab === "fx") {
+    if (fxData.length > 0) {
+      renderFxChart();
+    }
+    return;
+  }
+
+  comparisonSections.find((section) => section.key === activeTab)?.renderChart();
+}
+
 function centerMobileChartPane(track) {
   if (!track || !isMobileLandscape()) {
     return;
@@ -6606,6 +6631,20 @@ function handleResponsiveLayoutChange() {
   responsiveLayoutKey = nextKey;
   window.setTimeout(() => {
     syncMobileViewsForOrientation({ center: true, force: true });
+    renderActiveChartForResponsiveLayout();
+    requestAnimationFrame(() => {
+      resizeVisibleCharts();
+      requestAnimationFrame(() => centerActiveLandscapeChart());
+    });
+
+    // Safari can finish the orientation reflow after the first resize frame.
+    // A second redraw prevents the old portrait legend/date geometry from sticking.
+    window.setTimeout(() => {
+      renderActiveChartForResponsiveLayout();
+      resizeVisibleCharts();
+      centerActiveLandscapeChart();
+    }, 360);
+
     if (usesMobilePaneLayout() && !isMobileLandscape()) {
       resetMobilePortraitPosition();
     } else {
@@ -6615,6 +6654,7 @@ function handleResponsiveLayoutChange() {
 }
 
 landscapeMediaQuery.addEventListener("change", handleResponsiveLayoutChange);
+window.addEventListener("orientationchange", handleResponsiveLayoutChange);
 window.addEventListener("resize", handleResponsiveLayoutChange);
 
 syncMobileViewsForOrientation({ center: false, force: true });
