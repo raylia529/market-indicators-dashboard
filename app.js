@@ -1300,10 +1300,7 @@ function setupChartModebar(chartNode, logScaleInput = null, normalizedInput = nu
     return;
   }
 
-  const chartPane = chartNode.closest(".chart-pane");
-  const modebar =
-    chartNode.querySelector(".modebar") ||
-    chartPane?.querySelector(".dashboard-modebar, .chart-toolbar > .modebar, .fx-controls > .modebar");
+  const modebar = chartNode.querySelector(".modebar");
   if (!modebar) {
     return;
   }
@@ -1350,17 +1347,6 @@ function setupChartModebar(chartNode, logScaleInput = null, normalizedInput = nu
   }
 
   modebar.replaceChildren(modebarGroup);
-  modebar.classList.add("dashboard-modebar");
-
-  const toolbar = chartPane?.querySelector(".chart-toolbar, .fx-controls");
-  if (toolbar) {
-    toolbar.append(modebar);
-
-    const chartActions = toolbar.querySelector(".chart-actions");
-    if (chartActions && !chartActions.querySelector(".toggle-pill")) {
-      chartActions.hidden = true;
-    }
-  }
 }
 
 function getCssColor(name, fallback) {
@@ -2470,7 +2456,6 @@ function getDateFromChartPointer(chartNode, event) {
   const xaxis = fullLayout?.xaxis;
   const plotSize = fullLayout?._size;
   const rect = chartNode.getBoundingClientRect();
-  const dragRect = chartNode.querySelector(".nsewdrag")?.getBoundingClientRect();
 
   if (xaxis?.p2d && plotSize) {
     const xPixel = Math.min(Math.max(event.clientX - rect.left - plotSize.l, 0), plotSize.w);
@@ -2486,8 +2471,8 @@ function getDateFromChartPointer(chartNode, event) {
   const end = chartNode.dataset.promptEnd;
 
   if (start && end) {
-    const left = dragRect?.left ?? (plotSize ? rect.left + plotSize.l : rect.left);
-    const width = dragRect?.width || plotSize?.w || rect.width;
+    const left = plotSize ? rect.left + plotSize.l : rect.left;
+    const width = plotSize?.w || rect.width;
     const ratio = Math.min(Math.max((event.clientX - left) / width, 0), 1);
     const startTime = Date.parse(`${start}T00:00:00`);
     const endTime = Date.parse(`${end}T00:00:00`);
@@ -2731,20 +2716,11 @@ function setupPromptCopy(chartNode, buildPrompt) {
 }
 
 const chartHoverDismissRegistry = new Set();
-const chartSelectionTraces = new WeakMap();
 let chartHoverDismissDocumentReady = false;
 
 function clearPlotlyHover(chartNode) {
   if (chartNode && window.Plotly?.Fx?.unhover) {
     window.Plotly.Fx.unhover(chartNode);
-  }
-
-  if (chartNode) {
-    delete chartNode.dataset.selectedDate;
-    chartNode.classList.remove("chart-selection-active");
-    chartNode.querySelectorAll(".chart-selection-popover, .chart-selection-guide").forEach((element) => {
-      element.hidden = true;
-    });
   }
 }
 
@@ -2756,212 +2732,11 @@ function clearRegisteredPlotlyHovers(exceptChart = null) {
   });
 }
 
-function isInsideChartPlotArea(chartNode, event) {
-  const rect = chartNode?.getBoundingClientRect?.();
-  const plotSize = chartNode?._fullLayout?._size;
-  const dragRect = chartNode?.querySelector?.(".nsewdrag")?.getBoundingClientRect?.();
-
-  if (dragRect) {
-    return (
-      event.clientX >= dragRect.left &&
-      event.clientX <= dragRect.right &&
-      event.clientY >= dragRect.top &&
-      event.clientY <= dragRect.bottom
-    );
-  }
-
-  if (!rect || !plotSize) {
-    return false;
-  }
-
-  const left = rect.left + plotSize.l;
-  const right = left + plotSize.w;
-  const top = rect.top + plotSize.t;
-  const bottom = top + plotSize.h;
-
-  return (
-    event.clientX >= left &&
-    event.clientX <= right &&
-    event.clientY >= top &&
-    event.clientY <= bottom
-  );
-}
-
-function getNearestPlotlyPointRefs(chartNode, dateText) {
-  const targetTime = Date.parse(`${dateText}T00:00:00Z`);
-  const traces = chartSelectionTraces.get(chartNode) || chartNode?.data;
-
-  if (!Number.isFinite(targetTime) || !Array.isArray(traces)) {
-    return [];
-  }
-
-  return traces.flatMap((trace, curveNumber) => {
-    if (!Array.isArray(trace?.x) || trace.x.length === 0) {
-      return [];
-    }
-
-    let nearestPointNumber = -1;
-    let nearestDistance = Number.POSITIVE_INFINITY;
-
-    trace.x.forEach((value, pointNumber) => {
-      const time = Date.parse(value);
-
-      if (!Number.isFinite(time)) {
-        return;
-      }
-
-      const distance = Math.abs(time - targetTime);
-
-      if (distance < nearestDistance) {
-        nearestDistance = distance;
-        nearestPointNumber = pointNumber;
-      }
-    });
-
-    return nearestPointNumber >= 0 ? [{ curveNumber, pointNumber: nearestPointNumber }] : [];
-  });
-}
-
-function getChartSelectionValue(trace, pointNumber) {
-  const customdata = trace?.customdata?.[pointNumber];
-  const formattedValue = Array.isArray(customdata) ? customdata[2] ?? customdata[0] : customdata;
-
-  if (formattedValue !== undefined && formattedValue !== null && formattedValue !== "") {
-    return String(formattedValue);
-  }
-
-  const value = Number(trace?.y?.[pointNumber]);
-  return Number.isFinite(value)
-    ? new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(value)
-    : "--";
-}
-
-function getChartSelectionColor(trace, pointNumber) {
-  const lineColor = trace?.line?.color;
-  const markerColor = Array.isArray(trace?.marker?.color)
-    ? trace.marker.color[pointNumber]
-    : trace?.marker?.color;
-
-  return lineColor || markerColor || getCssColor("--muted", "#64748b");
-}
-
-function renderChartSelectionOverlay(chartNode, dateText, pointRefs, anchor = null) {
-  const traces = chartSelectionTraces.get(chartNode) || chartNode.data || [];
-  let popover = chartNode.querySelector(":scope > .chart-selection-popover");
-  let guide = chartNode.querySelector(":scope > .chart-selection-guide");
-
-  if (!popover) {
-    popover = document.createElement("div");
-    popover.className = "chart-selection-popover";
-    popover.setAttribute("role", "status");
-    popover.setAttribute("aria-live", "polite");
-    chartNode.append(popover);
-  }
-
-  if (!guide) {
-    guide = document.createElement("div");
-    guide.className = "chart-selection-guide";
-    guide.setAttribute("aria-hidden", "true");
-    chartNode.append(guide);
-  }
-
-  popover.replaceChildren();
-  const dateElement = document.createElement("div");
-  dateElement.className = "chart-selection-date";
-  dateElement.textContent = formatFullDate(dateText);
-  popover.append(dateElement);
-
-  const uniqueRefs = [];
-  const seenCurves = new Set();
-  pointRefs.forEach(({ curveNumber, pointNumber }) => {
-    if (seenCurves.has(curveNumber) || !traces[curveNumber]) {
-      return;
-    }
-
-    seenCurves.add(curveNumber);
-    uniqueRefs.push({ curveNumber, pointNumber });
-  });
-
-  uniqueRefs.forEach(({ curveNumber, pointNumber }) => {
-    const trace = traces[curveNumber];
-    const row = document.createElement("div");
-    row.className = "chart-selection-value";
-
-    const swatch = document.createElement("span");
-    swatch.className = "chart-selection-swatch";
-    swatch.style.backgroundColor = getChartSelectionColor(trace, pointNumber);
-
-    const value = document.createElement("span");
-    value.textContent = getChartSelectionValue(trace, pointNumber);
-    row.append(swatch, value);
-    popover.append(row);
-  });
-
-  const rect = chartNode.getBoundingClientRect();
-  const plotSize = chartNode?._fullLayout?._size;
-  const dragRect = chartNode.querySelector(".nsewdrag")?.getBoundingClientRect();
-  let localX = Number.isFinite(anchor?.clientX) ? anchor.clientX - rect.left : rect.width / 2;
-  let localY = Number.isFinite(anchor?.clientY) ? anchor.clientY - rect.top : rect.height / 2;
-  const plotLeft = dragRect ? dragRect.left - rect.left : plotSize?.l ?? 8;
-  const plotRight = dragRect
-    ? dragRect.right - rect.left
-    : plotLeft + (plotSize?.w ?? Math.max(rect.width - plotLeft - 8, 0));
-  const plotTop = dragRect ? dragRect.top - rect.top : plotSize?.t ?? 8;
-  const plotBottom = dragRect
-    ? dragRect.bottom - rect.top
-    : plotTop + (plotSize?.h ?? Math.max(rect.height - plotTop - 8, 0));
-
-  localX = Math.min(Math.max(localX, plotLeft), plotRight);
-  localY = Math.min(Math.max(localY, plotTop), plotBottom);
-  guide.style.left = `${localX}px`;
-  guide.style.top = `${plotTop}px`;
-  guide.style.height = `${Math.max(plotBottom - plotTop, 0)}px`;
-  guide.hidden = false;
-  popover.hidden = false;
-
-  const popoverWidth = popover.offsetWidth || 160;
-  const popoverHeight = popover.offsetHeight || 52;
-  const left = Math.min(Math.max(localX + 12, 8), Math.max(rect.width - popoverWidth - 8, 8));
-  const top = Math.min(Math.max(localY - popoverHeight - 12, 8), Math.max(rect.height - popoverHeight - 8, 8));
-  popover.style.left = `${left}px`;
-  popover.style.top = `${top}px`;
-}
-
-function showPlotlySelection(chartNode, dateText, eventPoints = [], anchor = null) {
-  if (!chartNode || !dateText) {
-    return;
-  }
-
-  chartNode.dataset.selectedDate = dateText;
-  chartNode.dataset.promptDate = dateText;
-  chartNode.classList.add("chart-selection-active");
-
-  const nearestRefs = getNearestPlotlyPointRefs(chartNode, dateText);
-  const pointRefs = [
-    ...nearestRefs,
-    ...eventPoints
-      .filter(
-        (point) =>
-          Number.isFinite(point?.curveNumber) && Number.isFinite(point?.pointNumber),
-      )
-      .map(({ curveNumber, pointNumber }) => ({ curveNumber, pointNumber })),
-  ];
-
-  try {
-    if (window.Plotly?.Fx?.unhover) {
-      window.Plotly.Fx.unhover(chartNode);
-    }
-  } catch {
-    // The custom selection overlay remains usable if Plotly has no active hover layer.
-  }
-
-  renderChartSelectionOverlay(chartNode, dateText, pointRefs, anchor);
-}
-
 function setupChartHoverDismiss(chartNode) {
   if (
     !chartNode ||
     typeof chartNode.addEventListener !== "function" ||
+    typeof chartNode.on !== "function" ||
     chartNode.dataset.hoverDismissReady === "true"
   ) {
     return;
@@ -2970,189 +2745,10 @@ function setupChartHoverDismiss(chartNode) {
   chartNode.dataset.hoverDismissReady = "true";
   chartHoverDismissRegistry.add(chartNode);
 
-  // Plotly can consume a short touch as the start of a pan gesture, so keep
-  // a small native tap fallback for mobile chart selection.
-  let touchTap = null;
-  const tapMoveTolerance = 14;
-  const tapDurationMs = 450;
-
-  function beginTouchTap(clientX, clientY) {
-    if (!isInsideChartPlotArea(chartNode, { clientX, clientY })) {
-      touchTap = null;
-      return;
-    }
-
-    touchTap = {
-      clientX,
-      clientY,
-      startedAt: Date.now(),
-      moved: false,
-    };
-  }
-
-  function updateTouchTap(clientX, clientY) {
-    if (!touchTap) {
-      return;
-    }
-
-    touchTap.moved =
-      touchTap.moved ||
-      Math.hypot(clientX - touchTap.clientX, clientY - touchTap.clientY) > tapMoveTolerance;
-  }
-
-  function finishTouchTap(clientX, clientY) {
-    const tap = touchTap;
-    touchTap = null;
-
-    if (
-      !tap ||
-      tap.moved ||
-      Date.now() - tap.startedAt > tapDurationMs ||
-      !isInsideChartPlotArea(chartNode, { clientX, clientY })
-    ) {
-      return;
-    }
-
-    const dateText = getDateFromChartPointer(chartNode, { clientX, clientY });
-
-    if (dateText) {
-      clearRegisteredPlotlyHovers(chartNode);
-      showPlotlySelection(chartNode, dateText, [], { clientX, clientY });
-    }
-  }
-
-  chartNode.addEventListener(
-    "pointerdown",
-    (event) => {
-      if (event.pointerType === "mouse") {
-        return;
-      }
-
-      beginTouchTap(event.clientX, event.clientY);
-    },
-    { capture: true },
-  );
-
-  chartNode.addEventListener(
-    "pointermove",
-    (event) => {
-      if (event.pointerType !== "mouse") {
-        updateTouchTap(event.clientX, event.clientY);
-      }
-    },
-    { capture: true },
-  );
-
-  chartNode.addEventListener(
-    "pointerup",
-    (event) => {
-      if (event.pointerType !== "mouse") {
-        finishTouchTap(event.clientX, event.clientY);
-      }
-    },
-    { capture: true },
-  );
-
-  chartNode.addEventListener(
-    "pointercancel",
-    (event) => {
-      if (event.pointerType !== "mouse") {
-        touchTap = null;
-      }
-    },
-    { capture: true },
-  );
-
   if (!chartHoverDismissDocumentReady) {
     chartHoverDismissDocumentReady = true;
-    const documentTouchTaps = new Map();
-
-    function findChartAtPoint(clientX, clientY) {
-      return [...chartHoverDismissRegistry].find((chart) =>
-        isInsideChartPlotArea(chart, { clientX, clientY }),
-      );
-    }
-
-    document.addEventListener(
-      "touchstart",
-      (event) => {
-        if (event.touches.length !== 1) {
-          documentTouchTaps.clear();
-          return;
-        }
-
-        const touch = event.touches[0];
-        const chart = findChartAtPoint(touch.clientX, touch.clientY);
-
-        if (chart) {
-          documentTouchTaps.set(chart, {
-            clientX: touch.clientX,
-            clientY: touch.clientY,
-            startedAt: Date.now(),
-            moved: false,
-          });
-        }
-      },
-      { capture: true, passive: true },
-    );
-
-    document.addEventListener(
-      "touchmove",
-      (event) => {
-        if (event.touches.length !== 1) {
-          documentTouchTaps.clear();
-          return;
-        }
-
-        const touch = event.touches[0];
-        documentTouchTaps.forEach((tap) => {
-          tap.moved =
-            tap.moved ||
-            Math.hypot(touch.clientX - tap.clientX, touch.clientY - tap.clientY) > tapMoveTolerance;
-        });
-      },
-      { capture: true, passive: true },
-    );
-
-    document.addEventListener(
-      "touchend",
-      (event) => {
-        const touch = event.changedTouches[0];
-
-        if (!touch) {
-          documentTouchTaps.clear();
-          return;
-        }
-
-        documentTouchTaps.forEach((tap, chart) => {
-          documentTouchTaps.delete(chart);
-
-          if (
-            tap.moved ||
-            Date.now() - tap.startedAt > tapDurationMs ||
-            !isInsideChartPlotArea(chart, { clientX: touch.clientX, clientY: touch.clientY })
-          ) {
-            return;
-          }
-
-          const dateText = getDateFromChartPointer(chart, touch);
-
-          if (dateText) {
-            clearRegisteredPlotlyHovers(chart);
-            showPlotlySelection(chart, dateText, [], touch);
-          }
-        });
-      },
-      { capture: true, passive: true },
-    );
-
-    document.addEventListener("touchcancel", () => documentTouchTaps.clear(), {
-      capture: true,
-      passive: true,
-    });
-
     document.addEventListener("click", (event) => {
-      if (event.target.closest?.(".modebar, .hovertext, .chart-selection-popover")) {
+      if (event.target.closest?.(".modebar, .hovertext")) {
         return;
       }
 
@@ -3161,39 +2757,20 @@ function setupChartHoverDismiss(chartNode) {
     });
   }
 
-  if (typeof chartNode.on === "function") {
-    chartNode.on("plotly_click", (eventData) => {
-      const dateText = normalizePlotlyDate(eventData?.points?.[0]?.x);
-      const pointerEvent = eventData?.event;
-      const anchor = Number.isFinite(pointerEvent?.clientX) && Number.isFinite(pointerEvent?.clientY)
-        ? { clientX: pointerEvent.clientX, clientY: pointerEvent.clientY }
-        : null;
-
-      if (dateText) {
-        clearRegisteredPlotlyHovers(chartNode);
-        showPlotlySelection(chartNode, dateText, eventData.points, anchor);
-      } else {
-        clearPlotlyHover(chartNode);
-      }
-    });
-  }
+  chartNode.on("plotly_click", (eventData) => {
+    if (!eventData?.points?.length) {
+      clearPlotlyHover(chartNode);
+    }
+  });
 
   chartNode.addEventListener("click", (event) => {
-    if (event.target.closest?.(".modebar, .hovertext, .chart-selection-popover")) {
+    if (event.target.closest?.(".modebar, .hovertext")) {
       return;
     }
 
-    if (isInsideChartPlotArea(chartNode, event)) {
-      const dateText = getDateFromChartPointer(chartNode, event);
-
-      if (dateText) {
-        clearRegisteredPlotlyHovers(chartNode);
-        showPlotlySelection(chartNode, dateText, [], event);
-      }
-      return;
+    if (event.target.closest?.(".nsewdrag, .draglayer")) {
+      window.requestAnimationFrame(() => clearPlotlyHover(chartNode));
     }
-
-    clearPlotlyHover(chartNode);
   });
 }
 
@@ -4122,10 +3699,7 @@ function renderChart() {
     return {
       x: rows.map((row) => row.date),
       y: rows.map((row) => row.value),
-      customdata: rawRows.map((row) => {
-        const formattedValue = formatDisplayNumber(row.value, indicator);
-        return [formattedValue, "", formattedValue];
-      }),
+      customdata: rawRows.map((row) => [formatDisplayNumber(row.value, indicator)]),
       type: indicator.chartType || "scatter",
       name: indicator.name,
       yaxis: axisById.get(id),
@@ -4230,7 +3804,6 @@ function renderChart() {
   layout.shapes = getThresholdZoneShapes(selected, layout, axisById);
 
   if (chartElement && window.Plotly) {
-    chartSelectionTraces.set(chartElement, traces);
     Plotly.react(chartElement, traces, layout, getPlotlyConfig()).then(() => {
       setupChartModebar(
         chartElement,
@@ -4468,11 +4041,6 @@ function renderFxChart() {
           minimumFractionDigits: getFxDisplayDecimals(series),
           maximumFractionDigits: getFxDisplayDecimals(series),
         }).format(getFxDisplayValue(row[series.field], series)),
-        "",
-        new Intl.NumberFormat("en-US", {
-          minimumFractionDigits: getFxDisplayDecimals(series),
-          maximumFractionDigits: getFxDisplayDecimals(series),
-        }).format(getFxDisplayValue(row[series.field], series)),
       ]),
       type: series.chartType || "scatter",
       ...(series.chartType === "bar"
@@ -4539,7 +4107,6 @@ function renderFxChart() {
     ...getAxisGroupAnnotations(rightIds, "right", getFxDefinition, theme),
   ];
 
-  chartSelectionTraces.set(fxChartElement, traces);
   Plotly.react(
     fxChartElement,
     traces,
@@ -5093,9 +4660,6 @@ function createComparisonSection(config) {
         customdata: rawRows.map((row) => [
           formatDisplayNumber(row.originalValue ?? row.value, indicator),
           row.baseDate ?? "",
-          state.normalized
-            ? formatDisplayNumber(row.value, { displayDecimals: 2 })
-            : formatDisplayNumber(row.originalValue ?? row.value, indicator),
         ]),
         type: indicator.chartType || "scatter",
         name: indicator.name,
@@ -5266,7 +4830,6 @@ function createComparisonSection(config) {
     ];
 
     if (elements.chart && window.Plotly) {
-      chartSelectionTraces.set(elements.chart, traces);
       Plotly.react(elements.chart, traces, layout, getPlotlyConfig()).then(() => {
         setupChartModebar(
           elements.chart,
@@ -5497,25 +5060,16 @@ function resizeVisibleCharts() {
     return;
   }
 
-  const isDisplayed = (chart) => {
-    if (!chart) {
-      return false;
-    }
-
-    const rect = chart.getBoundingClientRect();
-    return getComputedStyle(chart).display !== "none" && rect.width > 0 && rect.height > 0;
-  };
-
-  if (isDisplayed(chartElement)) {
+  if (chartElement) {
     Plotly.Plots.resize(chartElement);
   }
 
-  if (isDisplayed(fxChartElement)) {
+  if (fxChartElement) {
     Plotly.Plots.resize(fxChartElement);
   }
 
   comparisonSections.forEach((section) => {
-    if (section.loaded && isDisplayed(section.chartElement)) {
+    if (section.loaded && section.chartElement) {
       Plotly.Plots.resize(section.chartElement);
     }
   });
@@ -5533,45 +5087,11 @@ function centerMobileChartPane(track) {
     return;
   }
 
-  const target = chart || chartPane;
-  const rect = target.getBoundingClientRect();
-  const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-  const targetTop = Math.max(
-    0,
-    window.scrollY + rect.top - Math.max((viewportHeight - rect.height) / 2, 0),
-  );
-
-  window.scrollTo({ top: targetTop, behavior: "smooth" });
-}
-
-function syncChartLandscapeRequirement() {
-  const chartPaneActive = Boolean(document.querySelector('[data-mobile-pane="charts"].active'));
-  const requiresLandscape =
-    usesMobilePaneLayout() &&
-    chartPaneActive &&
-    window.matchMedia("(orientation: portrait)").matches;
-
-  document.body.classList.toggle("chart-landscape-required", requiresLandscape);
-}
-
-function requestChartLandscape() {
-  syncChartLandscapeRequirement();
-
-  const orientation = window.screen?.orientation;
-  if (orientation && typeof orientation.lock === "function") {
-    orientation.lock("landscape").catch(() => {
-      // iOS Safari may not expose orientation locking outside an installed app.
-    });
-  }
-}
-
-function releaseChartLandscape() {
-  document.body.classList.remove("chart-landscape-required");
-
-  const orientation = window.screen?.orientation;
-  if (orientation && typeof orientation.unlock === "function") {
-    orientation.unlock();
-  }
+  (chart || chartPane).scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+    inline: "nearest",
+  });
 }
 
 function centerActiveLandscapeChart() {
@@ -5604,12 +5124,6 @@ function setMobileView(group, view) {
     pane.classList.toggle("active", pane.dataset.mobilePane === view);
   });
 
-  if (view === "charts") {
-    requestChartLandscape();
-  } else {
-    releaseChartLandscape();
-  }
-
   mobileViewButtons
     .filter((button) => button.dataset.mobileViewButton === group)
     .forEach((button) => {
@@ -5626,8 +5140,6 @@ function setMobileView(group, view) {
       });
     });
   }
-
-  syncChartLandscapeRequirement();
 }
 
 function validateMacroScale() {
@@ -6232,8 +5744,6 @@ function activateTab(tab) {
     panel.classList.toggle("active", panel.dataset.tabPanel === tab);
   });
 
-  syncChartLandscapeRequirement();
-
   if (tab === "fx" && fxData.length === 0) {
     loadFxData().then(renderFx).catch((error) => setFxText("fx-updated", error.message));
   }
@@ -6476,14 +5986,10 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () 
 });
 
 window.matchMedia("(orientation: landscape)").addEventListener("change", (event) => {
-  syncChartLandscapeRequirement();
-
   if (event.matches) {
     window.setTimeout(centerActiveLandscapeChart, 180);
   }
 });
-
-syncChartLandscapeRequirement();
 
 loadIndicatorData()
   .then(() => {
