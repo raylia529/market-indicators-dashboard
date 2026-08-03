@@ -1340,7 +1340,12 @@ function setupChartModebar(chartNode, logScaleInput = null, normalizedInput = nu
   const control = logScaleInput?.closest(".toggle-pill");
   if (control) {
     control.classList.add("modebar-toggle-control", "modebar-log-control");
-    modebarGroup.append(control);
+    if (normalizedInput) {
+      control.classList.add("modebar-log-control-hidden");
+      control.hidden = true;
+    } else {
+      modebarGroup.append(control);
+    }
   }
 
   const normalizedControl = normalizedInput?.closest(".toggle-pill");
@@ -3490,7 +3495,7 @@ function getAxisGroupAnnotations(ids, side, getDefinition, theme) {
 function getHorizontalAxisMargins(hasRightAxis, hasLeftAxis = true) {
   const sideMargin = usesTouchChartMode() ? 100 : 110;
   return {
-    t: 72,
+    t: usesTouchChartMode() ? 42 : 48,
     r: hasRightAxis ? sideMargin : 22,
     b: 92,
     l: hasLeftAxis ? sideMargin : 22,
@@ -4168,6 +4173,9 @@ function createComparisonSection(config) {
   }
   if (elements.logScaleInput) {
     elements.logScaleInput.disabled = defaultNormalized;
+    if (elements.normalizedInput) {
+      elements.logScaleInput.closest(".toggle-pill")?.setAttribute("hidden", "");
+    }
   }
 
   function getLocalIndicator(id) {
