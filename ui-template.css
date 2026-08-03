@@ -1132,3 +1132,164 @@ body {
     color: var(--muted) !important;
   }
 }
+
+/* Keep the range and chart controls in one stable toolbar. */
+.chart-toolbar,
+.fx-controls {
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.chart-toolbar > .range-selector,
+.fx-controls > .range-selector {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  margin: 0;
+}
+
+.chart-actions[hidden] {
+  display: none !important;
+}
+
+/* Phone orientation is the view switch: portrait shows cards, landscape shows charts. */
+@media (max-width: 900px) {
+  .mobile-view-switch {
+    display: none !important;
+  }
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+  .dashboard-shell {
+    width: 100%;
+    max-width: none;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+  }
+
+  .dashboard-section {
+    padding-right: 0;
+    padding-left: 0;
+  }
+
+  .mobile-swipe-track {
+    margin: 0;
+  }
+
+  .mobile-pane {
+    padding-right: 0;
+    padding-left: 0;
+  }
+
+  .chart-toolbar,
+  .fx-controls {
+    gap: 6px;
+    margin: 0 0 8px;
+  }
+
+  #indicator-chart,
+  #fx-chart,
+  .comparison-chart {
+    height: calc(100svh - 60px);
+    height: calc(100dvh - 60px);
+    min-height: 240px;
+    margin-top: 0;
+  }
+}
+
+/* Plotly may rewrite the outer modebar class after a redraw; its toolbar position is stable. */
+:is(.chart-toolbar, .fx-controls) > .modebar {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  display: flex !important;
+  flex: 0 0 auto;
+  align-items: center;
+  float: none !important;
+  margin-left: auto;
+  transform: none !important;
+  background: transparent !important;
+}
+
+:is(.chart-toolbar, .fx-controls) > .modebar .dashboard-modebar-group {
+  display: inline-flex !important;
+  align-items: stretch;
+  gap: 0 !important;
+  float: none !important;
+  margin: 0;
+  padding: 0 !important;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+:is(.chart-toolbar, .fx-controls) > .modebar .modebar-btn,
+:is(.chart-toolbar, .fx-controls) > .modebar .modebar-toggle-control {
+  position: relative;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 112px !important;
+  min-width: 112px;
+  height: 32px !important;
+  margin: 0;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  padding: 0 10px !important;
+  background: var(--surface) !important;
+  color: var(--muted) !important;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  box-shadow: none;
+}
+
+:is(.chart-toolbar, .fx-controls) > .modebar .modebar-toggle-control input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+:is(.chart-toolbar, .fx-controls) > .modebar .modebar-button-label {
+  display: block;
+  color: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+}
+
+:is(.chart-toolbar, .fx-controls) > .modebar .modebar-group > :last-child {
+  border-right: 0;
+}
+
+:is(.chart-toolbar, .fx-controls) > .modebar .modebar-btn:hover,
+:is(.chart-toolbar, .fx-controls) > .modebar .modebar-toggle-control:hover,
+:is(.chart-toolbar, .fx-controls) > .modebar .modebar-btn:focus-visible,
+:is(.chart-toolbar, .fx-controls) > .modebar .modebar-toggle-control:focus-within {
+  background: var(--surface-soft) !important;
+  color: var(--blue-strong) !important;
+  outline: none;
+}
+
+:is(.chart-toolbar, .fx-controls) > .modebar .modebar-toggle-control:has(input:checked) {
+  background: var(--blue-soft) !important;
+  color: var(--blue-strong) !important;
+}
+
+@media (max-width: 760px) {
+  :is(.chart-toolbar, .fx-controls) > .modebar .modebar-btn,
+  :is(.chart-toolbar, .fx-controls) > .modebar .modebar-toggle-control {
+    width: 98px !important;
+    min-width: 98px;
+  }
+}

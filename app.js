@@ -1252,6 +1252,10 @@ function usesMobilePaneLayout() {
   ).matches;
 }
 
+function isMobileLandscape() {
+  return usesMobilePaneLayout() && window.matchMedia("(orientation: landscape)").matches;
+}
+
 function getChartDragMode() {
   return usesTouchChartMode() ? "pan" : "zoom";
 }
@@ -1300,7 +1304,8 @@ function setupChartModebar(chartNode, logScaleInput = null, normalizedInput = nu
     return;
   }
 
-  const modebar = chartNode.querySelector(".modebar");
+  const toolbar = chartNode.closest(".chart-pane")?.querySelector(".chart-toolbar, .fx-controls");
+  const modebar = chartNode.querySelector(".modebar") || toolbar?.querySelector(".modebar");
   if (!modebar) {
     return;
   }
@@ -1326,7 +1331,10 @@ function setupChartModebar(chartNode, logScaleInput = null, normalizedInput = nu
   resetLabel.className = "modebar-button-label";
   resetLabel.textContent = "Reset scale";
   resetButton.append(resetLabel);
-  resetButton.addEventListener("click", () => resetChartToInitialRanges(chartNode));
+  resetButton.addEventListener("click", () => {
+    resetChartToInitialRanges(chartNode);
+    requestAnimationFrame(() => centerMobileChartPane(chartNode.closest("[data-mobile-track]")));
+  });
   modebarGroup.append(resetButton);
 
   const control = logScaleInput?.closest(".toggle-pill");
@@ -1347,6 +1355,23 @@ function setupChartModebar(chartNode, logScaleInput = null, normalizedInput = nu
   }
 
   modebar.replaceChildren(modebarGroup);
+  modebar.classList.add("dashboard-modebar");
+
+  if (toolbar) {
+    const previousModebar = toolbar.querySelector(".modebar");
+    if (previousModebar && previousModebar !== modebar) {
+      previousModebar.remove();
+    }
+
+    const chartActions = toolbar.querySelector(".chart-actions");
+    if (chartActions) {
+      chartActions.hidden = true;
+    }
+
+    toolbar.append(modebar);
+  }
+
+  requestAnimationFrame(() => centerActiveLandscapeChart());
 }
 
 function getCssColor(name, fallback) {
@@ -4999,7 +5024,7 @@ function resizeVisibleCharts() {
 }
 
 function centerMobileChartPane(track) {
-  if (!usesMobilePaneLayout()) {
+  if (!track || !isMobileLandscape()) {
     return;
   }
 
@@ -5036,7 +5061,7 @@ function centerActiveLandscapeChart() {
   });
 }
 
-function setMobileView(group, view) {
+function setMobileView(group, view, { center = true } = {}) {
   const track = document.querySelector(`[data-mobile-track="${group}"]`);
 
   if (!track) {
@@ -5055,7 +5080,7 @@ function setMobileView(group, view) {
       button.setAttribute("aria-pressed", String(active));
     });
 
-  if (view === "charts") {
+  if (view === "charts" && center && isMobileLandscape()) {
     requestAnimationFrame(() => {
       resizeVisibleCharts();
       requestAnimationFrame(() => {
@@ -5064,6 +5089,31 @@ function setMobileView(group, view) {
     });
   }
 }
+
+function syncMobileViewsForOrientation({ center = true, force = false } = {}) {
+  const mobileLayout = usesMobilePaneLayout();
+  const nextView = isMobileLandscape() ? "charts" : "cards";
+  const layoutKey = mobileLayout ? nextView : "desktop";
+
+  if (!force && syncMobileViewsForOrientation.lastLayoutKey === layoutKey) {
+    return;
+  }
+
+  syncMobileViewsForOrientation.lastLayoutKey = layoutKey;
+  if (!mobileLayout) {
+    return;
+  }
+
+  document.querySelectorAll("[data-mobile-track]").forEach((track) => {
+    setMobileView(track.dataset.mobileTrack, nextView, { center: false });
+  });
+
+  if (nextView === "charts" && center) {
+    centerActiveLandscapeChart();
+  }
+}
+
+syncMobileViewsForOrientation.lastLayoutKey = null;
 
 function validateMacroScale() {
   if (macroScale === "log" && !selectedRowsAllowLog()) {
@@ -5654,6 +5704,7 @@ function setDashboardRange(range) {
     renderFxChart();
   }
   comparisonSections.forEach((section) => section.setRange(sharedRange));
+  requestAnimationFrame(() => centerActiveLandscapeChart());
 }
 
 function activateTab(tab) {
@@ -5676,6 +5727,8 @@ function activateTab(tab) {
 
   requestAnimationFrame(() => {
     resizeVisibleCharts();
+    syncMobileViewsForOrientation({ center: false, force: true });
+    centerActiveLandscapeChart();
   });
 }
 
@@ -5908,15 +5961,18 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () 
   comparisonSections.filter((section) => section.loaded).forEach((section) => section.renderChart());
 });
 
-window.matchMedia("(orientation: landscape)").addEventListener("change", (event) => {
-  if (event.matches) {
-    window.setTimeout(centerActiveLandscapeChart, 180);
-  }
+window.matchMedia("(orientation: landscape)").addEventListener("change", () => {
+  window.setTimeout(() => {
+    syncMobileViewsForOrientation({ center: true, force: true });
+  }, 120);
 });
+
+syncMobileViewsForOrientation({ center: false, force: true });
 
 loadIndicatorData()
   .then(() => {
     renderAll();
+    syncMobileViewsForOrientation({ center: true, force: true });
   })
   .catch((error) => {
     indicatorGrid.innerHTML = `<p class="error-message">${error.message}</p>`;
