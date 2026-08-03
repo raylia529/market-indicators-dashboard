@@ -14,83 +14,83 @@
   ],
   "previous_meeting_date": "2026-07-29",
   "observation_date": "2026-08-03",
-  "expected_target_upper_rate": 3.9067,
-  "expected_target_midpoint_rate": 3.7818,
+  "expected_target_upper_rate": 3.9118,
+  "expected_target_midpoint_rate": 3.7868,
   "probability_sum": 1,
   "probabilities": [
     {
       "target_range": "3.50-3.75",
-      "probability": 0.373
+      "probability": 0.353
     },
     {
       "target_range": "3.75-4.00",
-      "probability": 0.627
+      "probability": 0.647
     }
   ],
   "future_curve": [
     {
       "meeting_date": "2026-09-16",
       "observation_date": "2026-08-03",
-      "expected_target_upper_rate": 3.9067,
-      "expected_target_midpoint_rate": 3.7818
+      "expected_target_upper_rate": 3.9118,
+      "expected_target_midpoint_rate": 3.7868
     },
     {
       "meeting_date": "2026-10-28",
       "observation_date": "2026-08-03",
-      "expected_target_upper_rate": 3.9788,
-      "expected_target_midpoint_rate": 3.8538
+      "expected_target_upper_rate": 3.9837,
+      "expected_target_midpoint_rate": 3.8587
     },
     {
       "meeting_date": "2026-12-09",
       "observation_date": "2026-08-03",
-      "expected_target_upper_rate": 4.0885,
-      "expected_target_midpoint_rate": 3.9635
+      "expected_target_upper_rate": 4.0935,
+      "expected_target_midpoint_rate": 3.9685
     },
     {
       "meeting_date": "2027-01-27",
       "observation_date": "2026-08-03",
-      "expected_target_upper_rate": 4.1289,
-      "expected_target_midpoint_rate": 4.0039
+      "expected_target_upper_rate": 4.1362,
+      "expected_target_midpoint_rate": 4.0112
     },
     {
       "meeting_date": "2027-03-17",
       "observation_date": "2026-08-03",
-      "expected_target_upper_rate": 4.207,
-      "expected_target_midpoint_rate": 4.082
+      "expected_target_upper_rate": 4.2048,
+      "expected_target_midpoint_rate": 4.0798
     },
     {
       "meeting_date": "2027-04-28",
       "observation_date": "2026-08-03",
-      "expected_target_upper_rate": 4.229,
-      "expected_target_midpoint_rate": 4.104
+      "expected_target_upper_rate": 4.228,
+      "expected_target_midpoint_rate": 4.103
     },
     {
       "meeting_date": "2027-06-09",
       "observation_date": "2026-08-03",
-      "expected_target_upper_rate": 4.2398,
-      "expected_target_midpoint_rate": 4.1148
+      "expected_target_upper_rate": 4.24,
+      "expected_target_midpoint_rate": 4.115
     },
     {
       "meeting_date": "2027-07-28",
       "observation_date": "2026-08-03",
-      "expected_target_upper_rate": 4.2345,
-      "expected_target_midpoint_rate": 4.1095
+      "expected_target_upper_rate": 4.2322,
+      "expected_target_midpoint_rate": 4.1072
     },
     {
       "meeting_date": "2027-09-15",
       "observation_date": "2026-08-03",
-      "expected_target_upper_rate": 4.2072,
-      "expected_target_midpoint_rate": 4.0822
+      "expected_target_upper_rate": 4.2045,
+      "expected_target_midpoint_rate": 4.0795
     },
     {
       "meeting_date": "2027-10-27",
       "observation_date": "2026-08-03",
-      "expected_target_upper_rate": 4.1886,
-      "expected_target_midpoint_rate": 4.0636
+      "expected_target_upper_rate": 4.187,
+      "expected_target_midpoint_rate": 4.062
     }
   ],
   "source_name": "CME FedWatch",
   "source_url": "https://www.cmegroup.com/fedwatch",
   "method": "Probability-weighted target-range upper limit",
-  "source_checked_at": "2026-08-03T13:16:22.066Z"
+  "source_checked_at": "2026-08-03T23:17:04.648Z"
 }
