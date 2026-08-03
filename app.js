@@ -2716,11 +2716,20 @@ function setupPromptCopy(chartNode, buildPrompt) {
 }
 
 const chartHoverDismissRegistry = new Set();
+const chartSelectionTraces = new WeakMap();
 let chartHoverDismissDocumentReady = false;
 
 function clearPlotlyHover(chartNode) {
   if (chartNode && window.Plotly?.Fx?.unhover) {
     window.Plotly.Fx.unhover(chartNode);
+  }
+
+  if (chartNode) {
+    delete chartNode.dataset.selectedDate;
+    chartNode.classList.remove("chart-selection-active");
+    chartNode.querySelectorAll(".chart-selection-popover, .chart-selection-guide").forEach((element) => {
+      element.hidden = true;
+    });
   }
 }
 
@@ -2730,6 +2739,208 @@ function clearRegisteredPlotlyHovers(exceptChart = null) {
       clearPlotlyHover(chartNode);
     }
   });
+}
+
+function isInsideChartPlotArea(chartNode, event) {
+  const rect = chartNode?.getBoundingClientRect?.();
+  const plotSize = chartNode?._fullLayout?._size;
+  const dragRect = chartNode?.querySelector?.(".nsewdrag")?.getBoundingClientRect?.();
+
+  if (dragRect) {
+    return (
+      event.clientX >= dragRect.left &&
+      event.clientX <= dragRect.right &&
+      event.clientY >= dragRect.top &&
+      event.clientY <= dragRect.bottom
+    );
+  }
+
+  if (!rect || !plotSize) {
+    return false;
+  }
+
+  const left = rect.left + plotSize.l;
+  const right = left + plotSize.w;
+  const top = rect.top + plotSize.t;
+  const bottom = top + plotSize.h;
+
+  return (
+    event.clientX >= left &&
+    event.clientX <= right &&
+    event.clientY >= top &&
+    event.clientY <= bottom
+  );
+}
+
+function getNearestPlotlyPointRefs(chartNode, dateText) {
+  const targetTime = Date.parse(`${dateText}T00:00:00Z`);
+  const traces = chartSelectionTraces.get(chartNode) || chartNode?.data;
+
+  if (!Number.isFinite(targetTime) || !Array.isArray(traces)) {
+    return [];
+  }
+
+  return traces.flatMap((trace, curveNumber) => {
+    if (!Array.isArray(trace?.x) || trace.x.length === 0) {
+      return [];
+    }
+
+    let nearestPointNumber = -1;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+
+    trace.x.forEach((value, pointNumber) => {
+      const time = Date.parse(value);
+
+      if (!Number.isFinite(time)) {
+        return;
+      }
+
+      const distance = Math.abs(time - targetTime);
+
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestPointNumber = pointNumber;
+      }
+    });
+
+    return nearestPointNumber >= 0 ? [{ curveNumber, pointNumber: nearestPointNumber }] : [];
+  });
+}
+
+function getChartSelectionValue(trace, pointNumber) {
+  const customdata = trace?.customdata?.[pointNumber];
+  const formattedValue = Array.isArray(customdata) ? customdata[2] ?? customdata[0] : customdata;
+
+  if (formattedValue !== undefined && formattedValue !== null && formattedValue !== "") {
+    return String(formattedValue);
+  }
+
+  const value = Number(trace?.y?.[pointNumber]);
+  return Number.isFinite(value)
+    ? new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(value)
+    : "--";
+}
+
+function getChartSelectionColor(trace, pointNumber) {
+  const lineColor = trace?.line?.color;
+  const markerColor = Array.isArray(trace?.marker?.color)
+    ? trace.marker.color[pointNumber]
+    : trace?.marker?.color;
+
+  return lineColor || markerColor || getCssColor("--muted", "#64748b");
+}
+
+function renderChartSelectionOverlay(chartNode, dateText, pointRefs, anchor = null) {
+  const traces = chartSelectionTraces.get(chartNode) || chartNode.data || [];
+  let popover = chartNode.querySelector(":scope > .chart-selection-popover");
+  let guide = chartNode.querySelector(":scope > .chart-selection-guide");
+
+  if (!popover) {
+    popover = document.createElement("div");
+    popover.className = "chart-selection-popover";
+    popover.setAttribute("role", "status");
+    popover.setAttribute("aria-live", "polite");
+    chartNode.append(popover);
+  }
+
+  if (!guide) {
+    guide = document.createElement("div");
+    guide.className = "chart-selection-guide";
+    guide.setAttribute("aria-hidden", "true");
+    chartNode.append(guide);
+  }
+
+  popover.replaceChildren();
+  const dateElement = document.createElement("div");
+  dateElement.className = "chart-selection-date";
+  dateElement.textContent = formatFullDate(dateText);
+  popover.append(dateElement);
+
+  const uniqueRefs = [];
+  const seenCurves = new Set();
+  pointRefs.forEach(({ curveNumber, pointNumber }) => {
+    if (seenCurves.has(curveNumber) || !traces[curveNumber]) {
+      return;
+    }
+
+    seenCurves.add(curveNumber);
+    uniqueRefs.push({ curveNumber, pointNumber });
+  });
+
+  uniqueRefs.forEach(({ curveNumber, pointNumber }) => {
+    const trace = traces[curveNumber];
+    const row = document.createElement("div");
+    row.className = "chart-selection-value";
+
+    const swatch = document.createElement("span");
+    swatch.className = "chart-selection-swatch";
+    swatch.style.backgroundColor = getChartSelectionColor(trace, pointNumber);
+
+    const value = document.createElement("span");
+    value.textContent = getChartSelectionValue(trace, pointNumber);
+    row.append(swatch, value);
+    popover.append(row);
+  });
+
+  const rect = chartNode.getBoundingClientRect();
+  const plotSize = chartNode?._fullLayout?._size;
+  const dragRect = chartNode.querySelector(".nsewdrag")?.getBoundingClientRect();
+  let localX = Number.isFinite(anchor?.clientX) ? anchor.clientX - rect.left : rect.width / 2;
+  let localY = Number.isFinite(anchor?.clientY) ? anchor.clientY - rect.top : rect.height / 2;
+  const plotLeft = dragRect ? dragRect.left - rect.left : plotSize?.l ?? 8;
+  const plotRight = dragRect
+    ? dragRect.right - rect.left
+    : plotLeft + (plotSize?.w ?? Math.max(rect.width - plotLeft - 8, 0));
+  const plotTop = dragRect ? dragRect.top - rect.top : plotSize?.t ?? 8;
+  const plotBottom = dragRect
+    ? dragRect.bottom - rect.top
+    : plotTop + (plotSize?.h ?? Math.max(rect.height - plotTop - 8, 0));
+
+  localX = Math.min(Math.max(localX, plotLeft), plotRight);
+  localY = Math.min(Math.max(localY, plotTop), plotBottom);
+  guide.style.left = `${localX}px`;
+  guide.style.top = `${plotTop}px`;
+  guide.style.height = `${Math.max(plotBottom - plotTop, 0)}px`;
+  guide.hidden = false;
+  popover.hidden = false;
+
+  const popoverWidth = popover.offsetWidth || 160;
+  const popoverHeight = popover.offsetHeight || 52;
+  const left = Math.min(Math.max(localX + 12, 8), Math.max(rect.width - popoverWidth - 8, 8));
+  const top = Math.min(Math.max(localY - popoverHeight - 12, 8), Math.max(rect.height - popoverHeight - 8, 8));
+  popover.style.left = `${left}px`;
+  popover.style.top = `${top}px`;
+}
+
+function showPlotlySelection(chartNode, dateText, eventPoints = [], anchor = null) {
+  if (!chartNode || !dateText) {
+    return;
+  }
+
+  chartNode.dataset.selectedDate = dateText;
+  chartNode.dataset.promptDate = dateText;
+  chartNode.classList.add("chart-selection-active");
+
+  const nearestRefs = getNearestPlotlyPointRefs(chartNode, dateText);
+  const pointRefs = [
+    ...nearestRefs,
+    ...eventPoints
+      .filter(
+        (point) =>
+          Number.isFinite(point?.curveNumber) && Number.isFinite(point?.pointNumber),
+      )
+      .map(({ curveNumber, pointNumber }) => ({ curveNumber, pointNumber })),
+  ];
+
+  try {
+    if (window.Plotly?.Fx?.unhover) {
+      window.Plotly.Fx.unhover(chartNode);
+    }
+  } catch {
+    // The custom selection overlay can still be shown without Plotly hover state.
+  }
+
+  renderChartSelectionOverlay(chartNode, dateText, pointRefs, anchor);
 }
 
 function setupChartHoverDismiss(chartNode) {
@@ -2745,10 +2956,142 @@ function setupChartHoverDismiss(chartNode) {
   chartNode.dataset.hoverDismissReady = "true";
   chartHoverDismissRegistry.add(chartNode);
 
+  let touchTap = null;
+  const tapMoveTolerance = 14;
+  const tapDurationMs = 450;
+
+  function beginTouchTap(clientX, clientY) {
+    if (!isInsideChartPlotArea(chartNode, { clientX, clientY })) {
+      touchTap = null;
+      return;
+    }
+
+    touchTap = {
+      clientX,
+      clientY,
+      startedAt: Date.now(),
+      moved: false,
+    };
+  }
+
+  function updateTouchTap(clientX, clientY) {
+    if (!touchTap) {
+      return;
+    }
+
+    touchTap.moved =
+      touchTap.moved ||
+      Math.hypot(clientX - touchTap.clientX, clientY - touchTap.clientY) > tapMoveTolerance;
+  }
+
+  function finishTouchTap(clientX, clientY) {
+    const tap = touchTap;
+    touchTap = null;
+
+    if (
+      !tap ||
+      tap.moved ||
+      Date.now() - tap.startedAt > tapDurationMs ||
+      !isInsideChartPlotArea(chartNode, { clientX, clientY })
+    ) {
+      return;
+    }
+
+    const dateText = getDateFromChartPointer(chartNode, { clientX, clientY });
+
+    if (dateText) {
+      clearRegisteredPlotlyHovers(chartNode);
+      showPlotlySelection(chartNode, dateText, [], { clientX, clientY });
+    }
+  }
+
+  chartNode.addEventListener(
+    "pointerdown",
+    (event) => {
+      if (event.pointerType !== "mouse") {
+        beginTouchTap(event.clientX, event.clientY);
+      }
+    },
+    { capture: true },
+  );
+
+  chartNode.addEventListener(
+    "pointermove",
+    (event) => {
+      if (event.pointerType !== "mouse") {
+        updateTouchTap(event.clientX, event.clientY);
+      }
+    },
+    { capture: true },
+  );
+
+  chartNode.addEventListener(
+    "pointerup",
+    (event) => {
+      if (event.pointerType !== "mouse") {
+        finishTouchTap(event.clientX, event.clientY);
+      }
+    },
+    { capture: true },
+  );
+
+  chartNode.addEventListener(
+    "pointercancel",
+    (event) => {
+      if (event.pointerType !== "mouse") {
+        touchTap = null;
+      }
+    },
+    { capture: true },
+  );
+
+  chartNode.addEventListener(
+    "touchstart",
+    (event) => {
+      if (event.touches.length === 1 && !touchTap) {
+        const touch = event.touches[0];
+        beginTouchTap(touch.clientX, touch.clientY);
+      } else if (event.touches.length !== 1) {
+        touchTap = null;
+      }
+    },
+    { capture: true, passive: true },
+  );
+
+  chartNode.addEventListener(
+    "touchmove",
+    (event) => {
+      if (event.touches.length === 1) {
+        const touch = event.touches[0];
+        updateTouchTap(touch.clientX, touch.clientY);
+      } else {
+        touchTap = null;
+      }
+    },
+    { capture: true, passive: true },
+  );
+
+  chartNode.addEventListener(
+    "touchend",
+    (event) => {
+      const touch = event.changedTouches[0];
+      if (touch) {
+        finishTouchTap(touch.clientX, touch.clientY);
+      } else {
+        touchTap = null;
+      }
+    },
+    { capture: true, passive: true },
+  );
+
+  chartNode.addEventListener("touchcancel", () => {
+    touchTap = null;
+  }, { capture: true, passive: true });
+
   if (!chartHoverDismissDocumentReady) {
     chartHoverDismissDocumentReady = true;
     document.addEventListener("click", (event) => {
-      if (event.target.closest?.(".modebar, .hovertext")) {
+      if (event.target.closest?.(".modebar, .hovertext, .chart-selection-popover")) {
         return;
       }
 
@@ -2758,19 +3101,36 @@ function setupChartHoverDismiss(chartNode) {
   }
 
   chartNode.on("plotly_click", (eventData) => {
-    if (!eventData?.points?.length) {
+    const dateText = normalizePlotlyDate(eventData?.points?.[0]?.x);
+    const pointerEvent = eventData?.event;
+    const anchor = Number.isFinite(pointerEvent?.clientX) && Number.isFinite(pointerEvent?.clientY)
+      ? { clientX: pointerEvent.clientX, clientY: pointerEvent.clientY }
+      : null;
+
+    if (dateText) {
+      clearRegisteredPlotlyHovers(chartNode);
+      showPlotlySelection(chartNode, dateText, eventData.points, anchor);
+    } else {
       clearPlotlyHover(chartNode);
     }
   });
 
   chartNode.addEventListener("click", (event) => {
-    if (event.target.closest?.(".modebar, .hovertext")) {
+    if (event.target.closest?.(".modebar, .hovertext, .chart-selection-popover")) {
       return;
     }
 
-    if (event.target.closest?.(".nsewdrag, .draglayer")) {
-      window.requestAnimationFrame(() => clearPlotlyHover(chartNode));
+    if (isInsideChartPlotArea(chartNode, event)) {
+      const dateText = getDateFromChartPointer(chartNode, event);
+
+      if (dateText) {
+        clearRegisteredPlotlyHovers(chartNode);
+        showPlotlySelection(chartNode, dateText, [], event);
+      }
+      return;
     }
+
+    clearPlotlyHover(chartNode);
   });
 }
 
@@ -3804,6 +4164,7 @@ function renderChart() {
   layout.shapes = getThresholdZoneShapes(selected, layout, axisById);
 
   if (chartElement && window.Plotly) {
+    chartSelectionTraces.set(chartElement, traces);
     Plotly.react(chartElement, traces, layout, getPlotlyConfig()).then(() => {
       setupChartModebar(
         chartElement,
@@ -4107,6 +4468,7 @@ function renderFxChart() {
     ...getAxisGroupAnnotations(rightIds, "right", getFxDefinition, theme),
   ];
 
+  chartSelectionTraces.set(fxChartElement, traces);
   Plotly.react(
     fxChartElement,
     traces,
@@ -4830,6 +5192,7 @@ function createComparisonSection(config) {
     ];
 
     if (elements.chart && window.Plotly) {
+      chartSelectionTraces.set(elements.chart, traces);
       Plotly.react(elements.chart, traces, layout, getPlotlyConfig()).then(() => {
         setupChartModebar(
           elements.chart,
