@@ -611,9 +611,73 @@ body {
     border-right: 0;
   }
 
-  .range-button:nth-last-child(-n + 4) {
+.range-button:nth-last-child(-n + 4) {
     border-bottom: 0;
   }
+}
+
+#indicator-chart,
+#fx-chart,
+.comparison-chart {
+  position: relative;
+}
+
+.chart-selection-popover {
+  position: absolute;
+  z-index: 12;
+  min-width: 86px;
+  max-width: min(180px, calc(100% - 16px));
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  box-shadow: 0 6px 16px rgba(23, 35, 45, 0.16);
+  color: var(--ink);
+  font-size: 0.72rem;
+  font-weight: 750;
+  line-height: 1.25;
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.chart-selection-popover[hidden],
+.chart-selection-guide[hidden] {
+  display: none !important;
+}
+
+.chart-selection-date {
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.chart-selection-value {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 16px;
+}
+
+.chart-selection-swatch {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.chart-selection-guide {
+  position: absolute;
+  z-index: 11;
+  width: 0;
+  border-left: 1px dashed var(--chart-guide);
+  opacity: 0.58;
+  pointer-events: none;
+}
+
+.chart-selection-active .hoverlayer .hovertext {
+  visibility: hidden;
 }
 
 /* Concept refinement: one segmented-control language across tabs, chart actions, and glossary. */

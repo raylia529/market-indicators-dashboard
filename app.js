@@ -1282,6 +1282,283 @@ function getPlotlyConfig() {
   };
 }
 
+const chartDetailRegistry = new Set();
+const chartDetailTraces = new WeakMap();
+let chartDetailDocumentReady = false;
+
+function getCompactHoverTemplate(color, valueExpression) {
+  const safeColor = /^#[0-9a-f]{6}$/i.test(color || "") ? color : "#64748b";
+  return `<span style="color:${safeColor}">&#9679;</span> ${valueExpression}<extra></extra>`;
+}
+
+function clearChartDetail(chartNode) {
+  if (!chartNode) {
+    return;
+  }
+
+  if (window.Plotly?.Fx?.unhover) {
+    try {
+      window.Plotly.Fx.unhover(chartNode);
+    } catch {
+      // Plotly can finish rebuilding a chart between the outside tap and this call.
+    }
+  }
+
+  chartNode.classList.remove("chart-selection-active");
+  chartNode.querySelectorAll(".chart-selection-popover, .chart-selection-guide").forEach((element) => {
+    element.hidden = true;
+  });
+  delete chartNode.dataset.selectedDate;
+}
+
+function clearOtherChartDetails(activeChart) {
+  chartDetailRegistry.forEach((chartNode) => {
+    if (chartNode !== activeChart) {
+      clearChartDetail(chartNode);
+    }
+  });
+}
+
+function isInsideChartPlotArea(chartNode, event) {
+  const dragRect = chartNode?.querySelector?.(".nsewdrag")?.getBoundingClientRect?.();
+
+  if (dragRect) {
+    return (
+      event.clientX >= dragRect.left &&
+      event.clientX <= dragRect.right &&
+      event.clientY >= dragRect.top &&
+      event.clientY <= dragRect.bottom
+    );
+  }
+
+  const rect = chartNode?.getBoundingClientRect?.();
+  const plotSize = chartNode?._fullLayout?._size;
+
+  if (!rect || !plotSize) {
+    return false;
+  }
+
+  const left = rect.left + plotSize.l;
+  const right = left + plotSize.w;
+  const top = rect.top + plotSize.t;
+  const bottom = top + plotSize.h;
+
+  return event.clientX >= left && event.clientX <= right && event.clientY >= top && event.clientY <= bottom;
+}
+
+function getNearestChartPointRefs(chartNode, dateText) {
+  const targetTime = Date.parse(`${dateText}T00:00:00Z`);
+  const traces = chartDetailTraces.get(chartNode) || chartNode?.data;
+
+  if (!Number.isFinite(targetTime) || !Array.isArray(traces)) {
+    return [];
+  }
+
+  return traces.flatMap((trace, curveNumber) => {
+    if (!Array.isArray(trace?.x) || trace.x.length === 0) {
+      return [];
+    }
+
+    let nearestPointNumber = -1;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+    trace.x.forEach((value, pointNumber) => {
+      const time = Date.parse(value);
+      if (!Number.isFinite(time)) {
+        return;
+      }
+
+      const distance = Math.abs(time - targetTime);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestPointNumber = pointNumber;
+      }
+    });
+
+    return nearestPointNumber >= 0 ? [{ curveNumber, pointNumber: nearestPointNumber }] : [];
+  });
+}
+
+function getChartDetailValue(trace, pointNumber) {
+  if (trace?.meta?.dashboardNormalized) {
+    const normalizedValue = Number(trace.y?.[pointNumber]);
+    return Number.isFinite(normalizedValue)
+      ? new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(normalizedValue)
+      : "--";
+  }
+
+  const customdata = trace?.customdata?.[pointNumber];
+  const formattedValue = Array.isArray(customdata) ? customdata[0] : customdata;
+
+  if (formattedValue !== undefined && formattedValue !== null && formattedValue !== "") {
+    return String(formattedValue);
+  }
+
+  const value = Number(trace?.y?.[pointNumber]);
+  return Number.isFinite(value)
+    ? new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(value)
+    : "--";
+}
+
+function getChartDetailColor(trace) {
+  const lineColor = trace?.line?.color;
+  const markerColor = Array.isArray(trace?.marker?.color) ? trace.marker.color[0] : trace?.marker?.color;
+  return lineColor || markerColor || getCssColor("--muted", "#64748b");
+}
+
+function renderChartDetail(chartNode, dateText, pointRefs, anchor = null) {
+  const traces = chartDetailTraces.get(chartNode) || chartNode.data || [];
+  let popover = chartNode.querySelector(":scope > .chart-selection-popover");
+  let guide = chartNode.querySelector(":scope > .chart-selection-guide");
+
+  if (!popover) {
+    popover = document.createElement("div");
+    popover.className = "chart-selection-popover";
+    popover.setAttribute("role", "status");
+    popover.setAttribute("aria-live", "polite");
+    chartNode.append(popover);
+  }
+
+  if (!guide) {
+    guide = document.createElement("div");
+    guide.className = "chart-selection-guide";
+    guide.setAttribute("aria-hidden", "true");
+    chartNode.append(guide);
+  }
+
+  popover.replaceChildren();
+  const dateElement = document.createElement("div");
+  dateElement.className = "chart-selection-date";
+  dateElement.textContent = formatFullDate(dateText);
+  popover.append(dateElement);
+
+  const seenCurves = new Set();
+  pointRefs.forEach(({ curveNumber, pointNumber }) => {
+    if (seenCurves.has(curveNumber) || !traces[curveNumber]) {
+      return;
+    }
+
+    seenCurves.add(curveNumber);
+    const row = document.createElement("div");
+    row.className = "chart-selection-value";
+    const swatch = document.createElement("span");
+    swatch.className = "chart-selection-swatch";
+    swatch.style.backgroundColor = getChartDetailColor(traces[curveNumber]);
+    const value = document.createElement("span");
+    value.textContent = getChartDetailValue(traces[curveNumber], pointNumber);
+    row.append(swatch, value);
+    popover.append(row);
+  });
+
+  const rect = chartNode.getBoundingClientRect();
+  const plotSize = chartNode?._fullLayout?._size;
+  const dragRect = chartNode.querySelector(".nsewdrag")?.getBoundingClientRect();
+  let localX = Number.isFinite(anchor?.clientX) ? anchor.clientX - rect.left : rect.width / 2;
+  let localY = Number.isFinite(anchor?.clientY) ? anchor.clientY - rect.top : rect.height / 2;
+  const plotLeft = dragRect ? dragRect.left - rect.left : plotSize?.l ?? 8;
+  const plotRight = dragRect ? dragRect.right - rect.left : plotLeft + (plotSize?.w ?? Math.max(rect.width - plotLeft - 8, 0));
+  const plotTop = dragRect ? dragRect.top - rect.top : plotSize?.t ?? 8;
+  const plotBottom = dragRect ? dragRect.bottom - rect.top : plotTop + (plotSize?.h ?? Math.max(rect.height - plotTop - 8, 0));
+  localX = Math.min(Math.max(localX, plotLeft), plotRight);
+  localY = Math.min(Math.max(localY, plotTop), plotBottom);
+  guide.style.left = `${localX}px`;
+  guide.style.top = `${plotTop}px`;
+  guide.style.height = `${Math.max(plotBottom - plotTop, 0)}px`;
+  guide.hidden = false;
+  popover.hidden = false;
+
+  const popoverWidth = popover.offsetWidth || 120;
+  const popoverHeight = popover.offsetHeight || 52;
+  popover.style.left = `${Math.min(Math.max(localX + 12, 8), Math.max(rect.width - popoverWidth - 8, 8))}px`;
+  popover.style.top = `${Math.min(Math.max(localY - popoverHeight - 12, 8), Math.max(rect.height - popoverHeight - 8, 8))}px`;
+}
+
+function showChartDetail(chartNode, dateText, eventPoints = [], anchor = null) {
+  if (!chartNode || !dateText) {
+    return;
+  }
+
+  chartNode.dataset.selectedDate = dateText;
+  chartNode.classList.add("chart-selection-active");
+  const nearestRefs = getNearestChartPointRefs(chartNode, dateText);
+  const pointRefs = [
+    ...nearestRefs,
+    ...eventPoints
+      .filter((point) => Number.isFinite(point?.curveNumber) && Number.isFinite(point?.pointNumber))
+      .map(({ curveNumber, pointNumber }) => ({ curveNumber, pointNumber })),
+  ];
+
+  if (window.Plotly?.Fx?.unhover) {
+    try {
+      window.Plotly.Fx.unhover(chartNode);
+    } catch {
+      // The custom detail remains usable while Plotly is rebuilding.
+    }
+  }
+
+  renderChartDetail(chartNode, dateText, pointRefs, anchor);
+}
+
+function setupChartDetailInteraction(chartNode) {
+  if (!chartNode || typeof chartNode.addEventListener !== "function" || chartNode.dataset.chartDetailReady === "true") {
+    return;
+  }
+
+  chartNode.dataset.chartDetailReady = "true";
+  chartDetailRegistry.add(chartNode);
+
+  if (!chartDetailDocumentReady) {
+    chartDetailDocumentReady = true;
+    const clearOutside = (event) => {
+      const clickedChart = event.target.closest?.(".js-plotly-plot");
+      if (event.target.closest?.(".modebar, .hovertext, .chart-selection-popover")) {
+        return;
+      }
+
+      chartDetailRegistry.forEach((registeredChart) => {
+        if (registeredChart !== clickedChart || !clickedChart) {
+          clearChartDetail(registeredChart);
+        }
+      });
+    };
+    document.addEventListener("pointerdown", clearOutside, { capture: true });
+    document.addEventListener("click", clearOutside, { capture: true });
+  }
+
+  chartNode.addEventListener("click", (event) => {
+    if (event.target.closest?.(".modebar, .hovertext, .chart-selection-popover")) {
+      return;
+    }
+
+    if (!isInsideChartPlotArea(chartNode, event)) {
+      clearChartDetail(chartNode);
+      return;
+    }
+
+    const dateText = getDateFromChartPointer(chartNode, event);
+    if (dateText) {
+      clearOtherChartDetails(chartNode);
+      showChartDetail(chartNode, dateText, [], event);
+    }
+  }, { capture: true });
+
+  if (typeof chartNode.on === "function") {
+    chartNode.on("plotly_click", (eventData) => {
+      const dateText = normalizePlotlyDate(eventData?.points?.[0]?.x);
+      if (!dateText) {
+        clearChartDetail(chartNode);
+        return;
+      }
+
+      const pointerEvent = eventData?.event;
+      const anchor = Number.isFinite(pointerEvent?.clientX) && Number.isFinite(pointerEvent?.clientY)
+        ? { clientX: pointerEvent.clientX, clientY: pointerEvent.clientY }
+        : null;
+      clearOtherChartDetails(chartNode);
+      showChartDetail(chartNode, dateText, eventData.points, anchor);
+    });
+  }
+}
+
 const chartInitialAxisRanges = new WeakMap();
 
 function resetChartToInitialRanges(chartNode) {
@@ -3497,7 +3774,7 @@ function getHorizontalAxisMargins(hasRightAxis, hasLeftAxis = true) {
   return {
     t: usesTouchChartMode() ? 42 : 48,
     r: hasRightAxis ? sideMargin : 22,
-    b: 92,
+    b: usesTouchChartMode() ? 58 : 92,
     l: hasLeftAxis ? sideMargin : 22,
   };
 }
@@ -3664,8 +3941,10 @@ function renderChart() {
     const indicator = getIndicator(id);
     const rawRows = getFilteredRows(id);
     const rows = getUnitDisplayRows(rawRows, indicator);
-    const hoverUnit = getDisplayHoverMarkup(indicator);
-    const hoverTemplate = `<b>${indicator.name}</b><br>%{customdata[0]}${hoverUnit}<extra></extra>`;
+    const hoverTemplate = getCompactHoverTemplate(
+      getChartSeriesColor(indicator.id),
+      "%{customdata[0]}",
+    );
 
     return {
       x: rows.map((row) => row.date),
@@ -3723,7 +4002,7 @@ function renderChart() {
       orientation: "h",
       x: 0.5,
       xanchor: "center",
-      y: -0.22,
+      y: usesTouchChartMode() ? -0.1 : -0.22,
       yanchor: "top",
     },
     annotations: axisAnnotations,
@@ -3770,6 +4049,7 @@ function renderChart() {
   layout.shapes = getThresholdZoneShapes(selected, layout, axisById);
 
   if (chartElement && window.Plotly) {
+    chartDetailTraces.set(chartElement, traces);
     Plotly.react(chartElement, traces, layout, getPlotlyConfig()).then(() => {
       setupChartModebar(
         chartElement,
@@ -3786,6 +4066,7 @@ function renderChart() {
       setupBoundedXAxis(chartElement, getMacroXBounds);
       setupMobileYAxisGestures(chartElement);
       setupMobileXAxisGestures(chartElement);
+      setupChartDetailInteraction(chartElement);
       setupPromptCopy(chartElement, buildMacroPrompt);
     });
   }
@@ -4019,7 +4300,7 @@ function renderFxChart() {
       ...(series.chartType !== "bar" && seriesRows.length === 1
         ? { marker: { size: 8, color: series.color } }
         : {}),
-      hovertemplate: `<b>${series.name}</b><br>%{customdata[0]}${getFxDisplaySuffix(series)}<extra></extra>`,
+      hovertemplate: getCompactHoverTemplate(series.color, "%{customdata[0]}"),
     };
   });
 
@@ -4072,6 +4353,7 @@ function renderFxChart() {
     ...getAxisGroupAnnotations(rightIds, "right", getFxDefinition, theme),
   ];
 
+  chartDetailTraces.set(fxChartElement, traces);
   Plotly.react(
     fxChartElement,
     traces,
@@ -4088,7 +4370,7 @@ function renderFxChart() {
         orientation: "h",
         x: 0.5,
         xanchor: "center",
-        y: -0.22,
+        y: usesTouchChartMode() ? -0.1 : -0.22,
         yanchor: "top",
       },
       annotations: fxAxisAnnotations,
@@ -4123,6 +4405,7 @@ function renderFxChart() {
     setupBoundedXAxis(fxChartElement, getFxXBounds);
     setupMobileYAxisGestures(fxChartElement);
     setupMobileXAxisGestures(fxChartElement);
+    setupChartDetailInteraction(fxChartElement);
     setupPromptCopy(fxChartElement, buildFxPrompt);
   });
 }
@@ -4611,10 +4894,9 @@ function createComparisonSection(config) {
       const indicator = getLocalIndicator(id);
       const rawRows = getChartRows(id);
       const rows = state.normalized ? rawRows : getUnitDisplayRows(rawRows, indicator);
-      const hoverUnit = getDisplayHoverMarkup(indicator);
       const normalizedHover = state.normalized
-        ? `<b>${indicator.name}</b><br>Change from base: %{y:.2f}%<br>Original: %{customdata[0]}${hoverUnit}<br>Base date: %{customdata[1]}<extra></extra>`
-        : `<b>${indicator.name}</b><br>%{customdata[0]}${hoverUnit}<extra></extra>`;
+        ? getCompactHoverTemplate(getChartSeriesColor(indicator.id), "%{y:.2f}")
+        : getCompactHoverTemplate(getChartSeriesColor(indicator.id), "%{customdata[0]}");
 
       return {
         x: rows.map((row) => row.date),
@@ -4623,6 +4905,7 @@ function createComparisonSection(config) {
           formatDisplayNumber(row.originalValue ?? row.value, indicator),
           row.baseDate ?? "",
         ]),
+        meta: { dashboardNormalized: state.normalized },
         type: indicator.chartType || "scatter",
         name: indicator.name,
         yaxis: axisById.get(id),
@@ -4709,7 +4992,7 @@ function createComparisonSection(config) {
         orientation: "h",
         x: 0.5,
         xanchor: "center",
-        y: -0.22,
+        y: usesTouchChartMode() ? -0.1 : -0.22,
         yanchor: "top",
       },
       annotations: [...horizontalAxisAnnotations, ...trendAnnotations],
@@ -4787,6 +5070,7 @@ function createComparisonSection(config) {
     ];
 
     if (elements.chart && window.Plotly) {
+      chartDetailTraces.set(elements.chart, traces);
       Plotly.react(elements.chart, traces, layout, getPlotlyConfig()).then(() => {
         setupChartModebar(
           elements.chart,
@@ -4803,6 +5087,7 @@ function createComparisonSection(config) {
         setupBoundedXAxis(elements.chart, () => getDisplayXBounds(state.axisOrder));
         setupMobileYAxisGestures(elements.chart);
         setupMobileXAxisGestures(elements.chart);
+        setupChartDetailInteraction(elements.chart);
         setupPromptCopy(elements.chart, (dateText) => buildComparisonPrompt(config.label, state, config.indicators, dateText));
       });
     }
