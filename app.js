@@ -5656,15 +5656,14 @@ function centerMobileChartPane(track, { align = "center" } = {}) {
   }
 
   if (align === "toolbar" && toolbar) {
-    const scrollingElement = document.scrollingElement || document.documentElement;
+    toolbar.scrollIntoView({ behavior: "auto", block: "start", inline: "nearest" });
     const toolbarRect = toolbar.getBoundingClientRect();
-    const maxScroll = Math.max(scrollingElement.scrollHeight - window.innerHeight, 0);
-    const targetScroll = Math.min(
-      Math.max(window.scrollY + toolbarRect.top - 8, 0),
-      maxScroll,
-    );
+    const correction = toolbarRect.top - 8;
 
-    window.scrollTo({ top: targetScroll, behavior: "auto" });
+    if (Math.abs(correction) > 1) {
+      window.scrollBy({ top: correction, behavior: "auto" });
+    }
+
     return;
   }
 
@@ -6662,6 +6661,11 @@ function handleResponsiveLayoutChange() {
       resizeVisibleCharts();
       centerActiveLandscapeChart({ align: "toolbar" });
     }, 360);
+
+    // iOS may perform another scroll adjustment after the orientation reflow.
+    // Re-apply the toolbar anchor after that late layout pass.
+    window.setTimeout(() => centerActiveLandscapeChart({ align: "toolbar" }), 720);
+    window.setTimeout(() => centerActiveLandscapeChart({ align: "toolbar" }), 1200);
 
     if (usesMobilePaneLayout() && !isMobileLandscape()) {
       resetMobilePortraitPosition();
