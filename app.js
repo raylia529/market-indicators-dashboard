@@ -968,6 +968,7 @@ const tabPanels = Array.from(document.querySelectorAll("[data-tab-panel]"));
 document.body.dataset.activeTab = tabPanels.find((panel) => panel.classList.contains("active"))?.dataset.tabPanel || "macro";
 const mobileViewButtons = Array.from(document.querySelectorAll("[data-mobile-view-button]"));
 const fxChartElement = document.getElementById("fx-chart");
+const fxLogScaleInput = document.getElementById("fx-log-scale");
 const fxRangeButtons = Array.from(document.querySelectorAll("[data-fx-range]"));
 const fxCards = Array.from(document.querySelectorAll("[data-fx-card]"));
 const fxSelectionNotice = document.getElementById("fx-selection-notice");
@@ -1019,6 +1020,7 @@ let activeRange = DEFAULT_RANGE;
 let macroScale = "linear";
 let fxData = [];
 let activeFxRange = DEFAULT_RANGE;
+let fxScale = "linear";
 let visibleFxSeries = new Set(["USDJPY", "BROAD_US_DOLLAR_INDEX"]);
 let glossaryEntries = [];
 let glossarySearchText = "";
@@ -1577,121 +1579,13 @@ function setupChartDetailInteraction(chartNode) {
       });
     };
     document.addEventListener("pointerdown", clearOutside, { capture: true });
-    document.addEventListener("click", clearOutside, { capture: true });
-
-    // Some mobile browsers do not deliver a Plotly click from the blank upper
-    // canvas. Resolve the chart from screen coordinates as a document-level
-    // fallback, while keeping axis/legend controls out of the detail action.
-    const openFromDocumentClick = (event) => {
-      if (isChartDetailExcludedTarget(event.target)) {
-        return;
-      }
-
-      const chartNode = event.target.closest?.(".js-plotly-plot") || getChartAtPoint(event.clientX, event.clientY);
-      showChartDetailAtPoint(chartNode, event.clientX, event.clientY);
-    };
-    document.addEventListener("click", openFromDocumentClick, { capture: true });
-
-    let documentTouchTap = null;
-    const beginDocumentTouchTap = (clientX, clientY, target = null) => {
-      if (isChartDetailExcludedTarget(target)) {
-        documentTouchTap = null;
-        return;
-      }
-
-      const chartNode = getChartAtPoint(clientX, clientY);
-      if (!chartNode || isChartAxisPoint(chartNode, clientX, clientY)) {
-        documentTouchTap = null;
-        return;
-      }
-
-      const detailOpened = showChartDetailAtPoint(chartNode, clientX, clientY);
-      documentTouchTap = {
-        chartNode,
-        clientX,
-        clientY,
-        startedAt: Date.now(),
-        moved: false,
-        detailOpened,
-      };
-    };
-    const updateDocumentTouchTap = (clientX, clientY) => {
-      if (!documentTouchTap) {
-        return;
-      }
-
-      documentTouchTap.moved =
-        documentTouchTap.moved ||
-        Math.hypot(clientX - documentTouchTap.clientX, clientY - documentTouchTap.clientY) > 14;
-
-      if (documentTouchTap.moved && documentTouchTap.detailOpened) {
-        clearChartDetail(documentTouchTap.chartNode);
-        documentTouchTap.detailOpened = false;
-      }
-    };
-    const finishDocumentTouchTap = (clientX, clientY) => {
-      const tap = documentTouchTap;
-      documentTouchTap = null;
-
-      if (!tap || tap.moved || Date.now() - tap.startedAt > 450) {
-        return;
-      }
-
-      if (!tap.detailOpened) {
-        showChartDetailAtPoint(tap.chartNode, clientX, clientY);
-      }
-    };
-
-    document.addEventListener("pointerdown", (event) => {
-      if (event.pointerType !== "mouse") {
-        beginDocumentTouchTap(event.clientX, event.clientY, event.target);
-      }
-    }, { capture: true });
-    document.addEventListener("pointermove", (event) => {
-      if (event.pointerType !== "mouse") {
-        updateDocumentTouchTap(event.clientX, event.clientY);
-      }
-    }, { capture: true });
-    document.addEventListener("pointerup", (event) => {
-      if (event.pointerType !== "mouse") {
-        finishDocumentTouchTap(event.clientX, event.clientY);
-      }
-    }, { capture: true });
-    document.addEventListener("pointercancel", () => {
-      documentTouchTap = null;
-    }, { capture: true });
-    document.addEventListener("touchstart", (event) => {
-      if (event.touches.length === 1) {
-        const touch = event.touches[0];
-        beginDocumentTouchTap(touch.clientX, touch.clientY, event.target);
-      } else {
-        documentTouchTap = null;
-      }
-    }, { capture: true, passive: true });
-    document.addEventListener("touchmove", (event) => {
-      if (event.touches.length === 1) {
-        const touch = event.touches[0];
-        updateDocumentTouchTap(touch.clientX, touch.clientY);
-      } else {
-        documentTouchTap = null;
-      }
-    }, { capture: true, passive: true });
-    document.addEventListener("touchend", (event) => {
-      const touch = event.changedTouches[0];
-      if (touch) {
-        finishDocumentTouchTap(touch.clientX, touch.clientY);
-      } else {
-        documentTouchTap = null;
-      }
-    }, { capture: true, passive: true });
-    document.addEventListener("touchcancel", () => {
-      documentTouchTap = null;
-    }, { capture: true, passive: true });
   }
 
-  // Plotly does not consistently emit a click event for a short touch on every
-  // mobile browser. Keep the chart tap separate from axis pan/zoom gestures so
-  // a stationary tap still opens the compact detail overlay.
+  const touchLayer = document.createElement("div");
+  touchLayer.className = "chart-touch-detail-layer";
+  touchLayer.setAttribute("aria-hidden", "true");
+  chartNode.append(touchLayer);
+
   let touchTap = null;
   const tapMoveTolerance = 14;
   const tapDurationMs = 450;
@@ -1748,87 +1642,40 @@ function setupChartDetailInteraction(chartNode) {
     }
   }
 
-  chartNode.addEventListener(
+  touchLayer.addEventListener(
     "pointerdown",
     (event) => {
-      if (event.pointerType !== "mouse") {
-        beginTouchTap(event.clientX, event.clientY, event.target);
-      }
+      beginTouchTap(event.clientX, event.clientY, event.target);
     },
-    { capture: true },
+    { passive: true },
   );
-  chartNode.addEventListener(
+  touchLayer.addEventListener(
     "pointermove",
     (event) => {
-      if (event.pointerType !== "mouse") {
-        updateTouchTap(event.clientX, event.clientY);
-      }
+      updateTouchTap(event.clientX, event.clientY);
     },
-    { capture: true },
+    { passive: true },
   );
-  chartNode.addEventListener(
+  touchLayer.addEventListener(
     "pointerup",
     (event) => {
-      if (event.pointerType !== "mouse") {
-        finishTouchTap(event.clientX, event.clientY);
-      }
+      finishTouchTap(event.clientX, event.clientY);
     },
-    { capture: true },
+    { passive: true },
   );
-  chartNode.addEventListener(
+  touchLayer.addEventListener(
     "pointercancel",
-    (event) => {
-      if (event.pointerType !== "mouse") {
-        touchTap = null;
-      }
-    },
-    { capture: true },
-  );
-  chartNode.addEventListener(
-    "touchstart",
-    (event) => {
-      if (event.touches.length === 1 && !touchTap) {
-        const touch = event.touches[0];
-        beginTouchTap(touch.clientX, touch.clientY, event.target);
-      } else if (event.touches.length !== 1) {
-        touchTap = null;
-      }
-    },
-    { capture: true, passive: true },
-  );
-  chartNode.addEventListener(
-    "touchmove",
-    (event) => {
-      if (event.touches.length === 1) {
-        const touch = event.touches[0];
-        updateTouchTap(touch.clientX, touch.clientY);
-      } else {
-        touchTap = null;
-      }
-    },
-    { capture: true, passive: true },
-  );
-  chartNode.addEventListener(
-    "touchend",
-    (event) => {
-      const touch = event.changedTouches[0];
-      if (touch) {
-        finishTouchTap(touch.clientX, touch.clientY);
-      } else {
-        touchTap = null;
-      }
-    },
-    { capture: true, passive: true },
-  );
-  chartNode.addEventListener(
-    "touchcancel",
     () => {
       touchTap = null;
     },
-    { capture: true, passive: true },
+    { passive: true },
   );
 
   chartNode.addEventListener("click", (event) => {
+    if (usesTouchChartMode()) {
+      return;
+    }
+
     if (isChartDetailExcludedTarget(event.target)) {
       return;
     }
@@ -1840,23 +1687,6 @@ function setupChartDetailInteraction(chartNode) {
 
     showChartDetailAtPoint(chartNode, event.clientX, event.clientY);
   }, { capture: true });
-
-  if (typeof chartNode.on === "function") {
-    chartNode.on("plotly_click", (eventData) => {
-      const dateText = normalizePlotlyDate(eventData?.points?.[0]?.x);
-      if (!dateText) {
-        clearChartDetail(chartNode);
-        return;
-      }
-
-      const pointerEvent = eventData?.event;
-      const anchor = Number.isFinite(pointerEvent?.clientX) && Number.isFinite(pointerEvent?.clientY)
-        ? { clientX: pointerEvent.clientX, clientY: pointerEvent.clientY }
-        : null;
-      clearOtherChartDetails(chartNode);
-      showChartDetail(chartNode, dateText, eventData.points, anchor);
-    });
-  }
 }
 
 const chartInitialAxisRanges = new WeakMap();
@@ -4570,6 +4400,36 @@ function fxAxisRange(values, includeZero = false) {
   return [min, max];
 }
 
+function selectedFxRowsAllowLog() {
+  if (visibleFxSeries.size === 0) {
+    return false;
+  }
+
+  const rows = getFilteredFxRows();
+  return [...visibleFxSeries].every((id) => {
+    const series = fxSeriesDefinitions.find((item) => item.id === id);
+    if (!series) {
+      return false;
+    }
+
+    const values = rows
+      .map((row) => getFxDisplayValue(row[series.field], series))
+      .filter((value) => Number.isFinite(value));
+    return values.length > 0 && values.every((value) => value > 0);
+  });
+}
+
+function getFxAxisRange(values, includeZero, scale) {
+  if (scale === "log") {
+    return fxAxisRange(
+      values.filter((value) => Number.isFinite(value) && value > 0).map((value) => Math.log10(value)),
+      false,
+    );
+  }
+
+  return fxAxisRange(values, includeZero);
+}
+
 function renderFxChart() {
   if (!fxChartElement || !window.Plotly || fxData.length === 0) {
     return;
@@ -4625,9 +4485,14 @@ function renderFxChart() {
   });
   const xBounds = getFxXBounds();
   const theme = getChartTheme();
+  const scale = fxScale === "log" && selectedFxRowsAllowLog() ? "log" : "linear";
   const yaxis = leftIds.length
     ? {
-        range: fxAxisRange(leftValues, leftIds.some((id) => getFxDefinition(id).chartType === "bar")),
+        range: getFxAxisRange(
+          leftValues,
+          leftIds.some((id) => getFxDefinition(id).chartType === "bar"),
+          scale,
+        ),
         tickfont: {
           color: getAxisGroupColor(leftIds, theme),
           size: usesTouchChartMode() ? 10 : 11,
@@ -4635,13 +4500,18 @@ function renderFxChart() {
         },
         gridcolor: theme.grid,
         zeroline: false,
+        type: scale,
       }
     : {
         visible: false,
       };
   const yaxis2 = rightIds.length
     ? {
-        range: fxAxisRange(rightValues, rightIds.some((id) => getFxDefinition(id).chartType === "bar")),
+        range: getFxAxisRange(
+          rightValues,
+          rightIds.some((id) => getFxDefinition(id).chartType === "bar"),
+          scale,
+        ),
         tickfont: {
           color: getAxisGroupColor(rightIds, theme),
           size: usesTouchChartMode() ? 10 : 11,
@@ -4651,6 +4521,7 @@ function renderFxChart() {
         side: "right",
         showgrid: false,
         zeroline: false,
+        type: scale,
       }
     : {
         visible: false,
@@ -4712,7 +4583,7 @@ function renderFxChart() {
     },
     getPlotlyConfig(),
   ).then(() => {
-    setupChartModebar(fxChartElement);
+    setupChartModebar(fxChartElement, fxLogScaleInput);
 
     if (xBounds) {
       fxChartElement.dataset.promptStart = xBounds.start;
@@ -5662,7 +5533,7 @@ function renderActiveChartForResponsiveLayout() {
   comparisonSections.find((section) => section.key === activeTab)?.renderChart();
 }
 
-function centerMobileChartPane(track, { align = "center" } = {}) {
+function centerMobileChartPane(track, { align = "toolbar" } = {}) {
   if (!track || !isMobileLandscape()) {
     return;
   }
@@ -5678,7 +5549,8 @@ function centerMobileChartPane(track, { align = "center" } = {}) {
   if (align === "toolbar" && toolbar) {
     toolbar.scrollIntoView({ behavior: "auto", block: "start", inline: "nearest" });
     const toolbarRect = toolbar.getBoundingClientRect();
-    const correction = toolbarRect.top - 8;
+    const viewportTop = window.visualViewport?.offsetTop || 0;
+    const correction = toolbarRect.top - viewportTop - 8;
 
     if (Math.abs(correction) > 1) {
       window.scrollBy({ top: correction, behavior: "auto" });
@@ -5753,6 +5625,30 @@ function centerActiveLandscapeChart({ align = "center" } = {}) {
   });
 }
 
+let landscapeLayoutToken = 0;
+
+function settleActiveLandscapeLayout({ rerender = false } = {}) {
+  if (!isMobileLandscape()) {
+    return;
+  }
+
+  const token = ++landscapeLayoutToken;
+  const settle = () => {
+    if (token !== landscapeLayoutToken || !isMobileLandscape()) {
+      return;
+    }
+
+    if (rerender) {
+      renderActiveChartForResponsiveLayout();
+    }
+    resizeVisibleCharts();
+    requestAnimationFrame(() => centerActiveLandscapeChart({ align: "toolbar" }));
+  };
+
+  requestAnimationFrame(settle);
+  window.setTimeout(settle, 260);
+}
+
 function setMobileView(group, view, { center = true } = {}) {
   const track = document.querySelector(`[data-mobile-track="${group}"]`);
 
@@ -5814,6 +5710,16 @@ function validateMacroScale() {
       macroLogScaleInput.checked = false;
     }
     showNotice("Log scale is unavailable because the selected range includes zero or negative values.");
+  }
+}
+
+function validateFxScale() {
+  if (fxScale === "log" && !selectedFxRowsAllowLog()) {
+    fxScale = "linear";
+    if (fxLogScaleInput) {
+      fxLogScaleInput.checked = false;
+    }
+    showFxNotice("Log scale is unavailable because the selected range includes zero or negative values.");
   }
 }
 
@@ -6390,6 +6296,7 @@ function setDashboardRange(range) {
   activeFxRange = sharedRange;
 
   validateMacroScale();
+  validateFxScale();
   renderAll();
   renderFxRangeButtons();
   if (fxData.length > 0) {
@@ -6412,19 +6319,26 @@ function activateTab(tab) {
     panel.classList.toggle("active", panel.dataset.tabPanel === tab);
   });
 
+  let chartReady = Promise.resolve();
+
   if (tab === "fx" && fxData.length === 0) {
-    loadFxData().then(renderFx).catch((error) => setFxText("fx-updated", error.message));
+    chartReady = loadFxData()
+      .then(renderFx)
+      .catch((error) => setFxText("fx-updated", error.message));
   }
 
   const comparisonSection = comparisonSections.find((section) => section.key === tab);
-  comparisonSection?.load().catch((error) => comparisonSection.showError(error));
+  if (comparisonSection) {
+    chartReady = comparisonSection.load().catch((error) => comparisonSection.showError(error));
+  }
 
   requestAnimationFrame(() => {
     resizeVisibleCharts();
     centerActiveMobileTab();
     syncMobileViewsForOrientation({ center: false, force: true });
-    centerActiveLandscapeChart({ align: "toolbar" });
+    settleActiveLandscapeLayout();
   });
+  chartReady.then(() => settleActiveLandscapeLayout());
 }
 
 tabButtons.forEach((button) => {
@@ -6483,6 +6397,7 @@ function toggleFxCard(card) {
   }
 
   clearFxNotice();
+  validateFxScale();
   renderFxCards();
   renderFxChart();
 }
@@ -6529,6 +6444,22 @@ if (macroLogScaleInput) {
     renderChart();
   });
 
+}
+
+if (fxLogScaleInput) {
+  fxLogScaleInput.addEventListener("change", () => {
+    if (fxLogScaleInput.checked && !selectedFxRowsAllowLog()) {
+      fxLogScaleInput.checked = false;
+      fxScale = "linear";
+      showFxNotice("Log scale is unavailable because the selected range includes zero or negative values.");
+      renderFxChart();
+      return;
+    }
+
+    fxScale = fxLogScaleInput.checked ? "log" : "linear";
+    clearFxNotice();
+    renderFxChart();
+  });
 }
 
 if (selectionNoticeClose) {
@@ -6667,30 +6598,14 @@ function handleResponsiveLayoutChange() {
 
   responsiveLayoutKey = nextKey;
   window.setTimeout(() => {
-    syncMobileViewsForOrientation({ center: true, force: true, align: "toolbar" });
-    renderActiveChartForResponsiveLayout();
-    requestAnimationFrame(() => {
-      resizeVisibleCharts();
-      requestAnimationFrame(() => centerActiveLandscapeChart({ align: "toolbar" }));
-    });
-
-    // Safari can finish the orientation reflow after the first resize frame.
-    // A second redraw prevents the old portrait legend/date geometry from sticking.
-    window.setTimeout(() => {
-      renderActiveChartForResponsiveLayout();
-      resizeVisibleCharts();
-      centerActiveLandscapeChart({ align: "toolbar" });
-    }, 360);
-
-    // iOS may perform another scroll adjustment after the orientation reflow.
-    // Re-apply the toolbar anchor after that late layout pass.
-    window.setTimeout(() => centerActiveLandscapeChart({ align: "toolbar" }), 720);
-    window.setTimeout(() => centerActiveLandscapeChart({ align: "toolbar" }), 1200);
+    syncMobileViewsForOrientation({ center: false, force: true, align: "toolbar" });
 
     if (usesMobilePaneLayout() && !isMobileLandscape()) {
+      landscapeLayoutToken += 1;
       resetMobilePortraitPosition();
     } else {
       centerActiveMobileTab();
+      settleActiveLandscapeLayout({ rerender: true });
     }
   }, 120);
 }

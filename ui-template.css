@@ -931,6 +931,26 @@ body {
   .chart-selection-guide {
     opacity: 0.78;
   }
+
+  .data-status-badge.up-to-date {
+    background: rgba(51, 94, 72, 0.3);
+    color: #83b59a;
+  }
+
+  .data-status-badge.source-lag {
+    background: rgba(55, 79, 112, 0.3);
+    color: #88a8cf;
+  }
+
+  .data-status-badge.update-not-run {
+    background: rgba(100, 79, 39, 0.3);
+    color: #c4a567;
+  }
+
+  .data-status-badge.failed {
+    background: rgba(105, 52, 58, 0.3);
+    color: #cf888e;
+  }
 }
 
 /* Concept refinement: center disclosure triangles by shape, not text baseline. */
@@ -1259,10 +1279,58 @@ body {
   display: none !important;
 }
 
+.chart-touch-detail-layer {
+  display: none;
+}
+
 /* Phone orientation is the view switch: portrait shows cards, landscape shows charts. */
 @media (max-width: 900px) {
+  .metric-card,
+  .fx-card {
+    height: 104px;
+    min-height: 104px;
+  }
+
+  .indicator-title-row,
+  .indicator-label,
+  .fx-card > .indicator-label {
+    min-height: 2.4em;
+  }
+
+  .indicator-change {
+    flex-wrap: nowrap;
+    min-height: 1.3em;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .policy-change {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+
+  .policy-change .change-value {
+    margin-left: 4px;
+  }
+
   .mobile-view-switch {
     display: none !important;
+  }
+
+  .chart-touch-detail-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    display: block;
+    touch-action: none;
+    background: transparent;
+  }
+
+  .chart-selection-guide,
+  .chart-selection-popover {
+    z-index: 8;
+    pointer-events: none;
   }
 }
 
@@ -1291,6 +1359,7 @@ body {
   .fx-controls {
     gap: 6px;
     margin: 0 0 8px;
+    scroll-margin-top: calc(env(safe-area-inset-top) + 8px);
   }
 
   #indicator-chart,
@@ -1501,7 +1570,7 @@ body {
     gap: 0;
     overflow-x: auto;
     overflow-y: hidden;
-    padding-right: 0;
+    padding: 0;
     scroll-padding-inline: 0;
   }
 
@@ -1515,6 +1584,9 @@ body {
     height: 40px;
     align-items: center;
     justify-content: center;
+    border: 0;
+    border-right: 1px solid var(--line);
+    border-radius: 0;
     padding: 0 4px;
     font-size: 0.74rem;
     line-height: 1.05;
@@ -1525,6 +1597,17 @@ body {
     overflow: hidden;
   }
 
+  .tab-button.active {
+    border: 0;
+    border-right: 1px solid var(--line);
+    border-radius: 0;
+  }
+
+  .tab-button:last-child,
+  .tab-button.active:last-child {
+    border-right: 0;
+  }
+
   .tab-button-label {
     line-height: 1.05;
     white-space: normal;
@@ -1533,6 +1616,12 @@ body {
   .tab-button-label.multi-line {
     width: 6ch;
     max-width: 100%;
+  }
+
+  .fx-controls {
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
   }
 }
 
