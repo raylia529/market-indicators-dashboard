@@ -1696,6 +1696,7 @@ body {
     min-height: 32px;
     margin: 0 0 6px;
     overflow: visible;
+    overflow-anchor: none;
   }
 
   .chart-toolbar > .range-selector,
@@ -1710,5 +1711,6 @@ body {
     height: calc(100dvh - 46px);
     min-height: 220px;
     margin: 0;
+    overflow-anchor: none;
   }
 }

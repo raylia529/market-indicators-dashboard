@@ -1760,7 +1760,6 @@ function setupChartModebar(chartNode, logScaleInput = null, normalizedInput = nu
   resetButton.append(resetLabel);
   resetButton.addEventListener("click", () => {
     resetChartToInitialRanges(chartNode);
-    requestAnimationFrame(() => centerMobileChartPane(chartNode.closest("[data-mobile-track]")));
   });
   modebarGroup.append(resetButton);
 
@@ -1803,7 +1802,6 @@ function setupChartModebar(chartNode, logScaleInput = null, normalizedInput = nu
     toolbar.append(modebar);
   }
 
-  requestAnimationFrame(() => centerActiveLandscapeChart());
 }
 
 function getCssColor(name, fallback) {
@@ -6120,7 +6118,6 @@ function setDashboardRange(range) {
     }
   }
 
-  requestAnimationFrame(() => centerActiveLandscapeChart({ align: "toolbar" }));
 }
 
 function activateTab(tab) {
