@@ -1175,7 +1175,6 @@ function fetchLocalText(file) {
 }
 
 const clampingCharts = new WeakSet();
-const longPressTimers = new WeakMap();
 const mobileYAxisGestureStates = new WeakMap();
 const mobileYAxisTapStates = new WeakMap();
 const longPressMoveLimit = 12;
@@ -1586,13 +1585,39 @@ function setupChartDetailInteraction(chartNode) {
   touchLayer.setAttribute("aria-hidden", "true");
   chartNode.append(touchLayer);
 
-  let touchTap = null;
-  const tapMoveTolerance = 14;
-  const tapDurationMs = 450;
+  let touchDetail = null;
+  let touchDetailFrame = 0;
 
-  function beginTouchTap(clientX, clientY, target = null) {
+  function updateTouchDetail(clientX, clientY) {
+    if (!touchDetail || !isInsideChartPlotArea(chartNode, { clientX, clientY })) {
+      return;
+    }
+
+    const dateText = getDateFromChartPointer(chartNode, { clientX, clientY });
+    if (!dateText || chartNode.dataset.selectedDate === dateText) {
+      return;
+    }
+
+    clearOtherChartDetails(chartNode);
+    showChartDetail(chartNode, dateText, [], { clientX, clientY });
+  }
+
+  function queueTouchDetail(clientX, clientY) {
+    touchDetail = { ...touchDetail, clientX, clientY };
+    if (touchDetailFrame) {
+      return;
+    }
+
+    touchDetailFrame = requestAnimationFrame(() => {
+      touchDetailFrame = 0;
+      updateTouchDetail(touchDetail?.clientX, touchDetail?.clientY);
+    });
+  }
+
+  function beginTouchDetail(event) {
+    const { clientX, clientY, target } = event;
     if (target?.closest?.(".modebar, .hovertext, .legend, .axis, .colorbar, .chart-selection-popover")) {
-      touchTap = null;
+      touchDetail = null;
       return;
     }
 
@@ -1600,73 +1625,68 @@ function setupChartDetailInteraction(chartNode) {
       isChartAxisPoint(chartNode, clientX, clientY) ||
       !isInsideChartPlotArea(chartNode, { clientX, clientY })
     ) {
-      touchTap = null;
+      touchDetail = null;
       return;
     }
 
-    touchTap = {
+    touchDetail = {
+      pointerId: event.pointerId,
       clientX,
       clientY,
-      startedAt: Date.now(),
-      moved: false,
     };
+    touchLayer.setPointerCapture?.(event.pointerId);
+    updateTouchDetail(clientX, clientY);
   }
 
-  function updateTouchTap(clientX, clientY) {
-    if (!touchTap) {
+  function moveTouchDetail(event) {
+    if (!touchDetail || event.pointerId !== touchDetail.pointerId) {
       return;
     }
 
-    touchTap.moved =
-      touchTap.moved ||
-      Math.hypot(clientX - touchTap.clientX, clientY - touchTap.clientY) > tapMoveTolerance;
+    queueTouchDetail(event.clientX, event.clientY);
   }
 
-  function finishTouchTap(clientX, clientY) {
-    const tap = touchTap;
-    touchTap = null;
-
-    if (
-      !tap ||
-      tap.moved ||
-      Date.now() - tap.startedAt > tapDurationMs ||
-      !isInsideChartPlotArea(chartNode, { clientX, clientY })
-    ) {
+  function finishTouchDetail(event) {
+    if (!touchDetail || event.pointerId !== touchDetail.pointerId) {
       return;
     }
 
-    const dateText = getDateFromChartPointer(chartNode, { clientX, clientY });
-    if (dateText) {
-      clearOtherChartDetails(chartNode);
-      showChartDetail(chartNode, dateText, [], { clientX, clientY });
+    updateTouchDetail(event.clientX, event.clientY);
+    if (touchLayer.hasPointerCapture?.(event.pointerId)) {
+      touchLayer.releasePointerCapture(event.pointerId);
     }
+    touchDetail = null;
   }
 
   touchLayer.addEventListener(
     "pointerdown",
     (event) => {
-      beginTouchTap(event.clientX, event.clientY, event.target);
+      beginTouchDetail(event);
     },
-    { passive: true },
+    { passive: false },
   );
   touchLayer.addEventListener(
     "pointermove",
     (event) => {
-      updateTouchTap(event.clientX, event.clientY);
+      moveTouchDetail(event);
     },
-    { passive: true },
+    { passive: false },
   );
   touchLayer.addEventListener(
     "pointerup",
     (event) => {
-      finishTouchTap(event.clientX, event.clientY);
+      finishTouchDetail(event);
     },
-    { passive: true },
+    { passive: false },
   );
   touchLayer.addEventListener(
     "pointercancel",
     () => {
-      touchTap = null;
+      touchDetail = null;
+      if (touchDetailFrame) {
+        cancelAnimationFrame(touchDetailFrame);
+        touchDetailFrame = 0;
+      }
     },
     { passive: true },
   );
@@ -2433,64 +2453,6 @@ function clearNotice() {
   selectionNoticeText.textContent = "";
 }
 
-function showCopyToast(message, action = null) {
-  let toast = document.getElementById("copy-toast");
-
-  if (!toast) {
-    toast = document.createElement("div");
-    toast.id = "copy-toast";
-    toast.className = "copy-toast";
-    toast.setAttribute("role", "status");
-    toast.setAttribute("aria-live", "polite");
-    document.body.appendChild(toast);
-  }
-
-  toast.textContent = message;
-  toast.onclick = null;
-  toast.classList.toggle("actionable", Boolean(action));
-  toast.setAttribute("aria-label", action ? message : "");
-
-  if (action) {
-    toast.onclick = action;
-  }
-
-  toast.classList.add("show");
-  window.clearTimeout(showCopyToast.timeoutId);
-  showCopyToast.timeoutId = window.setTimeout(() => {
-    toast.classList.remove("show");
-    toast.classList.remove("actionable");
-    toast.onclick = null;
-  }, 1400);
-}
-
-async function copyText(text) {
-  const clipboard = globalThis.navigator?.clipboard;
-
-  if (clipboard?.writeText && window.isSecureContext) {
-    await clipboard.writeText(text);
-    return;
-  }
-
-  const textarea = document.createElement("textarea");
-  textarea.value = text;
-  textarea.setAttribute("readonly", "");
-  textarea.style.position = "fixed";
-  textarea.style.top = "0";
-  textarea.style.left = "-9999px";
-  textarea.style.opacity = "0";
-  document.body.appendChild(textarea);
-  textarea.focus();
-  textarea.select();
-  textarea.setSelectionRange(0, textarea.value.length);
-
-  const copied = typeof document.execCommand === "function" && document.execCommand("copy");
-  textarea.remove();
-
-  if (!copied) {
-    throw new Error("Copy command failed.");
-  }
-}
-
 function percentile(values, p) {
   const sorted = [...values].sort((a, b) => a - b);
   const index = (sorted.length - 1) * p;
@@ -3001,157 +2963,6 @@ function buildFxPrompt(dateText) {
     "Pay attention to the detected turning points and any lead/lag between the selected indicators.",
     "Discuss relevant rate differentials, inflation trends, central bank expectations, risk sentiment, and major market events around the date.",
   ].join("\n");
-}
-
-function setupPromptCopy(chartNode, buildPrompt) {
-  if (!chartNode || typeof chartNode.addEventListener !== "function" || chartNode.dataset.promptCopyReady === "true") {
-    return;
-  }
-
-  chartNode.dataset.promptCopyReady = "true";
-
-  if (typeof chartNode.on === "function") {
-    chartNode.on("plotly_hover", (eventData) => {
-      const hoveredDate = normalizePlotlyDate(eventData?.points?.[0]?.x);
-
-      if (hoveredDate) {
-        chartNode.dataset.promptDate = hoveredDate;
-      }
-    });
-  }
-
-  function clearLongPress() {
-    const timer = longPressTimers.get(chartNode);
-
-    if (timer?.timeoutId) {
-      window.clearTimeout(timer.timeoutId);
-    }
-
-    longPressTimers.delete(chartNode);
-  }
-
-  async function finishLongPressCopy() {
-    const timer = longPressTimers.get(chartNode);
-
-    if (!timer?.ready || !timer.prompt || timer.copied) {
-      clearLongPress();
-      return;
-    }
-
-    timer.copied = true;
-
-    try {
-      await copyText(timer.prompt);
-      showCopyToast("Copied");
-    } catch {
-      const prompt = timer.prompt;
-      showCopyToast("Tap to copy", async () => {
-        try {
-          await copyText(prompt);
-          showCopyToast("Copied");
-        } catch {
-          showCopyToast("Copy failed");
-        }
-      });
-    } finally {
-      clearLongPress();
-    }
-  }
-
-  function startLongPress(event, clientX, clientY) {
-    clearLongPress();
-    const timer = {
-      timeoutId: null,
-      startX: clientX,
-      startY: clientY,
-      ready: false,
-      copied: false,
-      prompt: "",
-    };
-
-    timer.timeoutId = window.setTimeout(() => {
-      const dateText = getDateFromChartPointer(chartNode, { clientX, clientY });
-
-      if (!dateText) {
-        clearLongPress();
-        return;
-      }
-
-      timer.ready = true;
-      timer.prompt = buildPrompt(dateText);
-    }, longPressDelayMs);
-
-    longPressTimers.set(chartNode, timer);
-  }
-
-  chartNode.addEventListener("pointerdown", (event) => {
-    if (event.button && event.button !== 0) {
-      return;
-    }
-
-    startLongPress(event, event.clientX, event.clientY);
-  });
-
-  function cancelWhenMoved(clientX, clientY) {
-    const timer = longPressTimers.get(chartNode);
-
-    if (!timer) {
-      return;
-    }
-
-    const moved = Math.hypot(clientX - timer.startX, clientY - timer.startY);
-
-    if (moved > longPressMoveLimit) {
-      clearLongPress();
-    }
-  }
-
-  chartNode.addEventListener("pointermove", (event) => {
-    cancelWhenMoved(event.clientX, event.clientY);
-  });
-
-  chartNode.addEventListener(
-    "touchstart",
-    (event) => {
-      if (event.touches.length !== 1) {
-        clearLongPress();
-        return;
-      }
-
-      const touch = event.touches[0];
-      startLongPress(event, touch.clientX, touch.clientY);
-    },
-    { passive: true },
-  );
-
-  chartNode.addEventListener(
-    "touchmove",
-    (event) => {
-      if (event.touches.length !== 1) {
-        clearLongPress();
-        return;
-      }
-
-      const touch = event.touches[0];
-      cancelWhenMoved(touch.clientX, touch.clientY);
-    },
-    { passive: true },
-  );
-
-  chartNode.addEventListener("touchend", finishLongPressCopy);
-  chartNode.addEventListener("touchcancel", clearLongPress);
-
-  chartNode.addEventListener("contextmenu", (event) => {
-    if (longPressTimers.has(chartNode)) {
-      event.preventDefault();
-    }
-  });
-
-  chartNode.addEventListener("pointerup", finishLongPressCopy);
-
-  ["pointercancel", "pointerleave"].forEach((eventName) => {
-    chartNode.addEventListener(eventName, clearLongPress);
-  });
 }
 
 function setupBoundedXAxis(chartNode, getBounds) {
@@ -4208,7 +4019,6 @@ function renderChart() {
       setupMobileYAxisGestures(chartElement);
       setupMobileXAxisGestures(chartElement);
       setupChartDetailInteraction(chartElement);
-      setupPromptCopy(chartElement, buildMacroPrompt);
     });
   }
 }
@@ -4594,7 +4404,6 @@ function renderFxChart() {
     setupMobileYAxisGestures(fxChartElement);
     setupMobileXAxisGestures(fxChartElement);
     setupChartDetailInteraction(fxChartElement);
-    setupPromptCopy(fxChartElement, buildFxPrompt);
   });
 }
 
@@ -5283,7 +5092,6 @@ function createComparisonSection(config) {
         setupMobileYAxisGestures(elements.chart);
         setupMobileXAxisGestures(elements.chart);
         setupChartDetailInteraction(elements.chart);
-        setupPromptCopy(elements.chart, (dateText) => buildComparisonPrompt(config.label, state, config.indicators, dateText));
       });
     }
   }
@@ -5384,12 +5192,12 @@ function createComparisonSection(config) {
     renderChart() {
       renderLocalChart();
     },
-    setRange(range) {
+    setRange(range, { render = true } = {}) {
       state.activeRange = range;
       renderLocalRangeButtons();
-      if (state.loaded) {
+      if (state.loaded && render) {
         validateLocalScale();
-        renderLocalAll();
+        renderLocalChart();
       }
     },
     showError(error) {
@@ -5547,14 +5355,9 @@ function centerMobileChartPane(track, { align = "toolbar" } = {}) {
   }
 
   if (align === "toolbar" && toolbar) {
-    toolbar.scrollIntoView({ behavior: "auto", block: "start", inline: "nearest" });
     const toolbarRect = toolbar.getBoundingClientRect();
-    const viewportTop = window.visualViewport?.offsetTop || 0;
-    const correction = toolbarRect.top - viewportTop - 8;
-
-    if (Math.abs(correction) > 1) {
-      window.scrollBy({ top: correction, behavior: "auto" });
-    }
+    const targetTop = window.scrollY + toolbarRect.top - 6;
+    window.scrollTo({ top: Math.max(targetTop, 0), behavior: "auto" });
 
     return;
   }
@@ -5614,13 +5417,16 @@ function centerActiveLandscapeChart({ align = "center" } = {}) {
   const activePanel = document.querySelector(".tab-panel.active");
   const track = activePanel?.querySelector("[data-mobile-track]");
   const chartPane = track?.querySelector('[data-mobile-pane="charts"].active');
+  const activeChart = chartPane?.querySelector("#indicator-chart, #fx-chart, .comparison-chart");
 
   if (!track || !chartPane) {
     return;
   }
 
   requestAnimationFrame(() => {
-    resizeVisibleCharts();
+    if (activeChart && window.Plotly) {
+      Plotly.Plots.resize(activeChart);
+    }
     requestAnimationFrame(() => centerMobileChartPane(track, { align }));
   });
 }
@@ -5633,15 +5439,16 @@ function settleActiveLandscapeLayout({ rerender = false } = {}) {
   }
 
   const token = ++landscapeLayoutToken;
+  let didRender = false;
   const settle = () => {
     if (token !== landscapeLayoutToken || !isMobileLandscape()) {
       return;
     }
 
-    if (rerender) {
+    if (rerender && !didRender) {
+      didRender = true;
       renderActiveChartForResponsiveLayout();
     }
-    resizeVisibleCharts();
     requestAnimationFrame(() => centerActiveLandscapeChart({ align: "toolbar" }));
   };
 
@@ -6295,15 +6102,25 @@ function setDashboardRange(range) {
   activeRange = sharedRange;
   activeFxRange = sharedRange;
 
-  validateMacroScale();
-  validateFxScale();
-  renderAll();
+  renderRangeButtons();
   renderFxRangeButtons();
-  if (fxData.length > 0) {
+  comparisonSections.forEach((section) => section.setRange(sharedRange, { render: false }));
+
+  const activeTab = document.body.dataset.activeTab || "macro";
+  if (activeTab === "macro") {
+    validateMacroScale();
+    renderChart();
+  } else if (activeTab === "fx" && fxData.length > 0) {
+    validateFxScale();
     renderFxChart();
+  } else {
+    const activeSection = comparisonSections.find((section) => section.key === activeTab);
+    if (activeSection?.loaded) {
+      activeSection.setRange(sharedRange);
+    }
   }
-  comparisonSections.forEach((section) => section.setRange(sharedRange));
-  requestAnimationFrame(() => centerActiveLandscapeChart());
+
+  requestAnimationFrame(() => centerActiveLandscapeChart({ align: "toolbar" }));
 }
 
 function activateTab(tab) {
