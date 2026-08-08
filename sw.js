@@ -1,4 +1,4 @@
-const CACHE_VERSION = "market-dashboard-v177";
+const CACHE_VERSION = "market-dashboard-v180";
 const APP_SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 
@@ -7,8 +7,7 @@ const APP_SHELL_ASSETS = [
   "./index.html",
   "./style.css?v=indicator-expansion-v61",
   "./ui-template.css?v=ui-template-v24",
-  "./app.js?v=indicator-expansion-v109",
-  "./data/glossary.json",
+  "./app.js?v=indicator-expansion-v112",
   "./manifest.json",
   "./offline.html",
   "./icons/icon-192.png?v=2",
@@ -48,9 +47,7 @@ function isMarketDataRequest(request) {
   const url = new URL(request.url);
   return (
     isLocalRequest(request) &&
-    url.pathname.includes("/data/") &&
-    !url.pathname.endsWith("/data/glossary.json") &&
-    /\.(csv|json)$/.test(url.pathname)
+    url.pathname.includes("/data/") && /\.(csv|json)$/.test(url.pathname)
   );
 }
 
@@ -63,8 +60,7 @@ function isAppShellRequest(request) {
   return (
     request.mode === "navigate" ||
     [".html", ".css", ".js", ".png", ".webmanifest"].some((extension) => url.pathname.endsWith(extension)) ||
-    url.pathname.endsWith("/manifest.json") ||
-    url.pathname.endsWith("/data/glossary.json")
+    url.pathname.endsWith("/manifest.json")
   );
 }
 

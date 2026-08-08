@@ -1028,6 +1028,8 @@ let activeGlossaryLanguage = getGlossaryLanguageFromUrl();
 let expandedGlossaryId = null;
 let dataStatusMetadata = null;
 let expandedStatusKey = null;
+let glossaryLoadPromise = null;
+let dataStatusLoadPromise = null;
 const localTextRequests = new Map();
 
 function getGlossaryLanguageFromUrl() {
@@ -1122,11 +1124,12 @@ function openGlossaryEntry(id) {
   if (glossarySearchInput) {
     glossarySearchInput.value = "";
   }
-  activateTab("glossary");
-  if (glossaryEntries.length > 0) {
-    renderGlossary({ indicators: glossaryEntries });
-    scrollGlossaryEntryIntoView(id);
-  }
+  activateTab("glossary").then(() => {
+    if (glossaryEntries.length > 0) {
+      renderGlossary({ indicators: glossaryEntries });
+      scrollGlossaryEntryIntoView(id);
+    }
+  });
 }
 
 function scrollDashboardCardIntoView(target, attempt = 0) {
@@ -1298,12 +1301,12 @@ function getCompactHoverTemplate(color, valueExpression) {
   return `<span style="color:${safeColor}">&#9679;</span> ${valueExpression}<extra></extra>`;
 }
 
-function clearChartDetail(chartNode) {
+function clearChartDetail(chartNode, { clearNativeHover = true } = {}) {
   if (!chartNode) {
     return;
   }
 
-  if (window.Plotly?.Fx?.unhover) {
+  if (clearNativeHover && window.Plotly?.Fx?.unhover) {
     try {
       window.Plotly.Fx.unhover(chartNode);
     } catch {
@@ -1364,43 +1367,6 @@ function isChartAxisPoint(chartNode, clientX, clientY) {
     localY <= plotSize.t + plotSize.h + 38;
 
   return onLeftAxis || onRightAxis || onXAxis;
-}
-
-function isChartDetailExcludedTarget(target) {
-  return Boolean(target?.closest?.(".modebar, .hovertext, .legend, .axis, .colorbar, .chart-selection-popover"));
-}
-
-function getChartAtPoint(clientX, clientY) {
-  let matchedChart = null;
-
-  chartDetailRegistry.forEach((chartNode) => {
-    if (matchedChart || !isInsideChartPlotArea(chartNode, { clientX, clientY })) {
-      return;
-    }
-
-    matchedChart = chartNode;
-  });
-
-  return matchedChart;
-}
-
-function showChartDetailAtPoint(chartNode, clientX, clientY) {
-  if (
-    !chartNode ||
-    isChartAxisPoint(chartNode, clientX, clientY) ||
-    !isInsideChartPlotArea(chartNode, { clientX, clientY })
-  ) {
-    return false;
-  }
-
-  const dateText = getDateFromChartPointer(chartNode, { clientX, clientY });
-  if (!dateText) {
-    return false;
-  }
-
-  clearOtherChartDetails(chartNode);
-  showChartDetail(chartNode, dateText, [], { clientX, clientY });
-  return true;
 }
 
 function getNearestChartPointRefs(chartNode, dateText) {
@@ -1510,13 +1476,11 @@ function renderChartDetail(chartNode, dateText, pointRefs, anchor = null) {
   const plotSize = chartNode?._fullLayout?._size;
   const dragRect = chartNode.querySelector(".nsewdrag")?.getBoundingClientRect();
   let localX = Number.isFinite(anchor?.clientX) ? anchor.clientX - rect.left : rect.width / 2;
-  let localY = Number.isFinite(anchor?.clientY) ? anchor.clientY - rect.top : rect.height / 2;
   const plotLeft = dragRect ? dragRect.left - rect.left : plotSize?.l ?? 8;
   const plotRight = dragRect ? dragRect.right - rect.left : plotLeft + (plotSize?.w ?? Math.max(rect.width - plotLeft - 8, 0));
   const plotTop = dragRect ? dragRect.top - rect.top : plotSize?.t ?? 8;
   const plotBottom = dragRect ? dragRect.bottom - rect.top : plotTop + (plotSize?.h ?? Math.max(rect.height - plotTop - 8, 0));
   localX = Math.min(Math.max(localX, plotLeft), plotRight);
-  localY = Math.min(Math.max(localY, plotTop), plotBottom);
   guide.style.left = `${localX}px`;
   guide.style.top = `${plotTop}px`;
   guide.style.height = `${Math.max(plotBottom - plotTop, 0)}px`;
@@ -1524,12 +1488,11 @@ function renderChartDetail(chartNode, dateText, pointRefs, anchor = null) {
   popover.hidden = false;
 
   const popoverWidth = popover.offsetWidth || 120;
-  const popoverHeight = popover.offsetHeight || 52;
   popover.style.left = `${Math.min(Math.max(localX + 12, 8), Math.max(rect.width - popoverWidth - 8, 8))}px`;
-  popover.style.top = `${Math.min(Math.max(localY - popoverHeight - 12, 8), Math.max(rect.height - popoverHeight - 8, 8))}px`;
+  popover.style.top = "8px";
 }
 
-function showChartDetail(chartNode, dateText, eventPoints = [], anchor = null) {
+function showChartDetail(chartNode, dateText, eventPoints = [], anchor = null, { clearNativeHover = true } = {}) {
   if (!chartNode || !dateText) {
     return;
   }
@@ -1544,7 +1507,7 @@ function showChartDetail(chartNode, dateText, eventPoints = [], anchor = null) {
       .map(({ curveNumber, pointNumber }) => ({ curveNumber, pointNumber })),
   ];
 
-  if (window.Plotly?.Fx?.unhover) {
+  if (clearNativeHover && window.Plotly?.Fx?.unhover) {
     try {
       window.Plotly.Fx.unhover(chartNode);
     } catch {
@@ -1562,6 +1525,47 @@ function setupChartDetailInteraction(chartNode) {
 
   chartNode.dataset.chartDetailReady = "true";
   chartDetailRegistry.add(chartNode);
+  let desktopPointerX = null;
+
+  chartNode.addEventListener("pointermove", (event) => {
+    if (!usesTouchChartMode()) {
+      desktopPointerX = event.clientX;
+    }
+  });
+
+  if (typeof chartNode.on === "function") {
+    chartNode.on("plotly_hover", (eventData) => {
+      if (usesTouchChartMode()) {
+        return;
+      }
+
+      const points = eventData?.points || [];
+      const dateText = normalizePlotlyDate(points[0]?.x);
+      if (!dateText) {
+        return;
+      }
+
+      const pointerEvent = eventData?.event;
+      const rect = chartNode.getBoundingClientRect();
+      const clientX = Number.isFinite(pointerEvent?.clientX)
+        ? pointerEvent.clientX
+        : desktopPointerX ?? rect.left + rect.width / 2;
+      clearOtherChartDetails(chartNode);
+      showChartDetail(
+        chartNode,
+        dateText,
+        points,
+        { clientX, clientY: rect.top + 8 },
+        { clearNativeHover: false },
+      );
+    });
+
+    chartNode.on("plotly_unhover", () => {
+      if (!usesTouchChartMode()) {
+        clearChartDetail(chartNode, { clearNativeHover: false });
+      }
+    });
+  }
 
   if (!chartDetailDocumentReady) {
     chartDetailDocumentReady = true;
@@ -1656,6 +1660,7 @@ function setupChartDetailInteraction(chartNode) {
       touchLayer.releasePointerCapture(event.pointerId);
     }
     touchDetail = null;
+    clearChartDetail(chartNode);
   }
 
   touchLayer.addEventListener(
@@ -1687,26 +1692,11 @@ function setupChartDetailInteraction(chartNode) {
         cancelAnimationFrame(touchDetailFrame);
         touchDetailFrame = 0;
       }
+      clearChartDetail(chartNode);
     },
     { passive: true },
   );
 
-  chartNode.addEventListener("click", (event) => {
-    if (usesTouchChartMode()) {
-      return;
-    }
-
-    if (isChartDetailExcludedTarget(event.target)) {
-      return;
-    }
-
-    if (!isInsideChartPlotArea(chartNode, event)) {
-      clearChartDetail(chartNode);
-      return;
-    }
-
-    showChartDetailAtPoint(chartNode, event.clientX, event.clientY);
-  }, { capture: true });
 }
 
 const chartInitialAxisRanges = new WeakMap();
@@ -5604,6 +5594,53 @@ async function loadGlossary() {
   return response.json();
 }
 
+function ensureGlossaryLoaded() {
+  if (glossaryEntries.length > 0) {
+    return Promise.resolve({ indicators: glossaryEntries });
+  }
+  if (glossaryLoadPromise) {
+    return glossaryLoadPromise;
+  }
+
+  glossaryLoadPromise = loadGlossary()
+    .then((glossary) => {
+      renderGlossary(glossary);
+      if (dataStatusMetadata) {
+        renderDataStatus(dataStatusMetadata);
+      }
+      return glossary;
+    })
+    .catch((error) => {
+      glossaryLoadPromise = null;
+      renderGlossaryError(error);
+      return null;
+    });
+
+  return glossaryLoadPromise;
+}
+
+function ensureDataStatusLoaded() {
+  if (dataStatusMetadata) {
+    return Promise.resolve(dataStatusMetadata);
+  }
+  if (dataStatusLoadPromise) {
+    return dataStatusLoadPromise;
+  }
+
+  dataStatusLoadPromise = loadDataStatus()
+    .then((metadata) => {
+      dataStatusMetadata = metadata;
+      return metadata;
+    })
+    .catch((error) => {
+      dataStatusLoadPromise = null;
+      renderDataStatusError(error);
+      return null;
+    });
+
+  return dataStatusLoadPromise;
+}
+
 function getStatusIndicatorNames(id, indicator) {
   const glossaryEntry = glossaryEntries.find((entry) => entry.id === id);
   return {
@@ -6146,6 +6183,18 @@ function activateTab(tab) {
     chartReady = comparisonSection.load().catch((error) => comparisonSection.showError(error));
   }
 
+  if (tab === "glossary") {
+    chartReady = ensureGlossaryLoaded();
+  } else if (tab === "data-status") {
+    chartReady = Promise.all([ensureGlossaryLoaded(), ensureDataStatusLoaded()]).then(
+      ([, metadata]) => {
+        if (metadata) {
+          renderDataStatus(metadata);
+        }
+      },
+    );
+  }
+
   requestAnimationFrame(() => {
     resizeVisibleCharts();
     centerActiveMobileTab();
@@ -6153,6 +6202,7 @@ function activateTab(tab) {
     settleActiveLandscapeLayout();
   });
   chartReady.then(() => settleActiveLandscapeLayout());
+  return chartReady;
 }
 
 tabButtons.forEach((button) => {
@@ -6440,15 +6490,6 @@ loadIndicatorData()
   });
 
 renderFxRangeButtons();
-
-loadDataStatus().then(renderDataStatus).catch(renderDataStatusError);
-
-loadGlossary()
-  .then((glossary) => {
-    renderGlossary(glossary);
-    if (dataStatusMetadata) renderDataStatus(dataStatusMetadata);
-  })
-  .catch(renderGlossaryError);
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
