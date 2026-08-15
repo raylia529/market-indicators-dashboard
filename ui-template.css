@@ -1305,6 +1305,13 @@ body {
     min-height: 2.4em;
   }
 
+  .indicator-title-row .indicator-label,
+  .indicator-title-row .indicator-label-detail {
+    flex: 0 0 auto;
+    min-height: 0;
+    white-space: nowrap;
+  }
+
   .indicator-change {
     flex-wrap: nowrap;
     min-height: 1.3em;
