@@ -2227,7 +2227,7 @@ function renderIndicatorChange(rows, indicator) {
   const periodsByCadence = {
     daily: [
       { label: "1D", observationsBack: 1 },
-      { label: "20D", observationsBack: 20 },
+      { label: "10D", observationsBack: 10 },
     ],
     weekly: [
       { label: "1W", observationsBack: 1 },
