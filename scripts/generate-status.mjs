@@ -1316,6 +1316,14 @@ function calculateStatus(
     return "Failed";
   }
 
+  if (sourceCheckStatus === "failed") {
+    return "Failed";
+  }
+
+  if (sourceCheckStatus === "deferred") {
+    return "Update not run";
+  }
+
   const todayText = finishedAt.slice(0, 10);
   const nextExpectedUpdate = calculateNextExpectedUpdate(definition, dashboardLatestDate);
   if (nextExpectedUpdate) {
@@ -1376,7 +1384,29 @@ function buildMetadata() {
   const todayText = finishedAt.slice(0, 10);
   const updateResults = loadUpdateResults();
   const previousMetadata = loadPreviousMetadata();
-  const hasUpdateResults = Object.keys(updateResults).length > 0;
+  const updateResultEntries = Object.values(updateResults);
+  const hasUpdateResults = updateResultEntries.length > 0;
+  const lastUpdateSummary = updateResultEntries.reduce(
+    (summary, result) => {
+      const status = result?.status || "unknown";
+      summary.total += 1;
+      if (status === "success" || status === "source_lag") {
+        summary.succeeded += 1;
+      } else if (status === "deferred") {
+        summary.deferred += 1;
+      } else {
+        summary.failed += 1;
+      }
+      return summary;
+    },
+    { total: 0, succeeded: 0, failed: 0, deferred: 0 },
+  );
+  const lastUpdateOutcome =
+    lastUpdateSummary.failed > 0 || lastUpdateSummary.deferred > 0
+      ? "partial_failure"
+      : hasUpdateResults
+        ? "success"
+        : "no_updates_needed";
   const indicators = {};
   let fedWatchExpectation = null;
   try {
@@ -1496,6 +1526,10 @@ function buildMetadata() {
   }
 
   return {
+    last_scheduler_check: finishedAt,
+    last_scheduler_check_display: formatJstDisplay(finishedAt),
+    last_update_outcome: lastUpdateOutcome,
+    last_update_summary: lastUpdateSummary,
     last_dashboard_refresh: hasUpdateResults
       ? finishedAt
       : previousMetadata.last_dashboard_refresh || finishedAt,
@@ -1523,7 +1557,9 @@ const metadata = buildMetadata();
 atomicWriteJson(outputFile, metadata);
 
 console.log("Data Status metadata");
+console.log(`Scheduler check: ${metadata.last_scheduler_check_display}`);
 console.log(`Dashboard refresh: ${metadata.last_dashboard_refresh_display}`);
+console.log(`Update outcome: ${metadata.last_update_outcome}`);
 console.log(`Indicators: ${Object.keys(metadata.indicators).length}`);
 for (const [key, indicator] of Object.entries(metadata.indicators)) {
   console.log(`${key}: ${indicator.status} (${indicator.latest_available_date || "no date"})`);

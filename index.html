@@ -13,10 +13,10 @@
     <title>Market Indicators Dashboard</title>
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2" />
-    <link rel="stylesheet" href="style.css?v=indicator-expansion-v61" />
+    <link rel="stylesheet" href="style.css?v=indicator-expansion-v62" />
     <link rel="stylesheet" href="ui-template.css?v=ui-template-v25" />
     <script src="https://cdn.plot.ly/plotly-basic-2.35.2.min.js" defer></script>
-    <script src="app.js?v=indicator-expansion-v113" defer></script>
+    <script src="app.js?v=indicator-expansion-v114" defer></script>
   </head>
   <body>
     <main class="dashboard-shell">
@@ -467,6 +467,8 @@
             </div>
             <span id="data-status-updated">Loading metadata</span>
           </div>
+
+          <div id="scheduler-health" class="scheduler-health" role="status" aria-live="polite" hidden></div>
 
           <div class="data-status-table-wrap" aria-label="Data source status table">
             <table class="data-status-table">

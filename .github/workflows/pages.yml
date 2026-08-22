@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  schedule:
+    # Independent fallback check at 23:15 JST on weekdays.
+    - cron: "15 14 * * MON-FRI"
   workflow_dispatch:
     inputs:
       update_profile:
@@ -32,6 +35,8 @@ concurrency:
 
 jobs:
   build:
+    outputs:
+      update_failures: ${{ steps.update-health.outputs.failures }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -62,7 +67,11 @@ jobs:
       - name: Select scheduled data group
         if: github.event_name != 'push'
         run: |
-          profile="${{ inputs.update_profile || 'full' }}"
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            profile="backup"
+          else
+            profile="${{ inputs.update_profile || 'full' }}"
+          fi
 
           echo "UPDATE_PROFILE=${profile}" >> "${GITHUB_ENV}"
           echo "Selected ${profile} update group."
@@ -285,6 +294,11 @@ jobs:
             run_us_sources slow-overdue
             run_asia_daily
             run_asia_slow slow-overdue
+          elif [ "${UPDATE_PROFILE}" = "backup" ]; then
+            run_us_sources slow-overdue
+            run_asia_daily
+            run_asia_slow slow-overdue
+            run_breadth
           elif [ "${UPDATE_PROFILE}" = "breadth" ]; then
             run_breadth
           elif [ "${UPDATE_PROFILE}" = "alpaca" ]; then
@@ -315,8 +329,27 @@ jobs:
           echo "ANY_UPDATE_ATTEMPTED=${attempted}" >> "${GITHUB_ENV}"
 
       - name: Generate data status metadata
-        if: env.ANY_UPDATE_ATTEMPTED == '1'
+        if: github.event_name != 'push'
         run: node scripts/generate-status.mjs
+
+      - name: Summarize data update health
+        id: update-health
+        if: always()
+        run: |
+          failures="${DATA_UPDATE_FAILURES:-0}"
+          attempted="${ANY_UPDATE_ATTEMPTED:-0}"
+          echo "failures=${failures}" >> "${GITHUB_OUTPUT}"
+          {
+            echo "### Data update health"
+            echo ""
+            echo "- Update attempted: ${attempted}"
+            echo "- Source failures or deferrals: ${failures}"
+            if [ "${failures}" = "1" ]; then
+              echo "- Result: Partial failure; existing data was retained and Data Status was deployed."
+            else
+              echo "- Result: Scheduler check completed without source failures."
+            fi
+          } >> "${GITHUB_STEP_SUMMARY}"
 
       - name: Generate consolidated data
         run: node scripts/generate-consolidated.mjs
@@ -406,3 +439,16 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  health:
+    name: Report data update health
+    runs-on: ubuntu-latest
+    needs: [build, deploy]
+    steps:
+      - name: Fail when a source update failed
+        run: |
+          if [ "${{ needs.build.outputs.update_failures }}" = "1" ]; then
+            echo "One or more source updates failed or were deferred. Review Data Status for details."
+            exit 1
+          fi
+          echo "All attempted source updates completed successfully."

@@ -976,6 +976,7 @@ const fxSelectionNoticeText = document.getElementById("fx-selection-notice-text"
 const fxSelectionNoticeClose = document.getElementById("fx-selection-notice-close");
 const dataStatusUpdated = document.getElementById("data-status-updated");
 const dataStatusBody = document.getElementById("data-status-body");
+const schedulerHealth = document.getElementById("scheduler-health");
 const glossaryBody = document.getElementById("glossary-body");
 const glossarySearchInput = document.getElementById("glossary-search");
 const glossaryLanguageButtons = Array.from(document.querySelectorAll("[data-glossary-global-language]"));
@@ -5747,6 +5748,106 @@ function compareAlphabeticalIndicators(left, right) {
     numeric: true,
   });
 }
+const schedulerGraceMs = 90 * 60 * 1000;
+const schedulerWindowsJst = [
+  { days: [2, 3, 4, 5, 6], hour: 8, minute: 15 },
+  { days: [2, 3, 4, 5, 6], hour: 10, minute: 15 },
+  { days: [1, 2, 3, 4, 5], hour: 18, minute: 15 },
+  { days: [1, 2, 3, 4, 5], hour: 20, minute: 15 },
+  { days: [1, 2, 3, 4, 5], hour: 22, minute: 15 },
+  { days: [1, 2, 3, 4, 5], hour: 23, minute: 15 },
+];
+
+function getLatestExpectedSchedulerRun(now = new Date()) {
+  const jstParts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  })
+    .formatToParts(now)
+    .reduce((parts, part) => ({ ...parts, [part.type]: part.value }), {});
+  const jstMidnightUtc = Date.UTC(
+    Number(jstParts.year),
+    Number(jstParts.month) - 1,
+    Number(jstParts.day),
+  );
+  const eligibleBefore = now.getTime() - schedulerGraceMs;
+  let latest = null;
+
+  for (let daysAgo = 0; daysAgo < 8; daysAgo += 1) {
+    const calendarDate = new Date(jstMidnightUtc - daysAgo * 86400000);
+    const dayOfWeek = calendarDate.getUTCDay();
+    for (const window of schedulerWindowsJst) {
+      if (!window.days.includes(dayOfWeek)) {
+        continue;
+      }
+      const candidate = Date.UTC(
+        calendarDate.getUTCFullYear(),
+        calendarDate.getUTCMonth(),
+        calendarDate.getUTCDate(),
+        window.hour - 9,
+        window.minute,
+      );
+      if (candidate <= eligibleBefore && (!latest || candidate > latest.getTime())) {
+        latest = new Date(candidate);
+      }
+    }
+  }
+
+  return latest;
+}
+
+function getSchedulerHealth(metadata) {
+  const lastCheckText = metadata.last_scheduler_check || metadata.last_dashboard_refresh;
+  const lastCheck = Date.parse(lastCheckText || "");
+  const latestExpectedRun = getLatestExpectedSchedulerRun();
+  const summary = metadata.last_update_summary || {};
+  const warningCount = Number(summary.failed || 0) + Number(summary.deferred || 0);
+
+  if (
+    !Number.isFinite(lastCheck) ||
+    (latestExpectedRun && lastCheck < latestExpectedRun.getTime())
+  ) {
+    return {
+      state: "stale",
+      title: "Scheduler stale",
+      detail: Number.isFinite(lastCheck)
+        ? `No completed scheduler check since ${metadata.last_scheduler_check_display || metadata.last_dashboard_refresh_display || lastCheckText}.`
+        : "No completed scheduler check is recorded.",
+    };
+  }
+
+  if (metadata.last_update_outcome === "partial_failure" || warningCount > 0) {
+    return {
+      state: "warning",
+      title: "Source warning",
+      detail: `${warningCount} source check${warningCount === 1 ? "" : "s"} did not complete. Existing data was retained.`,
+    };
+  }
+
+  return {
+    state: "healthy",
+    title: "Scheduler healthy",
+    detail: `Last checked ${metadata.last_scheduler_check_display || metadata.last_dashboard_refresh_display || lastCheckText}.`,
+  };
+}
+
+function renderSchedulerHealth(metadata) {
+  if (!schedulerHealth) {
+    return;
+  }
+
+  const health = getSchedulerHealth(metadata);
+  const title = document.createElement("strong");
+  const detail = document.createElement("span");
+  title.textContent = health.title;
+  detail.textContent = health.detail;
+  schedulerHealth.className = `scheduler-health ${health.state}`;
+  schedulerHealth.replaceChildren(title, detail);
+  schedulerHealth.hidden = false;
+}
+
 function renderDataStatus(metadata) {
   if (!metadata || !metadata.indicators) {
     throw new Error("Data status metadata is missing indicators.");
@@ -5762,6 +5863,8 @@ function renderDataStatus(metadata) {
       ? `Last dashboard refresh ${metadata.last_dashboard_refresh_display}`
       : "Data status loaded";
   }
+
+  renderSchedulerHealth(metadata);
 
   if (dataStatusBody) {
     dataStatusBody.innerHTML = indicators
@@ -5830,6 +5933,13 @@ function renderDataStatus(metadata) {
 function renderDataStatusError(error) {
   if (dataStatusUpdated) {
     dataStatusUpdated.textContent = "Data status unavailable";
+  }
+
+  if (schedulerHealth) {
+    schedulerHealth.className = "scheduler-health stale";
+    schedulerHealth.innerHTML =
+      "<strong>Status unavailable</strong><span>The scheduler state could not be loaded.</span>";
+    schedulerHealth.hidden = false;
   }
 
   if (dataStatusBody) {

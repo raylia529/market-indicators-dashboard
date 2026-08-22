@@ -997,6 +997,50 @@ input,
   display: none;
 }
 
+.scheduler-health {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 12px;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.scheduler-health[hidden] {
+  display: none;
+}
+
+.scheduler-health strong {
+  flex: 0 0 auto;
+  font-weight: 800;
+}
+
+.scheduler-health span {
+  color: inherit;
+  font-weight: 400;
+}
+
+.scheduler-health.healthy {
+  border-color: color-mix(in srgb, var(--green) 25%, var(--line));
+  background: var(--success-soft);
+  color: var(--green);
+}
+
+.scheduler-health.warning {
+  border-color: color-mix(in srgb, var(--gold) 28%, var(--line));
+  background: var(--warning-soft);
+  color: var(--gold);
+}
+
+.scheduler-health.stale {
+  border-color: color-mix(in srgb, var(--red) 28%, var(--line));
+  background: var(--danger-soft);
+  color: var(--red);
+}
+
 .tab-panel[data-tab-panel="data-status"] .data-status-table-wrap {
   overflow: visible;
   border: 0;
@@ -1593,6 +1637,12 @@ input,
     margin-top: 9px;
     color: var(--muted);
     font-size: 0.78rem;
+  }
+
+  .scheduler-health {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
   }
 
   .status-card-head {
