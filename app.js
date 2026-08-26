@@ -992,6 +992,7 @@ document.querySelectorAll(".mobile-view-switch").forEach((switchElement) => {
 
 let indicatorData = new Map();
 let fedWatchExpectation = null;
+let bojImpliedExpectation = null;
 const sharedIndicatorColorStorageKey = "marketIndicatorColorsV3";
 const legacyDefaultColorMigrations = new Map([
   ["hyg-ief", new Set(["#218c83", "#2a9d8f"])],
@@ -4555,6 +4556,39 @@ function createComparisonSection(config) {
       return [...rows, ...futureRows];
     }
 
+    if (
+      !state.normalized &&
+      indicatorId === "boj-implied-rate" &&
+      rows.length > 0 &&
+      Array.isArray(bojImpliedExpectation?.future_curve)
+    ) {
+      const futureRows = [];
+      const futureCurve = bojImpliedExpectation.future_curve.filter(
+        (item) =>
+          item.meeting_date > rows.at(-1).date &&
+          Number.isFinite(item.implied_policy_rate),
+      );
+
+      futureCurve.forEach((item, index) => {
+        const segmentStart =
+          index === 0 ? addDays(rows.at(-1).date, 1) : futureCurve[index - 1].meeting_date;
+        const segmentEnd = addDays(item.meeting_date, -1);
+
+        let date = segmentStart;
+        while (date <= segmentEnd) {
+          futureRows.push({
+            date,
+            value: item.implied_policy_rate,
+            meetingDate: item.meeting_date,
+            projected: true,
+          });
+          date = addDays(date, 1);
+        }
+      });
+
+      return [...rows, ...futureRows];
+    }
+
     return rows;
   }
 
@@ -5532,6 +5566,7 @@ async function loadIndicatorData() {
       }),
     ),
     loadFedWatchExpectation(),
+    loadBojImpliedExpectation(),
   ]);
 
   indicatorData = new Map(datasets);
@@ -5549,6 +5584,21 @@ async function loadFedWatchExpectation() {
   } catch (error) {
     fedWatchExpectation = null;
     console.warn("CME FedWatch expectation unavailable:", error);
+  }
+}
+
+async function loadBojImpliedExpectation() {
+  try {
+    const response = await fetch(`data/boj-implied-rate-latest.json?updated=${Date.now()}`, {
+      cache: "no-store",
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    bojImpliedExpectation = await response.json();
+  } catch (error) {
+    bojImpliedExpectation = null;
+    console.warn("BOJ implied-rate path unavailable:", error);
   }
 }
 

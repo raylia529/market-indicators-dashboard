@@ -1054,12 +1054,16 @@
     "BOJ_IMPLIED_RATE_3M_TONA": {
       "display_name": "BOJ Implied Rate from 3-Month TONA Futures",
       "short_name": "BOJ Implied Rate (3M TONA)",
-      "source_name": "JPX settlement prices",
+      "source_name": "JPX settlement prices; TFX historical daily statistics",
       "source_url": "https://www.jpx.co.jp/english/markets/derivatives/settlement-price/index.html",
       "source_urls": [
         {
           "label": "JPX settlement prices",
           "url": "https://www.jpx.co.jp/english/markets/derivatives/settlement-price/index.html"
+        },
+        {
+          "label": "TFX historical daily statistics",
+          "url": "https://www.tfx.co.jp/en/historical/futures/"
         }
       ],
       "latest_available_date": "2026-08-26",
@@ -1081,12 +1085,12 @@
       "unit": "Percent",
       "status": "Up to date",
       "error_message": null,
-      "formula": "Select the 3-Month TONA futures contract covering the next BOJ meeting; remove the pre-meeting days at the latest observed overnight rate; add the current BOJ-policy-minus-overnight-rate basis; round to the nearest 0.25 percentage-point policy step.",
-      "release_note": "This is the nearest BOJ policy-rate level implied for the next meeting. The unrounded estimate and dynamic policy/TONA basis remain available in calculation metadata.",
+      "formula": "Map each quarterly 3-Month TONA contract to the nearest BOJ meeting; remove known pre-meeting days; add the dynamic policy/TONA basis; round to the nearest 0.25 percentage-point policy step.",
+      "release_note": "Historical next-meeting levels are backfilled from official TFX daily statistics. The projected line uses current JPX settlements and changes at quarterly BOJ meetings, including September 2026 and December 2026.",
       "next_boj_meeting_date": "2026-09-18",
       "contract_month": "202609",
       "policy_tona_basis": 0.023,
-      "calculation_basis": "Contract covering the next BOJ meeting; day-weighted removal of the pre-meeting period at the latest observed overnight rate; dynamic policy-minus-overnight basis added; final display rounded to the nearest 0.25 percentage-point BOJ policy step."
+      "calculation_basis": "Quarterly TONA contract mapped to the nearest BOJ meeting; pre-meeting days removed at the latest applicable overnight rate; dynamic policy-minus-overnight basis added; display rounded to the nearest 0.25 percentage-point BOJ policy step."
     },
     "JAPAN_CORE_CPI_YOY": {
       "display_name": "Japan Core Consumer Price Index Year-over-Year",

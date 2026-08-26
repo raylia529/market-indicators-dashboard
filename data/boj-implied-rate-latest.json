@@ -18,6 +18,52 @@
   "raw_implied_policy_rate": 1.2306,
   "policy_rate_increment": 0.25,
   "implied_policy_rate": 1.25,
-  "method_effective_date": "2026-08-26",
-  "method": "Contract covering the next BOJ meeting; day-weighted removal of the pre-meeting period at the latest observed overnight rate; dynamic policy-minus-overnight basis added; final display rounded to the nearest 0.25 percentage-point BOJ policy step."
+  "future_curve": [
+    {
+      "meeting_date": "2026-09-18",
+      "contract_month": "202609",
+      "settlement_price": 98.7975,
+      "raw_implied_policy_rate": 1.2306,
+      "implied_policy_rate": 1.25
+    },
+    {
+      "meeting_date": "2026-12-18",
+      "contract_month": "202612",
+      "settlement_price": 98.575,
+      "raw_implied_policy_rate": 1.4524,
+      "implied_policy_rate": 1.5
+    },
+    {
+      "meeting_date": "2027-03-18",
+      "contract_month": "202703",
+      "settlement_price": 98.3975,
+      "raw_implied_policy_rate": 1.6269,
+      "implied_policy_rate": 1.75
+    },
+    {
+      "meeting_date": "2027-06-11",
+      "contract_month": "202706",
+      "settlement_price": 98.24,
+      "raw_implied_policy_rate": 1.783,
+      "implied_policy_rate": 1.75
+    },
+    {
+      "meeting_date": "2027-09-22",
+      "contract_month": "202709",
+      "settlement_price": 98.1025,
+      "raw_implied_policy_rate": 1.9347,
+      "implied_policy_rate": 2
+    },
+    {
+      "meeting_date": "2027-12-17",
+      "contract_month": "202712",
+      "settlement_price": 98.02,
+      "raw_implied_policy_rate": 2.0031,
+      "implied_policy_rate": 2
+    }
+  ],
+  "historical_backfill_source": "TFX official daily statistics",
+  "historical_backfill_start_date": "2026-08-01",
+  "method_effective_date": "2026-08-01",
+  "method": "Quarterly TONA contract mapped to the nearest BOJ meeting; pre-meeting days removed at the latest applicable overnight rate; dynamic policy-minus-overnight basis added; display rounded to the nearest 0.25 percentage-point BOJ policy step."
 }
