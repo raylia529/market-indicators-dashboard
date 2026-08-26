@@ -222,7 +222,7 @@ jobs:
             run_update "US initial jobless claims" "node scripts/update-fred-series.mjs --series=ICSA" "ICSA" "slow-overdue" "us" "fred"
             run_update "Broad U.S. Dollar Index" "node scripts/update-fred-series.mjs --series=DTWEXBGS" "DTWEXBGS" "daily" "us" "fred"
             run_update "US 2Y and US-JP spread" "node scripts/update-fx.mjs --profile=us --only=us2y" "DGS2,US_JAPAN_2Y_SPREAD" "daily" "us" "fred"
-            run_update "Fed Funds Rate" "node scripts/update-fred-series.mjs --series=DFEDTARU" "DFEDTARU" "${slow_mode}" "us" "fred"
+            run_update "Fed Funds Rate" "node scripts/update-fred-series.mjs --series=DFEDTARU" "DFEDTARU" "once" "us" "fred"
             run_update "Fed balance sheet" "node scripts/update-fred-series.mjs --series=WALCL" "WALCL" "${slow_mode}" "us" "fred"
             run_update "NFCI" "node scripts/update-fred-series.mjs --series=NFCI" "NFCI" "${slow_mode}" "us" "fred"
           }

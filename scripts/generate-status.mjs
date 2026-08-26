@@ -95,24 +95,10 @@ const indicatorDefinitions = [
         url: "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
       },
     ],
-    frequency: "Policy decisions, normally eight scheduled FOMC meetings per year",
+    frequency: "Daily observations; target changes only after FOMC decisions",
     unit: "Percent, target range upper limit",
     releaseNote:
-      "The chart uses the discontinued DFEDTAR target rate through 2008-12-15 and DFEDTARU thereafter. Daily as-of observations are drawn as a step line. The next official update follows the scheduled FOMC decision date; unscheduled decisions can occur earlier.",
-    scheduledUpdateDates: [
-      "2026-07-29",
-      "2026-09-16",
-      "2026-10-28",
-      "2026-12-09",
-      "2027-01-27",
-      "2027-03-17",
-      "2027-04-28",
-      "2027-06-09",
-      "2027-07-28",
-      "2027-09-15",
-      "2027-10-27",
-      "2027-12-08",
-    ],
+      "The chart uses the discontinued DFEDTAR target rate through 2008-12-15 and DFEDTARU thereafter. FRED publishes a daily as-of observation even when the target is unchanged, so the dashboard checks it daily and draws the result as a step line.",
     file: "data/fed-funds-rate.csv",
     type: "single",
     dailyLagDays: 3,
@@ -1209,6 +1195,29 @@ function calculateNextExpectedUpdate(definition, latestAvailableDate) {
   return null;
 }
 
+function validateIndicatorDefinitions(definitions) {
+  const errors = [];
+  const keys = new Set();
+
+  for (const definition of definitions) {
+    if (keys.has(definition.key)) {
+      errors.push(`Duplicate indicator key: ${definition.key}`);
+    }
+    keys.add(definition.key);
+
+    const frequency = String(definition.frequency || "").toLowerCase();
+    if (frequency.includes("daily") && Array.isArray(definition.scheduledUpdateDates)) {
+      errors.push(
+        `${definition.key} is a daily series but uses event-only scheduledUpdateDates.`,
+      );
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Invalid indicator update configuration:\n${errors.join("\n")}`);
+  }
+}
+
 function zonedDateTimeToIso(dateText, timeText, timeZone) {
   const [year, month, day] = dateText.split("-").map(Number);
   const [hour, minute] = timeText.split(":").map(Number);
@@ -1553,6 +1562,7 @@ function atomicWriteJson(file, data) {
   fs.renameSync(tempFile, file);
 }
 
+validateIndicatorDefinitions(indicatorDefinitions);
 const metadata = buildMetadata();
 atomicWriteJson(outputFile, metadata);
 
