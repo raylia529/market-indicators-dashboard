@@ -1,0 +1,23 @@
+{
+  "observation_date": "2026-08-26",
+  "next_boj_meeting_date": "2026-09-18",
+  "contract_name": "FUT_TOA3M_261215",
+  "contract_month": "202609",
+  "contract_reference_start": "2026-09-16",
+  "contract_reference_end": "2026-12-15",
+  "settlement_price": 98.7975,
+  "contract_implied_tona": 1.2025,
+  "current_policy_rate": 1,
+  "current_policy_rate_date": "2026-08-18",
+  "current_overnight_rate": 0.977,
+  "current_overnight_rate_date": "2026-08-24",
+  "policy_tona_basis": 0.023,
+  "pre_meeting_days": 2,
+  "post_meeting_days": 89,
+  "implied_post_meeting_tona": 1.2076,
+  "raw_implied_policy_rate": 1.2306,
+  "policy_rate_increment": 0.25,
+  "implied_policy_rate": 1.25,
+  "method_effective_date": "2026-08-26",
+  "method": "Contract covering the next BOJ meeting; day-weighted removal of the pre-meeting period at the latest observed overnight rate; dynamic policy-minus-overnight basis added; final display rounded to the nearest 0.25 percentage-point BOJ policy step."
+}

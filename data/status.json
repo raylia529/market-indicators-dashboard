@@ -1081,8 +1081,12 @@
       "unit": "Percent",
       "status": "Up to date",
       "error_message": null,
-      "formula": null,
-      "release_note": "Calculated as 100 minus the settlement price of the nearest listed 3-Month TONA futures contract. It is a market-implied short-rate proxy, not an official BOJ policy-rate forecast."
+      "formula": "Select the 3-Month TONA futures contract covering the next BOJ meeting; remove the pre-meeting days at the latest observed overnight rate; add the current BOJ-policy-minus-overnight-rate basis; round to the nearest 0.25 percentage-point policy step.",
+      "release_note": "This is the nearest BOJ policy-rate level implied for the next meeting. The unrounded estimate and dynamic policy/TONA basis remain available in calculation metadata.",
+      "next_boj_meeting_date": "2026-09-18",
+      "contract_month": "202609",
+      "policy_tona_basis": 0.023,
+      "calculation_basis": "Contract covering the next BOJ meeting; day-weighted removal of the pre-meeting period at the latest observed overnight rate; dynamic policy-minus-overnight basis added; final display rounded to the nearest 0.25 percentage-point BOJ policy step."
     },
     "JAPAN_CORE_CPI_YOY": {
       "display_name": "Japan Core Consumer Price Index Year-over-Year",

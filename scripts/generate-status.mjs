@@ -647,9 +647,11 @@ const indicatorDefinitions = [
     sourceUrls: [{ label: "JPX settlement prices", url: "https://www.jpx.co.jp/english/markets/derivatives/settlement-price/index.html" }],
     frequency: "Daily, Japan business days",
     unit: "Percent",
-    releaseNote: "Calculated as 100 minus the settlement price of the nearest listed 3-Month TONA futures contract. It is a market-implied short-rate proxy, not an official BOJ policy-rate forecast.",
+    formula: "Select the 3-Month TONA futures contract covering the next BOJ meeting; remove the pre-meeting days at the latest observed overnight rate; add the current BOJ-policy-minus-overnight-rate basis; round to the nearest 0.25 percentage-point policy step.",
+    releaseNote: "This is the nearest BOJ policy-rate level implied for the next meeting. The unrounded estimate and dynamic policy/TONA basis remain available in calculation metadata.",
     file: "data/boj-implied-rate.csv",
     type: "single",
+    metadataFile: "data/boj-implied-rate-latest.json",
     dailyLagDays: 5,
     sourceReleaseBusinessDays: 0,
     sourceReleaseTime: "16:45",
@@ -1425,6 +1427,14 @@ function buildMetadata() {
   } catch {
     fedWatchExpectation = null;
   }
+  let bojImpliedExpectation = null;
+  try {
+    bojImpliedExpectation = JSON.parse(
+      fs.readFileSync(path.join("data", "boj-implied-rate-latest.json"), "utf8"),
+    );
+  } catch {
+    bojImpliedExpectation = null;
+  }
 
   for (const definition of indicatorDefinitions) {
     const updateResult = updateResults[definition.key] || updateResults[definition.file] || null;
@@ -1529,6 +1539,14 @@ function buildMetadata() {
         ? {
             next_fomc_meeting_date: fedWatchExpectation.meeting_date,
             calculation_basis: fedWatchExpectation.method,
+          }
+        : {}),
+      ...(definition.key === "BOJ_IMPLIED_RATE_3M_TONA" && bojImpliedExpectation
+        ? {
+            next_boj_meeting_date: bojImpliedExpectation.next_boj_meeting_date,
+            contract_month: bojImpliedExpectation.contract_month,
+            policy_tona_basis: bojImpliedExpectation.policy_tona_basis,
+            calculation_basis: bojImpliedExpectation.method,
           }
         : {}),
     };
