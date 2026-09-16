@@ -1,5 +1,5 @@
 {
-  "meeting_date": "2026-09-16",
+  "meeting_date": "2026-10-28",
   "meeting_dates": [
     "2026-09-16",
     "2026-10-28",
@@ -12,85 +12,79 @@
     "2027-09-15",
     "2027-10-27"
   ],
-  "previous_meeting_date": "2026-07-29",
-  "observation_date": "2026-09-15",
-  "expected_target_upper_rate": 3.9808,
-  "expected_target_midpoint_rate": 3.8558,
+  "previous_meeting_date": "2026-09-16",
+  "observation_date": "2026-09-16",
+  "expected_target_upper_rate": 3.9773,
+  "expected_target_midpoint_rate": 3.8523,
   "probability_sum": 1,
   "probabilities": [
     {
       "target_range": "3.50-3.75",
-      "probability": 0.077
+      "probability": 0.091
     },
     {
       "target_range": "3.75-4.00",
-      "probability": 0.923
+      "probability": 0.909
     }
   ],
   "future_curve": [
     {
-      "meeting_date": "2026-09-16",
-      "observation_date": "2026-09-15",
-      "expected_target_upper_rate": 3.9808,
-      "expected_target_midpoint_rate": 3.8558
-    },
-    {
       "meeting_date": "2026-10-28",
-      "observation_date": "2026-09-15",
-      "expected_target_upper_rate": 4.1024,
-      "expected_target_midpoint_rate": 3.9774
+      "observation_date": "2026-09-16",
+      "expected_target_upper_rate": 3.9773,
+      "expected_target_midpoint_rate": 3.8523
     },
     {
       "meeting_date": "2026-12-09",
-      "observation_date": "2026-09-15",
-      "expected_target_upper_rate": 4.2765,
-      "expected_target_midpoint_rate": 4.1515
+      "observation_date": "2026-09-16",
+      "expected_target_upper_rate": 4.2472,
+      "expected_target_midpoint_rate": 4.1223
     },
     {
       "meeting_date": "2027-01-27",
-      "observation_date": "2026-09-15",
-      "expected_target_upper_rate": 4.3626,
-      "expected_target_midpoint_rate": 4.2376
+      "observation_date": "2026-09-16",
+      "expected_target_upper_rate": 4.3251,
+      "expected_target_midpoint_rate": 4.2001
     },
     {
       "meeting_date": "2027-03-17",
-      "observation_date": "2026-09-15",
-      "expected_target_upper_rate": 4.5088,
-      "expected_target_midpoint_rate": 4.3838
+      "observation_date": "2026-09-16",
+      "expected_target_upper_rate": 4.4555,
+      "expected_target_midpoint_rate": 4.3305
     },
     {
       "meeting_date": "2027-04-28",
-      "observation_date": "2026-09-15",
-      "expected_target_upper_rate": 4.5725,
-      "expected_target_midpoint_rate": 4.4475
+      "observation_date": "2026-09-16",
+      "expected_target_upper_rate": 4.5205,
+      "expected_target_midpoint_rate": 4.3955
     },
     {
       "meeting_date": "2027-06-09",
-      "observation_date": "2026-09-15",
-      "expected_target_upper_rate": 4.6542,
-      "expected_target_midpoint_rate": 4.5292
+      "observation_date": "2026-09-16",
+      "expected_target_upper_rate": 4.5995,
+      "expected_target_midpoint_rate": 4.4745
     },
     {
       "meeting_date": "2027-07-28",
-      "observation_date": "2026-09-15",
-      "expected_target_upper_rate": 4.6832,
-      "expected_target_midpoint_rate": 4.5582
+      "observation_date": "2026-09-16",
+      "expected_target_upper_rate": 4.6069,
+      "expected_target_midpoint_rate": 4.4819
     },
     {
       "meeting_date": "2027-09-15",
-      "observation_date": "2026-09-15",
-      "expected_target_upper_rate": 4.705,
-      "expected_target_midpoint_rate": 4.58
+      "observation_date": "2026-09-16",
+      "expected_target_upper_rate": 4.6254,
+      "expected_target_midpoint_rate": 4.5004
     },
     {
       "meeting_date": "2027-10-27",
-      "observation_date": "2026-09-15",
-      "expected_target_upper_rate": 4.705,
-      "expected_target_midpoint_rate": 4.58
+      "observation_date": "2026-09-16",
+      "expected_target_upper_rate": 4.676,
+      "expected_target_midpoint_rate": 4.551
     }
   ],
   "source_name": "CME FedWatch",
   "source_url": "https://www.cmegroup.com/fedwatch",
   "method": "Probability-weighted target-range upper limit",
-  "source_checked_at": "2026-09-15T18:14:17.966Z"
+  "source_checked_at": "2026-09-16T18:13:01.354Z"
 }
