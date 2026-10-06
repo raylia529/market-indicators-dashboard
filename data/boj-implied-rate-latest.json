@@ -1,57 +1,57 @@
 {
-  "observation_date": "2026-10-05",
+  "observation_date": "2026-10-06",
   "next_boj_meeting_date": "2026-12-18",
   "contract_name": "FUT_TOA3M_270316",
   "contract_month": "202612",
   "contract_reference_start": "2026-12-16",
   "contract_reference_end": "2027-03-16",
-  "settlement_price": 98.51,
-  "contract_implied_tona": 1.49,
+  "settlement_price": 98.515,
+  "contract_implied_tona": 1.485,
   "current_policy_rate": 1.25,
   "current_policy_rate_date": "2026-09-29",
   "current_overnight_rate": 1.227,
-  "current_overnight_rate_date": "2026-10-01",
+  "current_overnight_rate_date": "2026-10-02",
   "policy_tona_basis": 0.023,
   "pre_meeting_days": 2,
   "post_meeting_days": 89,
-  "implied_post_meeting_tona": 1.4959,
-  "raw_implied_policy_rate": 1.5189,
+  "implied_post_meeting_tona": 1.4908,
+  "raw_implied_policy_rate": 1.5138,
   "policy_rate_increment": 0.25,
   "implied_policy_rate": 1.5,
   "future_curve": [
     {
       "meeting_date": "2026-12-18",
       "contract_month": "202612",
-      "settlement_price": 98.51,
-      "raw_implied_policy_rate": 1.5189,
+      "settlement_price": 98.515,
+      "raw_implied_policy_rate": 1.5138,
       "implied_policy_rate": 1.5
     },
     {
       "meeting_date": "2027-03-18",
       "contract_month": "202703",
-      "settlement_price": 98.285,
-      "raw_implied_policy_rate": 1.7406,
+      "settlement_price": 98.2825,
+      "raw_implied_policy_rate": 1.7432,
       "implied_policy_rate": 1.75
     },
     {
       "meeting_date": "2027-06-11",
       "contract_month": "202706",
-      "settlement_price": 98.1275,
-      "raw_implied_policy_rate": 1.8955,
+      "settlement_price": 98.105,
+      "raw_implied_policy_rate": 1.918,
       "implied_policy_rate": 2
     },
     {
       "meeting_date": "2027-09-22",
       "contract_month": "202709",
-      "settlement_price": 97.985,
-      "raw_implied_policy_rate": 2.0412,
+      "settlement_price": 97.97,
+      "raw_implied_policy_rate": 2.0574,
       "implied_policy_rate": 2
     },
     {
       "meeting_date": "2027-12-17",
       "contract_month": "202712",
-      "settlement_price": 97.8775,
-      "raw_implied_policy_rate": 2.1488,
+      "settlement_price": 97.855,
+      "raw_implied_policy_rate": 2.1718,
       "implied_policy_rate": 2.25
     }
   ],
