@@ -7,7 +7,7 @@ const downloadTimeoutMs = 20_000;
 const defaultRetryBackoffMs = [];
 
 const sources = {
-  usdJpyGoogleFinance: "https://www.google.com/finance/quote/USD-JPY?hl=en",
+  usdJpyGoogleFinance: "https://www.google.com/finance/quote/USD-JPY?hl=en&window=1D",
   japan2yHistorical:
     "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/historical/jgbcme_all.csv",
   japan2yCurrent:
@@ -119,11 +119,14 @@ async function downloadWithRetry(
 }
 
 function parseGoogleFinanceUsdJpy(text) {
+  // Other instruments can appear before the currency quote on the new page.
+  const quoteHeading = text.indexOf("United States Dollar / Japanese Yen</div>");
+  const quoteText = quoteHeading >= 0 ? text.slice(quoteHeading) : text;
   const priceMatch =
     text.match(/\bdata-last-price="([^"]+)"/) ||
-    text.match(/jsname="Pdsbrc"[^>]*>[\s\S]*?<span[^>]*>\s*([\d,]+(?:\.\d+)?)\s*<\/span>/);
+    (quoteHeading >= 0 && quoteText.match(/jsname="Pdsbrc"[^>]*>\s*<span[^>]*>\s*([\d,]+(?:\.\d+)?)\s*<\/span>/));
   const timestampMatch = text.match(/\bdata-last-normal-market-timestamp="(\d+)"/);
-  const dateTextMatch = text.match(
+  const dateTextMatch = quoteText.match(
     />([A-Z][a-z]{2}\s+\d{1,2},\s+\d{1,2}:\d{2}:\d{2}\s*(?:AM|PM)\s+UTC)<\/div>/,
   );
   const value = Number((priceMatch?.[1] || "").replaceAll(",", ""));
@@ -443,6 +446,7 @@ async function main() {
     try {
       googleUsdJpyRows = parseGoogleFinanceUsdJpy(
         await downloadWithRetry(sources.usdJpyGoogleFinance, {
+          "User-Agent": "Mozilla/5.0",
           Accept: "text/html",
           "Accept-Language": "en-US,en;q=0.9",
         }),
