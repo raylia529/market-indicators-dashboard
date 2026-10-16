@@ -1,29 +1,29 @@
 {
-  "observation_date": "2026-10-15",
+  "observation_date": "2026-10-16",
   "next_boj_meeting_date": "2026-12-18",
   "contract_name": "FUT_TOA3M_270316",
   "contract_month": "202612",
   "contract_reference_start": "2026-12-16",
   "contract_reference_end": "2027-03-16",
-  "settlement_price": 98.5375,
-  "contract_implied_tona": 1.4625,
+  "settlement_price": 98.5425,
+  "contract_implied_tona": 1.4575,
   "current_policy_rate": 1.25,
-  "current_policy_rate_date": "2026-10-06",
+  "current_policy_rate_date": "2026-10-13",
   "current_overnight_rate": 1.228,
-  "current_overnight_rate_date": "2026-10-13",
+  "current_overnight_rate_date": "2026-10-14",
   "policy_tona_basis": 0.022,
   "pre_meeting_days": 2,
   "post_meeting_days": 89,
-  "implied_post_meeting_tona": 1.4678,
-  "raw_implied_policy_rate": 1.4898,
+  "implied_post_meeting_tona": 1.4627,
+  "raw_implied_policy_rate": 1.4847,
   "policy_rate_increment": 0.25,
   "implied_policy_rate": 1.5,
   "future_curve": [
     {
       "meeting_date": "2026-12-18",
       "contract_month": "202612",
-      "settlement_price": 98.5375,
-      "raw_implied_policy_rate": 1.4898,
+      "settlement_price": 98.5425,
+      "raw_implied_policy_rate": 1.4847,
       "implied_policy_rate": 1.5
     },
     {
@@ -36,22 +36,22 @@
     {
       "meeting_date": "2027-06-11",
       "contract_month": "202706",
-      "settlement_price": 98.12,
-      "raw_implied_policy_rate": 1.902,
+      "settlement_price": 98.11,
+      "raw_implied_policy_rate": 1.912,
       "implied_policy_rate": 2
     },
     {
       "meeting_date": "2027-09-22",
       "contract_month": "202709",
-      "settlement_price": 97.9775,
-      "raw_implied_policy_rate": 2.0482,
+      "settlement_price": 97.99,
+      "raw_implied_policy_rate": 2.0347,
       "implied_policy_rate": 2
     },
     {
       "meeting_date": "2027-12-17",
       "contract_month": "202712",
-      "settlement_price": 97.8975,
-      "raw_implied_policy_rate": 2.1273,
+      "settlement_price": 97.89,
+      "raw_implied_policy_rate": 2.135,
       "implied_policy_rate": 2.25
     }
   ],
