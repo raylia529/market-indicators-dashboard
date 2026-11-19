@@ -1,11 +1,11 @@
 {
-  "last_scheduler_check": "2026-11-20T08:16:37+09:00",
+  "last_scheduler_check": "2026-11-20T08:16:55+09:00",
   "last_scheduler_check_display": "2026-11-20 08:16 JST",
-  "last_update_outcome": "partial_failure",
+  "last_update_outcome": "no_updates_needed",
   "last_update_summary": {
-    "total": 17,
-    "succeeded": 16,
-    "failed": 1,
+    "total": 0,
+    "succeeded": 0,
+    "failed": 0,
     "deferred": 0
   },
   "last_dashboard_refresh": "2026-11-20T08:16:37+09:00",
