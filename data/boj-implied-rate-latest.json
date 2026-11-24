@@ -1,12 +1,12 @@
 {
-  "observation_date": "2026-11-20",
+  "observation_date": "2026-11-24",
   "next_boj_meeting_date": "2026-12-18",
   "contract_name": "FUT_TOA3M_270316",
   "contract_month": "202612",
   "contract_reference_start": "2026-12-16",
   "contract_reference_end": "2027-03-16",
-  "settlement_price": 98.57,
-  "contract_implied_tona": 1.43,
+  "settlement_price": 98.5525,
+  "contract_implied_tona": 1.4475,
   "current_policy_rate": 1.25,
   "current_policy_rate_date": "2026-11-17",
   "current_overnight_rate": 1.228,
@@ -14,16 +14,16 @@
   "policy_tona_basis": 0.022,
   "pre_meeting_days": 2,
   "post_meeting_days": 89,
-  "implied_post_meeting_tona": 1.4345,
-  "raw_implied_policy_rate": 1.4565,
+  "implied_post_meeting_tona": 1.4524,
+  "raw_implied_policy_rate": 1.4744,
   "policy_rate_increment": 0.25,
   "implied_policy_rate": 1.5,
   "future_curve": [
     {
       "meeting_date": "2026-12-18",
       "contract_month": "202612",
-      "settlement_price": 98.57,
-      "raw_implied_policy_rate": 1.4565,
+      "settlement_price": 98.5525,
+      "raw_implied_policy_rate": 1.4744,
       "implied_policy_rate": 1.5
     },
     {
@@ -36,23 +36,23 @@
     {
       "meeting_date": "2027-06-11",
       "contract_month": "202706",
-      "settlement_price": 98.25,
-      "raw_implied_policy_rate": 1.772,
+      "settlement_price": 98.28,
+      "raw_implied_policy_rate": 1.742,
       "implied_policy_rate": 1.75
     },
     {
       "meeting_date": "2027-09-22",
       "contract_month": "202709",
-      "settlement_price": 98.17,
-      "raw_implied_policy_rate": 1.8605,
+      "settlement_price": 98.225,
+      "raw_implied_policy_rate": 1.8009,
       "implied_policy_rate": 1.75
     },
     {
       "meeting_date": "2027-12-17",
       "contract_month": "202712",
-      "settlement_price": 98.0875,
-      "raw_implied_policy_rate": 1.9386,
-      "implied_policy_rate": 2
+      "settlement_price": 98.15,
+      "raw_implied_policy_rate": 1.8747,
+      "implied_policy_rate": 1.75
     }
   ],
   "historical_backfill_source": "TFX official daily statistics",
